@@ -430,6 +430,15 @@
 (global-set-key (kbd "C-S-<f11>")     'align-regexp)
 ;;(global-set-key (kbd "C-c o")         'nl/counsel-git-files)
 
+(defun nl/beginning-of-line-or-indentation ()
+  "move to beginning of line, or indentation"
+  (interactive)
+  (if (bolp)
+      (back-to-indentation)
+    (beginning-of-line)))
+
+(global-set-key (kbd "<home>")     'nl/beginning-of-line-or-indentation)
+
 (use-package recentf
   :init (recentf-mode 1)
   :custom
@@ -487,6 +496,48 @@
 (setq bookmark-default-file "~/.config/.emacs.d/etc/bookmarks")
 
 (windmove-default-keybindings 'meta)
+
+(use-package emacs
+  :hook
+  (text-mode . (lambda () (turn-on-auto-fill))))            ; Enable automatic line wrapping
+
+(use-package compile
+  ;;:bind (("C-c c" . compile)
+  ;;       ("M-O"   . show-compilation))
+  :preface
+  (defun show-compilation ()
+    (interactive)
+    (let ((compile-buf
+           (catch 'found
+             (dolist (buf (buffer-list))
+               (if (string-match "\\*compilation\\*" (buffer-name buf))
+                   (throw 'found buf))))))
+      (if compile-buf
+          (switch-to-buffer-other-window compile-buf)
+        (call-interactively 'compile))))
+
+  (defun compilation-ansi-color-process-output ()
+    (ansi-color-process-output nil)
+    (set (make-local-variable 'comint-last-output-start)
+         (point-marker)))
+
+  ;; (defun colorize-compilation-buffer ()
+  ;;   (let ((inhibit-read-only t))
+  ;;     (ansi-color-apply-on-region (point-min) (point-max))))
+  ;; (add-hook 'compilation-filter-hook 'colorize-compilation-buffer)
+  :config
+  (setq compilation-ask-about-save nil
+        compilation-always-kill t
+        compilation-scroll-output t)
+
+  :hook (compilation-filter . compilation-ansi-color-process-output))
+
+(use-package expand-region
+  ;; :load-path (lambda () (expand-file-name "~/src/github/elisp/expand-region.el"))
+  :bind ("C-=" . er/expand-region)
+  :config
+  (setq expand-region-smart-cursor t
+        er/enable-subword-mode? nil))
 
 (use-package hungry-delete
   :diminish hungry-delete-mode
@@ -580,6 +631,19 @@
                                                    (-map #'symbol-name))))))
   (mapc #'disable-theme custom-enabled-themes)
   (load-theme theme 'no-confirm))
+
+(use-package selected
+  :diminish selected-minor-mode
+  ;; :bind (:map selected-keymap
+  ;;            ("M-%" . query-replace-regexp)
+  ;;            ("C-[" . align-entire)
+  ;;            ("C-f" . fill-region)
+  ;;            ("C-U" . unfill-region)
+  ;;            ("C-d" . downcase-region)
+  ;;            ("C-r" . reverse-region)
+  ;;            ("C-s" . sort-lines)
+  ;;            ("C-u" . upcase-region))
+  :init (selected-global-mode 1))
 
 (use-package multiple-cursors
   :after selected
@@ -966,8 +1030,10 @@
   :hook (progmode-hook . column-enforce-mode))2
 
 (use-package typescript-mode
+  :diminish typescript-mode
   :mode ("\\.ts\\'" "\\.tsx\\'" "\\.js\\'")
   :hook
+  (typescript-mode . display-line-numbers-mode)
   (typescript-mode . lsp-deferred)
   (typescript-mode . column-enforce-mode)
   ;;(typescript-mode . rainbow-delimiters-mode)
@@ -977,6 +1043,7 @@
     (flycheck-mode +1)
     (eldoc-mode +1)
     (company-mode +1)
+    (subword-mode +1)
 
     ;; need to override the value set in typescript-mode.el
     (push '(typescript-tsc-pretty
@@ -987,9 +1054,9 @@
     ;;(setq prettify-symbols-alist nl-typescript-prettify-symbols)
     (prettify-symbols-mode))
   :config
-  (setq ;;prettify-symbols-unprettify-at-point 'right-edge
-   company-tooltip-align-annotations t ;; aligns annotation to the right hand side
-   flycheck-check-syntax-automatically '(save mode-enabled))
+  (setq company-tooltip-align-annotations t ;; aligns annotation to the right hand side
+        ;;prettify-symbols-unprettify-at-point 'right-edge
+        flycheck-check-syntax-automatically '(save mode-enabled))
   (setq-default typescript-indent-level 4)
   )
 
@@ -1154,15 +1221,74 @@
          (css-mode . prettier-mode)
          (scss-mode . prettier-mode)))
 
+(use-package php-mode
+  :mode "\\.php[345]?\\'"
+  :hook (php-mode . nl/php-mode-hook)
+  :preface
+  (defun nl/php-mode-hook ()
+    "My PHP mode configuration."
+    (flycheck-mode t)
+    (setq c-basic-offset 2)
+    (php-set-style "nl/php"))
+
+  ;; this style is based on the symfony2 style
+  (c-add-style
+   "nl/php"
+   '("php"
+     (c-basic-offset . 2)
+     (indent-tabs-mode . nil)
+     (c-offsets-alist . ((statement-cont . php-lineup-hanging-semicolon)))
+     (c-indent-comments-syntactically-p . t)
+     (fill-column . 78)
+     (require-final-newline . t)))
+
+  (flycheck-define-checker nl/php-checker
+    "A PHP syntax checker using the PHP command line interpreter.
+     See URL http://php.net/manual/en/features.commandline.php."
+    :command ("php" "-l" "-d" "error_reporting=E_ALL" "-d" "display_errors=1"
+              "-d" "log_errors=0" source)
+    :error-patterns
+    ((error line-start (or "Parse" "Fatal" "syntax") " error" (any ":" ",") " "
+            (message) " in " (file-name) " on line " line line-end))
+    :modes (php-mode web-mode))
+
+  (eval-after-load 'flycheck
+    '(add-to-list 'flycheck-checkers 'nl/php-checker))
+  :custom
+  (php-mode-coding-style (quote nl/php))
+  (php-mode-lineup-cascaded-calls t))
+
+(use-package phpunit
+  :after (php-mode)
+  :bind (:map php-mode-map
+              ("C-c , t" . phpunit-current-test)
+              ("C-c , c" . phpunit-current-class)
+              ("C-c , p" . phpunit-current-project))
+  :init
+  (push `(php-error-regexp
+          ,(rx line-start
+               (zero-or-more "Trace:" space)
+               "#" (one-or-more digit)
+               (zero-or-more space)
+               (group-n 1 (one-or-more (not (in space "(" "\n"))))
+               "(" (group-n 2 (one-or-more digit))
+               (zero-or-more not-newline))
+          1 2)
+        compilation-error-regexp-alist-alist)
+  (push 'php-error-regexp compilation-error-regexp-alist)
+  :custom
+  (phpunit-arg "--stderr --debug"))
+
 (use-package lsp-mode
   ;;:load-path "~/src/github/elisp/lsp-mode"
+  :diminish lsp-mode
   :pin melpa
   :commands (lsp lsp-deferred)
   :hook
   ;;(js-mode . lsp)
   (typescript-mode . lsp)
-  (scala-mode . lsp)
-  ;;(php-mode . lsp)
+  ;;(scala-mode . lsp)
+  (php-mode . lsp)
   ;; (python-mode . lsp) ;; commented out because lsp is initialized in lsp-pyright config
   :custom
   (lsp-keymap-prefix "C-c l")
