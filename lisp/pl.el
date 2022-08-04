@@ -27,8 +27,8 @@
 
 ;; Please see the README
 
-(eval-when-compile
-  (require 'cl))
+;; (eval-when-compile
+;;   (require 'cl))
 (require 'cl-lib)
 
 (defgroup pl nil
