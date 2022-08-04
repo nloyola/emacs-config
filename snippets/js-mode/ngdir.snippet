@@ -1,0 +1,22 @@
+# -*- mode: snippet -*-
+# name: AngularJS Directive
+# key: ngdir
+# --
+/**
+ *
+ */
+function ${1:`(file-name-nondirectory (file-name-sans-extension (buffer-file-name)))`}() {
+  var directive = {
+    restrict: 'E',
+    scope: {},
+    bindToController: {
+    },
+    template: require('`(ngcomp-snippet-get-template-url)`'),
+    controller: ${1:$(s-upper-camel-case (replace-regexp-in-string "Directive" "Ctrl" yas-text))},
+    controllerAs: 'vm'
+  };
+
+  return directive;
+}
+
+export default ngModule => ngModule.directive('${1:$(replace-regexp-in-string "Directive" "" yas-text)}', $1)

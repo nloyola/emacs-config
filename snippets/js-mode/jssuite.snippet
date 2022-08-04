@@ -1,0 +1,29 @@
+# -*- mode: snippet -*-
+# name: jssuite
+# key: jssuite
+# --
+/**
+ * Jasmine test suite
+ *
+ */
+/* global angular */
+
+import { TestSuiteMixin } from 'test/mixins/TestSuiteMixin';
+import ngModule from '';
+
+describe('`(replace-regexp-in-string "Spec$" "" (file-name-nondirectory (file-name-sans-extension (buffer-file-name))))`', function() {
+
+  beforeEach(() => {
+    angular.mock.module(ngModule, 'biobank.test');
+    angular.mock.inject(function() {
+      Object.assign(this, TestSuiteMixin);
+
+      this.injectDependencies('');
+    });
+  });
+
+  it('$0', function() {
+
+  });
+
+});

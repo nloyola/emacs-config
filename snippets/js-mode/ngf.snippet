@@ -1,0 +1,26 @@
+# -*- mode: snippet -*-
+# name: AngularJS Factory
+# key: ngf
+# --
+/**
+ *
+ */
+define(function () {
+  'use strict';
+
+  `(file-name-nondirectory (file-name-sans-extension (buffer-file-name)))`Factory.$inject = [];
+
+  function `(file-name-nondirectory (file-name-sans-extension (buffer-file-name)))`Factory() {
+
+    /**
+     * ${1:Description}
+     */
+    function `(file-name-nondirectory (file-name-sans-extension (buffer-file-name)))`() {
+
+    }
+
+    return `(file-name-nondirectory (file-name-sans-extension (buffer-file-name)))`;
+  }
+
+  return `(file-name-nondirectory (file-name-sans-extension (buffer-file-name)))`Factory;
+});
