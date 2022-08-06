@@ -9,184 +9,189 @@
 * Basic settings
 
 #+begin_src emacs-lisp
-    (when (eq system-type 'darwin)
-      (require 'ls-lisp)
-      (setq ls-lisp-use-insert-directory-program nil))
+(when (eq system-type 'darwin)
+  (require 'ls-lisp)
+  (setq ls-lisp-use-insert-directory-program nil))
 
-    (setq user-full-name "Nelson Loyola"
-          user-mail-address "nloyola@gmail.com")
+(setq user-full-name "Nelson Loyola"
+      user-mail-address "nloyola@gmail.com")
 
-    (setq custom-file (expand-file-name "custom.el" user-emacs-directory))
-    (load custom-file)
+(setq custom-file (expand-file-name "custom.el" user-emacs-directory))
+(load custom-file)
 
-    (setq comp-async-report-warnings-errors nil)
+(setq comp-async-report-warnings-errors nil)
 
-    (put 'downcase-region 'disabled nil)
-    (put 'upcase-region 'disabled nil)
-    (put 'narrow-to-region 'disabled nil)
-    (put 'dired-find-alternate-file 'disabled nil)
-    (put 'erase-buffer 'disabled nil)
+(put 'downcase-region 'disabled nil)
+(put 'upcase-region 'disabled nil)
+(put 'narrow-to-region 'disabled nil)
+(put 'dired-find-alternate-file 'disabled nil)
+(put 'erase-buffer 'disabled nil)
 
-    ;; Sentences end with a single space.
-    (setq sentence-end-double-space nil)
+;; Sentences end with a single space.
+(setq sentence-end-double-space nil)
 
-    ;; Set the default major mode to =text-mode=. By default it's =fundamental= mode which is
-    ;; not what we want. Also, use =text-mode= for the scratch buffer.
+;; Set the default major mode to =text-mode=. By default it's =fundamental= mode which is
+;; not what we want. Also, use =text-mode= for the scratch buffer.
 
-    (setq default-major-mode 'text-mode
-          initial-major-mode 'text-mode)
+(setq default-major-mode 'text-mode
+      initial-major-mode 'text-mode)
 
-    ;; Don't scroll to middle of the page. Also, scroll line by line, without
-    ;; scrolloff and try to keep point at the same visual place when
-    ;; scrolling by page.
-    (setq-default scroll-up-aggressively 0.01 scroll-down-aggressively 0.01)
-    (setq redisplay-dont-pause t
-          scroll-step 1
-          scroll-margin 3
-          scroll-conservatively 10
-          scroll-preserve-screen-position t)
+;; Don't scroll to middle of the page. Also, scroll line by line, without
+;; scrolloff and try to keep point at the same visual place when
+;; scrolling by page.
+(setq-default scroll-up-aggressively 0.01 scroll-down-aggressively 0.01)
+(setq redisplay-dont-pause t
+      scroll-step 1
+      scroll-margin 3
+      scroll-conservatively 10
+      scroll-preserve-screen-position t)
 
-    ;; Level of decoration {1 - 3}, t = max.
-    (setq font-lock-maximum-decoration t)
+;; Level of decoration {1 - 3}, t = max.
+(setq font-lock-maximum-decoration t)
 
-    ;; For symlinks, automatically follow the link and visit the real file instead.
-    (setq vc-follow-symlinks nil)
+;; For symlinks, automatically follow the link and visit the real file instead.
+(setq vc-follow-symlinks nil)
 
-    ;; Make searches case insensitive.
-    (setq-default case-fold-search t)
+;; Make searches case insensitive.
+(setq-default case-fold-search t)
 
-    ;; Autosave files are created between saves after a sufficient timeout in
-    ;; the current directory for crash detection, they begin and end with
-    ;; =#=.  Change this location to the emacs directory.
-    (setq auto-save-list-file-prefix "~/.emacs.d/autosave/"
-          auto-save-file-name-transforms `((".*" "~/.emacs.d/autosave/" t))
-          backup-directory-alist `(("." . ,(concat user-emacs-directory "autosave"))))
+;; Autosave files are created between saves after a sufficient timeout in
+;; the current directory for crash detection, they begin and end with
+;; =#=.  Change this location to the emacs directory.
+(setq auto-save-list-file-prefix "~/.emacs.d/autosave/"
+      auto-save-file-name-transforms `((".*" "~/.emacs.d/autosave/" t))
+      backup-directory-alist `(("." . ,(concat user-emacs-directory "autosave"))))
 
-    ;;Set line wrap at column 100.
-    (setq fill-column 100)
+;;Set line wrap at column 100.
+(setq fill-column 100)
 
-    ;; Replace =yes or no= prompt with =y or n= prompt.
-    (fset 'yes-or-no-p 'y-or-n-p)
+;; Replace =yes or no= prompt with =y or n= prompt.
+(fset 'yes-or-no-p 'y-or-n-p)
 
-    ;; Use UTF-8 everywhere.
-    (setq locale-coding-system 'utf-8)
-    (set-terminal-coding-system 'utf-8)
-    (set-keyboard-coding-system 'utf-8)
-    (set-selection-coding-system 'utf-8)
-    (prefer-coding-system 'utf-8)
+;; Use UTF-8 everywhere.
+(setq locale-coding-system 'utf-8)
+(set-terminal-coding-system 'utf-8)
+(set-keyboard-coding-system 'utf-8)
+(set-selection-coding-system 'utf-8)
+(prefer-coding-system 'utf-8)
 
-    ;; Use spaces instead of tabs.
-    (setq-default indent-tabs-mode nil)
+;; Use spaces instead of tabs.
+(setq-default indent-tabs-mode nil)
 
-    ;; Delete the region when typing, just like as we expect nowadays.
-    (delete-selection-mode t)
+;; Delete the region when typing, just like as we expect nowadays.
+(delete-selection-mode t)
 
-    ;; Highlight matches in query-replace mode.
-    (setq query-replace-highlight t)
+;; Highlight matches in query-replace mode.
+(setq query-replace-highlight t)
 
-    ;; Use visual line mode to display long lines.
-    (global-visual-line-mode -1)
+;; Use visual line mode to display long lines.
+(global-visual-line-mode -1)
 
-    ;;Revert these files without asking.
-    (setq revert-without-query '(".*"))
+;;Revert these files without asking.
+(setq revert-without-query '(".*"))
 
-    ;; Middle-clicking is nice to paste, however it should not adjust point
-    ;; and paste at the then adjusted point.
-    (setq mouse-yank-at-point t)
+;; Middle-clicking is nice to paste, however it should not adjust point
+;; and paste at the then adjusted point.
+(setq mouse-yank-at-point t)
 
-    ;; Save clipboard data of other programs in the kill ring when possible.
-    (setq save-interprogram-paste-before-kill t)
+;; Save clipboard data of other programs in the kill ring when possible.
+(setq save-interprogram-paste-before-kill t)
 
-    ;; Set environment variable for shells.
-    (setenv "PAGER" "cat")
+;; Set environment variable for shells.
+(setenv "PAGER" "cat")
 
-    ;; Configure =next-buffer= and =previous-buffer= to only visit file
-    ;; buffers (has to be called for each frame):
-    (set-frame-parameter (selected-frame) 'buffer-predicate #'buffer-file-name)
+;; Configure =next-buffer= and =previous-buffer= to only visit file
+;; buffers (has to be called for each frame):
+(set-frame-parameter (selected-frame) 'buffer-predicate #'buffer-file-name)
 
-    ;; These are taken from
-    ;; https://github.com/patrickt/emacs/blob/master/init.el:
-    (setq
-     kill-whole-line t                      ; Lets C-k delete the whole line
-     ;;default-directory "~/src/"             ; My code lives here
-     enable-recursive-minibuffers t         ; don't freak out if I use the minibuffer twice
-     sentence-end-double-space nil          ; are you kidding me
-     confirm-kill-processes nil             ; don't when quitting
-     )
+;; These are taken from
+;; https://github.com/patrickt/emacs/blob/master/init.el:
+(setq
+ kill-whole-line t                      ; Lets C-k delete the whole line
+ ;;default-directory "~/src/"             ; My code lives here
+ enable-recursive-minibuffers t         ; don't freak out if I use the minibuffer twice
+ sentence-end-double-space nil          ; are you kidding me
+ confirm-kill-processes nil             ; don't when quitting
+ )
 
-    (setq-default
-     cursor-type 'box
-     indent-tabs-mode nil
-     cursor-in-non-selected-windows nil)
+(setq-default
+ cursor-type 'box
+ indent-tabs-mode nil
+ cursor-in-non-selected-windows nil)
 
-    ;; Cursor Movement
-    (setq auto-window-vscroll nil)
+;; Cursor Movement
+(setq auto-window-vscroll nil)
 
-    ;; Turn off auto-save.
-    (setq auto-save-default nil)
+;; Turn off auto-save.
+(setq auto-save-default nil)
 
-    ;; Don't make any backup files.
-    (setq make-backup-files nil)
+;; Don't make any backup files.
+(setq make-backup-files nil)
 
-    ;; Get rid of the menu bar. Tool bar and scroll bars are disabled in
-    ;; ~init.el~..
-    (when (fboundp 'menu-bar-mode) (menu-bar-mode -1))
+;; Get rid of the menu bar. Tool bar and scroll bars are disabled in
+;; ~init.el~..
+(when (fboundp 'menu-bar-mode) (menu-bar-mode -1))
 
-    ;; Turn off the blinking cursor.
-    (blink-cursor-mode -1)
+;; Turn off the blinking cursor.
+(blink-cursor-mode -1)
 
-    ;; Don't use dialog boxes
-    (setq use-dialog-box nil)
+;; Don't use dialog boxes
+(setq use-dialog-box nil)
 
-    ;; Don't want an audible bell.
-    (setq visible-bell t)
+;; Don't want an audible bell.
+(setq visible-bell t)
 
-    ;; Display the running program and the selected buffer in the frame title.
-    (setq frame-title-format
-          '("" invocation-name ": " (:eval (replace-regexp-in-string
-                                            "^ +" "" (buffer-name)))))
-    ;; Don't add new lines past end of file, and indicate unused lines at the
-    ;; end of the window with a small image in the left fringe.
-    (setq next-line-add-newlines nil)
-    (setq-default indicate-empty-lines t)
+;; Display the running program and the selected buffer in the frame title.
+(setq frame-title-format
+      '("" invocation-name ": " (:eval (replace-regexp-in-string
+                                        "^ +" "" (buffer-name)))))
+;; Don't add new lines past end of file, and indicate unused lines at the
+;; end of the window with a small image in the left fringe.
+(setq next-line-add-newlines nil)
+(setq-default indicate-empty-lines t)
 
-    ;; Add =\n= to end of file if required.
-    (setq require-final-newline t)
+;; Add =\n= to end of file if required.
+(setq require-final-newline t)
 
-    ;; Eshell
-    (setq eshell-history-size 100000)
+;; Eshell
+(setq eshell-history-size 100000)
 
-    ;; Follow Buffer
+;; Follow Buffer
 
-    (add-to-list 'auto-mode-alist '("\\.log\\'" . auto-revert-mode))
+(add-to-list 'auto-mode-alist '("\\.log\\'" . auto-revert-mode))
 
-    ;; Don’t compact font caches during GC.
-    (setq inhibit-compacting-font-caches t)
+;; Don’t compact font caches during GC.
+(setq inhibit-compacting-font-caches t)
 
-    ;; Automatically cycle through the highlighting faces listed in
-    ;; ~hi-lock-face-defaults~ instead of bothering the user to pick a face
-    ;; each time.
-    (setq hi-lock-auto-select-face t)
+;; Automatically cycle through the highlighting faces listed in
+;; ~hi-lock-face-defaults~ instead of bothering the user to pick a face
+;; each time.
+(setq hi-lock-auto-select-face t)
 
-    ;; History
-    (setq history-delete-duplicates t)
+;; History
+(setq history-delete-duplicates t)
 
-    ;; Use the directory name to make buffer names unique.
-    (setq uniquify-buffer-name-style 'forward)
+;; Use the directory name to make buffer names unique.
+(setq uniquify-buffer-name-style 'forward)
 
-    (global-so-long-mode 1)
+(global-so-long-mode 1)
 
-    (setq fit-window-to-buffer-horizontally t)
-    (setq window-resize-pixelwise t)
+(setq fit-window-to-buffer-horizontally t)
+(setq window-resize-pixelwise t)
 
-    (setq-default indent-tabs-mode nil)
+(setq-default indent-tabs-mode nil)
 
-    (setq bookmark-default-file "~/.emacs.d/etc/bookmarks")
+(setq bookmark-default-file "~/.emacs.d/etc/bookmarks")
 
-    (windmove-default-keybindings 'meta)
+;;Set line wrap at column 100.
+(setq fill-column 100)
+
+(windmove-default-keybindings 'meta)
 #+end_src
 
 * Fonts
+
+** Main font
 
 #+begin_src emacs-lisp
 
@@ -246,6 +251,48 @@
       (set-face-font 'mode-line-highlight (nl/gui-variable-font-normal))
       (set-face-font 'mode-line-inactive (nl/gui-variable-font-normal))
       )
+#+end_src
+
+** Change font size
+
+#+begin_src emacs-lisp
+(defhydra hydra-zoom (global-map "C-c z")
+  "zoom"
+  ("g" text-scale-increase "in")
+  ("l" text-scale-decrease "out"))
+#+end_src
+
+Taken from: http://doc.rix.si/org/fsem.html
+
+#+begin_src emacs-lisp
+(defun nl/change-font-size (fixed-font-size variable-font-size)
+  "Change font size in all buffers."
+  (interactive)
+  (setq nl/gui-current-fixed-font-size fixed-font-size
+        nl/gui-current-variable-font-size variable-font-size)
+  (let* ((frame (selected-frame))
+         (fixed-font (nl/gui-font nl/gui-fixed-font-name fixed-font-size))
+         (variable-font (nl/gui-font nl/gui-variable-font-name variable-font-size)))
+
+    (set-face-attribute 'default frame :font fixed-font)
+    (set-face-font 'default fixed-font)
+    (set-face-font 'italic variable-font)
+    (set-face-font 'bold-italic variable-font)
+    (set-face-font 'fixed-pitch-serif variable-font)
+    (set-face-font 'variable-pitch variable-font)
+
+    (nl/org-mode-faces (* 10 (string-to-number fixed-font-size)))))
+
+(defun nl/zoom-config ()
+  "Set a large enough font size for all Emacs frames for screensharing on Zoom meetings."
+  (interactive)
+  (nl/change-font-size "16" "18"))
+
+(defun nl/normal-config ()
+  "Set the size and position of the Emacs window."
+  (interactive)
+  (nl/change-font-size nl/gui-fixed-font-size-normal nl/gui-variable-font-size-normal)
+  (nl/main-frame-set-size-and-position))
 #+end_src
 
 * Frame configuration
@@ -319,6 +366,19 @@
       (back-to-indentation)
     (beginning-of-line)))
 
+#+end_src
+
+** Windows
+
+#+begin_src emacs-lisp
+(defun nl/split-view-same-file ()
+  (interactive)
+  (windmove-right)
+  (delete-window)
+  (split-window-right)
+  (windmove-right))
+
+(global-set-key [S-f9] 'nl/split-view-same-file)
 #+end_src
 
 * Side windows
@@ -507,6 +567,35 @@ Enable ANSI colors for compilation buffers.
 
   :hook ((compilation-filter . nl/compilation-ansi-color-process-output)
          (compilation-mode . nl/compile-hook)))
+#+end_src
+
+** =dired=
+
+Make dired show directories first. Dired buffers should auto revert
+and not give any use feedback (source: [[http://whattheemacsd.com/sane-defaults.el-01.html][Magnars Sveen]]).
+
+#+begin_src emacs-lisp
+(use-package dired
+  :ensure nil
+  :custom
+  (dired-recursive-copies 'always)
+  ;; Auto refresh Dired, but be quiet about it
+  (global-auto-revert-non-file-buffers t)
+  ;; Move files to trash when deleting
+  (delete-by-moving-to-trash t)
+  (dired-dwim-target t)
+  (find-file-visit-truename t)
+  :config
+  (setq dired-listing-switches "-aBhl --group-directories-first")
+  ;; Reuse same dired buffer, to prevent numerous buffers while navigating in dired
+  (put 'dired-find-alternate-file 'disabled nil)
+  :hook ((dired-mode . dired-hide-details-mode)
+         (dired-mode . hl-line-mode)
+         (dired-mode . (lambda ()
+                         (local-set-key (kbd "<mouse-2>") #'dired-find-alternate-file)
+                         ;;(local-set-key (kbd "RET") #'dired-find-alternate-file)
+                         (local-set-key (kbd "^")
+                                        (lambda () (interactive) (find-alternate-file "..")))))))
 #+end_src
 
 ** =emacsclient=
@@ -712,7 +801,7 @@ Complete anything.
   (advice-add #'register-preview :override #'consult-register-window)
 
   ;; Optionally replace `completing-read-multiple' with an enhanced version.
-  (advice-add #'completing-read-multiple :override #'consult-completing-read-multiple)
+  ;;(advice-add #'completing-read-multiple :override #'consult-completing-read-multiple)
 
   ;; Use Consult to select xref locations with preview
   (setq xref-show-xrefs-function #'consult-xref
@@ -877,6 +966,13 @@ Complete anything.
   (setq enable-recursive-minibuffers t))
 #+end_src
 *
+** [[https://github.com/spotify/dockerfile-mode][dockerfile-mode]]
+
+#+begin_src emacs-lisp
+(use-package dockerfile-mode
+  :mode ("Dockerfile\\'" . dockerfile-mode))
+#+end_src
+
 ** Git
 *** [[https://github.com/magit/magit][magit]]
 
@@ -961,7 +1057,8 @@ No more juggling windows after commiting. It's magit bliss.
 #+begin_src emacs-lisp
 (use-package expand-region
   ;; :load-path (lambda () (expand-file-name "~/src/github/elisp/expand-region.el"))
-  :bind ("C-=" . er/expand-region)
+  :bind
+  ("C-=" . er/expand-region)
   :config
   (setq expand-region-smart-cursor t
         er/enable-subword-mode? nil))
@@ -1405,6 +1502,20 @@ Project navigation and management library for Emacs.
   :init (selected-global-mode 1))
 #+end_src
 
+** Python
+
+*** lsp-pyright
+
+#+begin_src emacs-lisp
+(use-package lsp-pyright
+  :preface
+  (defun nl/pyright-hook ()
+    (require 'lsp-pyright))
+  :hook
+  (python-mode . nl/pyright-hook)
+  (python-mode . lsp-deferred))
+#+end_src
+
 ** typescript
 
 #+begin_src emacs-lisp
@@ -1442,6 +1553,8 @@ Project navigation and management library for Emacs.
 
 ** [[https://github.com/fxbois/web-mode][web-mode]]
 
+For TSX see: https://github.com/emacs-typescript/typescript.el/issues/4#issuecomment-947866123
+
 #+begin_src emacs-lisp
 (use-package web-mode
   :hook ((web-mode . lsp)
@@ -1456,6 +1569,14 @@ Project navigation and management library for Emacs.
   (setq web-mode-markup-indent-offset 2
         web-mode-css-indent-offset 2
         web-mode-code-indent-offset 2))
+#+end_src
+
+** [[https://github.com/yoshiki/yaml-mode][yaml-mode]]
+
+#+begin_src emacs-lisp
+(use-package yaml-mode
+  :config
+  (add-to-list 'auto-mode-alist '("\\.yml\\'" . yaml-mode)))
 #+end_src
 
 ** [[https://github.com/capitaomorte/yasnippet][yasnippet]]
@@ -1480,70 +1601,71 @@ Large collection of snippets: [[https://github.com/AndreaCrotti/yasnippet-snippe
 *** [[https://github.com/AndreaCrotti/yasnippet-snippets][yasnippet-snippets]]
 
 
-** [#B] Org mode
+** Org mode
 
 #+begin_src emacs-lisp
-    (use-package org
-      :pin org
-      ;;:hook (org-mode . nl/org-mode-setup)
-      :custom-face
-      (org-table ((t :foreground "#91b831")))
-      :config
-      (setq org-ellipsis " ⤵"
-            org-hide-emphasis-markers t
-            org-catch-invisible-edits 'error
-            org-startup-indented t
-            org-cycle-include-plain-lists 'integrate
-            org-return-follows-link t
-            org-M-RET-may-split-line nil
-            org-src-fontify-natively t
-            org-src-preserve-indentation t
-            org-edit-src-content-indentation 0
-            org-enforce-todo-dependencies t
-            org-enforce-todo-checkbox-dependencies t
-            ;; org-link-frame-setup '((file . find-file))
-            org-export-backends '(ascii html icalendar latex md)
-            org-log-into-drawer t)
+(use-package org
+  :pin org
+  :bind
+  ("C-c c" . org-capture)
+  ;;:hook (org-mode . nl/org-mode-setup)
+  :custom-face
+  (org-table ((t :foreground "#91b831")))
+  :preface
+  (defun nl/org-confirm-babel-evaluate (lang body)
+    "Do not confirm evaluation for these languages."
+    (not (or (string= lang "C")
+             (string= lang "emacs-lisp")
+             (string= lang "java")
+             (string= lang "python")
+             (string= lang "sh")
+             (string= lang "sql")
+             (string= lang "sqlite"))))
+  :config
+  (setq org-ellipsis " ⤵"
+        org-hide-emphasis-markers t
+        org-catch-invisible-edits 'error
+        org-startup-indented t
+        org-cycle-include-plain-lists 'integrate
+        org-return-follows-link t
+        org-M-RET-may-split-line nil
+        org-src-fontify-natively t
+        org-src-preserve-indentation t
+        org-edit-src-content-indentation 0
+        org-enforce-todo-dependencies t
+        org-enforce-todo-checkbox-dependencies t
+        ;; org-link-frame-setup '((file . find-file))
+        org-export-backends '(ascii html icalendar latex md)
+        org-log-into-drawer t)
 
-      (setq org-capture-templates
-            '(("t" "Todo" entry (file+headline "~/Dropbox/orgfiles/todo.org" "Tasks")
-               "* TODO %?\n  %i\n  %a")
-              ("l" "Link" entry (file+headline "~/Dropbox/orgfiles/links.org" "Links")
-               "* %? %^L %^g \n%T" :prepend t)
-              ("n" "Note" entry (file "~/Dropbox/orgfiles/notes.org")
-               "* NOTE %?\n%U" :empty-lines 1)
-              ("N" "Note with Clipboard" entry (file "~/Dropbox/orgfiles/notes.org")
-               "* NOTE %?\n%U\n   %c" :empty-lines 1)
-              ("j" "Journal" entry (file+datetree "~/Dropbox/orgfiles/journal.org")
-               "* %?\nEntered on %U\n  %i\n  %a")))
-      ;;(nl/org-mode-faces (* 10 (string-to-number nl/gui-fixed-font-size-normal)))
-      )
+  (setq org-capture-templates
+        '(("t" "Todo" entry (file+headline "~/Sync/orgfiles/todo.org" "Tasks")
+           "* TODO %?\n  %i\n  %a")
+          ("l" "Link" entry (file+headline "~/Sync/orgfiles/links.org" "Links")
+           "* %? %^L %^g \n%T" :prepend t)
+          ("n" "Note" entry (file "~/Sync/orgfiles/notes.org")
+           "* NOTE %?\n%U" :empty-lines 1)
+          ("N" "Note with Clipboard" entry (file "~/Sync/orgfiles/notes.org")
+           "* NOTE %?\n%U\n   %c" :empty-lines 1)
+          ("j" "Journal" entry (file+datetree "~/Sync/orgfiles/journal.org")
+           "* %?\nEntered on %U\n  %i\n  %a")))
+  )
 
-      (with-eval-after-load 'org
-        (org-babel-do-load-languages
-         'org-babel-load-languages
-         '((C . t)
-           (calc . t)
-           (emacs-lisp . t)
-           (latex . t)
-           (java . t)
-           (js . t)
-           (python . t)
-           (ruby . t)
-           (shell . t)
-           (sql . t)
-           (sqlite . t)))
-
-        (defun nl/org-confirm-babel-evaluate (lang body)
-          "Do not confirm evaluation for these languages."
-          (not (or (string= lang "C")
-                   (string= lang "emacs-lisp")
-                   (string= lang "java")
-                   (string= lang "python")
-                   (string= lang "sh")
-                   (string= lang "sql")
-                   (string= lang "sqlite"))))
-        (setq org-confirm-babel-evaluate 'nl/org-confirm-babel-evaluate))
+(with-eval-after-load 'org
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   '((C . t)
+     (calc . t)
+     (emacs-lisp . t)
+     (latex . t)
+     (java . t)
+     (js . t)
+     (python . t)
+     (ruby . t)
+     (shell . t)
+     (sql . t)
+     (sqlite . t)))
+  (setq org-confirm-babel-evaluate 'nl/org-confirm-babel-evaluate))
 #+end_src
 
 *** Structure templates
