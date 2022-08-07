@@ -6,6 +6,7 @@
 
 ;;; Code:
 
+(use-package nl-php-project :demand :load-path "~/.emacs.d/lisp")
 (require 'nl-php-project)
 
 (defvar nl/norweb-project-root (projectile-project-root))

@@ -1,3 +1,4 @@
+
 #+TITLE: Emacs Configuration
 #+AUTHOR: Nelson Loyola
 #+STARTUP: content
@@ -63,7 +64,7 @@
       backup-directory-alist `(("." . ,(concat user-emacs-directory "autosave"))))
 
 ;;Set line wrap at column 100.
-(setq fill-column 100)
+(setq-default fill-column 100)
 
 ;; Replace =yes or no= prompt with =y or n= prompt.
 (fset 'yes-or-no-p 'y-or-n-p)
@@ -114,10 +115,8 @@
  confirm-kill-processes nil             ; don't when quitting
  )
 
-(setq-default
- cursor-type 'box
- indent-tabs-mode nil
- cursor-in-non-selected-windows nil)
+(setq-default cursor-type 'box
+              cursor-in-non-selected-windows nil)
 
 ;; Cursor Movement
 (setq auto-window-vscroll nil)
@@ -182,9 +181,6 @@
 (setq-default indent-tabs-mode nil)
 
 (setq bookmark-default-file "~/.emacs.d/etc/bookmarks")
-
-;;Set line wrap at column 100.
-(setq fill-column 100)
 
 (windmove-default-keybindings 'meta)
 #+end_src
@@ -371,6 +367,9 @@ Taken from: http://doc.rix.si/org/fsem.html
 ** Windows
 
 #+begin_src emacs-lisp
+(setq split-height-threshold 160
+      split-width-threshold nil)
+
 (defun nl/split-view-same-file ()
   (interactive)
   (windmove-right)
@@ -683,6 +682,17 @@ what I have them set to (with respect to Dvorak, of course).
   (setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l)))
 #+end_src
 
+** [[https://github.com/abo-abo/avy][avy]]
+
+A quick way to jump around text in buffers.
+
+#+begin_src emacs-lisp
+(use-package avy
+  :bind
+  (("C-c SPC" . avy-goto-char)
+   ("C-:" . avy-goto-char-timer)))
+#+end_src
+
 ** [[https://github.com/company-mode/company-mode][company-mode]]
 
 Complete anything.
@@ -966,6 +976,21 @@ Complete anything.
   (setq enable-recursive-minibuffers t))
 #+end_src
 *
+** [[https://github.com/emacs-dashboard/emacs-dashboard][dashboard]]
+
+#+begin_src emacs-lisp
+(use-package dashboard
+  :demand t
+  :custom
+  (dashboard-projects-backend 'projectile)
+  :config
+  (setq dashboard-items '((recents  . 5)
+                          (projects . 5)
+                          (bookmarks . 5)
+                          (agenda . 5)
+                          (registers . 5)))
+  (dashboard-setup-startup-hook))
+#+end_src
 ** [[https://github.com/spotify/dockerfile-mode][dockerfile-mode]]
 
 #+begin_src emacs-lisp
@@ -1260,19 +1285,14 @@ short bindings with a common prefix - a Hydra.
   (setq lsp-prefer-capf t
         lsp-idle-delay 0.5
         lsp-pyls-plugins-flake8-enabled t
-        ;; lsp-serenata-server-path (substitute-in-file-name "$HOME/apps/serenata.phar")
-        ;; lsp-serenata-index-database-uri (substitute-in-file-name "$HOME/.emacs.d/serenata-index.sqlite")
-        ;; lsp--tcp-server-port 11111
-        ;; lsp-enabled-clients '(serenata)
-        ;; lsp-serenata-php-version 7.4
         lsp-ensabled-clients '(intelephense))
   (setq lsp-clients-angular-language-server-command
         '("node"
-          "/home/nelson/.nvm/versions/node/v16.13.2/lib/node_modules/@angular/language-server"
+          "/home/nelson/.nvm/versions/node/v16.16.0/lib/node_modules/@angular/language-server"
           "--ngProbeLocations"
-          "/home/nelson/.nvm/versions/node/v16.13.2/lib/node_modules"
+          "/home/nelson/.nvm/versions/node/v16.16.0/lib/node_modules"
           "--tsProbeLocations"
-          "/home/nelson/.nvm/versions/node/v16.13.2/lib/node_modules"
+          "/home/nelson/.nvm/versions/node/v16.16.0/lib/node_modules"
           "--stdio"))
   (lsp-register-custom-settings
    '(("pyls.plugins.pyls_mypy.enabled" t t)
@@ -1282,32 +1302,63 @@ short bindings with a common prefix - a Hydra.
 
 (use-package lsp-ui
   ;; :load-path "~/src/github/elisp/lsp-ui"
-  :hook
-  (lsp-mode . lsp-ui-mode)
+  :hook (lsp-mode . lsp-ui-mode)
+  :commands lsp-ui-mode
   :bind (:map lsp-ui-mode-map
-              ;;([remap xref-find-definitions] . lsp-ui-peek-find-definitions)
-              ;;([remap xref-find-references] . lsp-ui-peek-find-references)
+              ([remap xref-find-definitions] . lsp-ui-peek-find-definitions)
+              ([remap xref-find-references] . lsp-ui-peek-find-references)
               ([f10] . lsp-ui-sideline-toggle-symbols-info))
   :custom-face
   (lsp-ui-peek-peek ((nil :background "gray30")))
   (lsp-ui-peek-highlight ((nil :foreground "gray60" :background "gray20")))
-  (header-line ((t (:inherit mode-line :background "gray30"))))
+  (header-line ((t (:inherit mode-line :background "gray20"))))
   :custom
   (lsp-ui-sideline-enable t)
   (lsp-ui-sideline-show-hover nil)
-  (lsp-ui-doc-enable nil)
   (lsp-ui-peek-enable nil)
   (flycheck-add-next-checker 'lsp-ui 'typescript-tslint)
   :config
-  (setq lsp-ui-peek-always-show nil
-        lsp-ui-doc-enable t
-        lsp-ui-doc-use-childframe t
-        lsp-ui-doc-position 'top
-        lsp-ui-doc-include-signature t
-        lsp-ui-flycheck-list-position 'right
+  (setq lsp-ui-flycheck-list-position 'bottom
+        ;;lsp-ui-doc-enable t
+        ;;lsp-ui-doc-show-with-cursor t
+        ;;lsp-ui-doc-show-with-mouse t
+        ;;lsp-ui-doc-use-childframe t
+        ;;lsp-ui-doc-position 'top
+        ;;lsp-ui-doc-include-signature t
+        lsp-ui-peek-always-show nil
         lsp-ui-peek-list-width 60
-        lsp-ui-peek-peek-height 25)
+        lsp-ui-peek-peek-height 25
+        lsp-eldoc-enable-hover nil)
   )
+#+end_src
+
+** [[https://github.com/defunkt/markdown-mode][markdown-mode]]
+
+#+begin_src emacs-lisp
+(use-package markdown-mode
+  :commands (markdown-mode gfm-mode)
+  :mode (("README\\.md\\'" . gfm-mode)
+         ("\\.markdown\\'" . markdown-mode)
+         ("\\.md\\'"       . markdown-mode))
+  :hook
+  (markdown-mode . (lambda () (auto-fill-mode -1)))
+  (markdown-mode . variable-pitch-mode)
+  (markdown-mode . flyspell-mode)
+  :config
+  (setq markdown-command "pandoc")
+  (dolist (face '(markdown-inline-code-face markdown-code-face))
+    (set-face-attribute face nil :inherit 'fixed-pitch)))
+#+end_src
+
+** [[https://github.com/ancane/markdown-preview-mode][markdown-preview-mode]]
+
+#+begin_src emacs-lisp
+(use-package markdown-preview-mode
+  :config
+  ;;(add-to-list 'markdown-preview-stylesheets
+  ;;             "https://raw.githubusercontent.com/richleland/pygments-css/master/emacs.css")
+  (setq markdown-preview-stylesheets (list
+                                      "http://thomasf.github.io/solarized-css/solarized-dark.min.css")))
 #+end_src
 
 ** [[https://github.com/emacsfodder/move-text][move-text]]
@@ -1358,14 +1409,59 @@ checker is loaded.
 (use-package php-mode
   :mode "\\.php[345]?\\'"
   :hook
-  (php-mode . lsp-deferred)
-  (php-mode . nl/php-mode-hook)
+  (php-mode . display-line-numbers-mode)
+  (php-mode . nl/nordita-php-mode-hook)
   :preface
   (defun nl/php-mode-hook ()
     "My PHP mode configuration."
+    (lsp)
     (flycheck-mode t)
-    (setq c-basic-offset 2)
-    (php-set-style "nl/php"))
+    (php-set-style "nl/php"));; this style is based on the symfony2 style
+
+  (defun nl/nordita-php-mode-hook ()
+    "Nordita's PHP mode configuration."
+    (lsp)
+    (flycheck-mode t)
+    ;; for help with enabling python-flake8 see https://github.com/emacs-lsp/lsp-mode/issues/2594
+    (require 'lsp-diagnostics)
+    (lsp-diagnostics-flycheck-enable)
+    (flycheck-add-next-checker 'lsp 'php-phpcs)
+    (cond ((string= (projectile-project-root) (expand-file-name "~/src/nordita/norweb-2021/"))
+           (setq lsp-intelephense-files-exclude
+                 (vconcat lsp-intelephense-files-exclude
+                          ["public/wire/**"
+                           "public/wire.old/**"
+                           "**/AppApi/**"
+                           "**/FieldtypeCombo/**"
+                           "**/FieldtypeFieldsetGroup/**"
+                           "**/FieldtypeRepeaterMatrix/**"
+                           "**/FieldtypeTextareas/**"
+                           "**/FileValidatorSvgSanitizer/**"
+                           "**/InputfieldCKEditor/**"
+                           "**/ProcessHannaCode/**"
+                           "**/pw-fieldtype-yaml/**"
+                           "**/RockMigrations/**"
+                           "**/TracyDebugger/**"
+                           ])
+                 lsp-intelephense-rename-exclude
+                 (vconcat lsp-intelephense-rename-exclude
+                          ["public/wire/**"
+                           "public/wire.old/**"
+                           "**/AppApi/**"
+                           "**/FieldtypeCombo/**"
+                           "**/FieldtypeFieldsetGroup/**"
+                           "**/FieldtypeRepeaterMatrix/**"
+                           "**/FieldtypeTextareas/**"
+                           "**/FileValidatorSvgSanitizer/**"
+                           "**/InputfieldCKEditor/**"
+                           "**/ProcessHannaCode/**"
+                           "**/pw-fieldtype-yaml/**"
+                           "**/RockMigrations/**"
+                           "**/TracyDebugger/**"
+                           ])
+                 lsp-intelephense-php-version "7.4")
+           ))
+    )
 
   ;; this style is based on the symfony2 style
   (c-add-style
@@ -1375,7 +1471,41 @@ checker is loaded.
      (indent-tabs-mode . nil)
      (c-offsets-alist . ((statement-cont . php-lineup-hanging-semicolon)))
      (c-indent-comments-syntactically-p . t)
-     (fill-column . 78)
+     (fill-column . 120)
+     (require-final-newline . t)))
+
+  ;; see https://github.com/taksatou/dotfiles/blob/037e22d7a31112321b92e11bcbd871b8e2acbc9c/.emacs.d/my/my-codingstyles.el
+  (c-add-style
+   "nl/php-nordita"
+   '("php"
+     (c-set-style "k&r")
+     (c-basic-offset . 4)
+     (indent-tabs-mode . nil)
+     (c-offsets-alist . ((defun-open            . 0)
+                         (defun-close           . 0)
+                         (defun-block-intro     . +)
+                         (topmost-intro         . 0)
+                         (topmost-intro-cont    . c-lineup-topmost-intro-cont)
+                         (block-open            . 0)
+                         (block-close           . 0)
+                         (statement             . 0)
+                         (statement-cont        . +)
+                         (statement-block-intro . +)
+                         (statement-case-intro  . +)
+                         (statement-case-open   . 0)
+                         (substatement          . +)
+                         (substatement-open     . 0)
+                         (case-label            . +)
+                         (comment-intro         . (c-lineup-knr-region-comment c-lineup-comment))
+                         (arglist-intro         . +)
+                         (arglist-cont          . (c-lineup-gcc-asm-reg 0))
+                         (arglist-cont-nonempty . +)
+                         (arglist-close         . 0)
+                         ))
+     (c-indent-comments-syntactically-p . t)
+     (php-mode-lineup-cascaded-calls . nil)
+     (show-trailing-whitespace . nil)
+     (fill-column . 120)
      (require-final-newline . t)))
 
   (flycheck-define-checker nl/php-checker
@@ -1391,7 +1521,7 @@ checker is loaded.
   (eval-after-load 'flycheck
     '(add-to-list 'flycheck-checkers 'nl/php-checker))
   :custom
-  (php-mode-coding-style (quote nl/php))
+  (php-mode-coding-style (quote nl/php-nordita))
   (php-mode-lineup-cascaded-calls t))
 #+end_src
 
@@ -1422,8 +1552,8 @@ checker is loaded.
 
 *** [[https://github.com/OVYA/php-cs-fixer][php-cs-fixer]]
 
-Allows the Emacs editor to fix most issues in PHP code when you
-want to follow the coding standards PSR-1 and PSR-2.
+Allows the Emacs editor to fix most issues in PHP code when you want to follow the coding standards
+PSR-1 and PSR-2.
 
 #+begin_src emacs-lisp
 (use-package php-cs-fixer
@@ -1531,7 +1661,7 @@ Project navigation and management library for Emacs.
   :preface
   (defun nl/typescript-mode ()
     (flycheck-mode +1)
-    (eldoc-mode +1)
+    ;;(eldoc-mode +1)
     (company-mode +1)
     (subword-mode +1)
 
