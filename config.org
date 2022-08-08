@@ -370,17 +370,24 @@ Taken from: http://doc.rix.si/org/fsem.html
 (setq split-height-threshold 160
       split-width-threshold nil)
 
-(defun nl/split-view-same-file ()
+(defun nl/zoom-into-window ()
+  "Removes all other windows but the one the point is at."
   (interactive)
-  (windmove-right)
-  (delete-window)
+  (while (> (length (window-list)) 1)
+    (delete-other-windows)))
+
+(defun nl/split-window-same-file ()
+  "Splits the frame into two windows, with the buffer on the rightmost window in left and right windows."
+  (interactive)
+  (nl/zoom-into-window)
   (split-window-right)
   (windmove-right))
 
-(global-set-key [S-f9] 'nl/split-view-same-file)
+(global-set-key [f9] 'nl/zoom-into-window)
+(global-set-key [S-f9] 'nl/split-window-same-file)
 #+end_src
 
-* Side windows
+** Side windows
 
 #+begin_src emacs-lisp
 
@@ -470,24 +477,8 @@ Taken from: http://doc.rix.si/org/fsem.html
       )
 
     (with-eval-after-load 'markdown-mode
+      (set-face-background 'markdown-code-face "#121212")
       ;;(set-face-foreground 'markdown-code-face (doom-darken 'green 0.2))
-      ;;(set-face-background 'markdown-code-face (doom-color 'brightblack))
-      ;;(set-face-background 'org-block (doom-color 'brightblack))
-      (set-face-attribute 'markdown-header-face
-                          nil
-                          :font nl/gui-variable-font-name
-                          :weight 'bold
-                          :height (* 12 (string-to-number nl/gui-current-variable-font-size)))
-      (set-face-attribute 'markdown-link-face
-                          nil
-                          :font nl/gui-variable-font-name
-                          :weight 'bold
-                          :height (* 10 (string-to-number nl/gui-current-variable-font-size)))
-      )
-
-    (with-eval-after-load 'markdown-mode
-      ;;(set-face-foreground 'markdown-code-face (doom-darken 'green 0.2))
-      ;;(set-face-background 'markdown-code-face (doom-color 'brightblack))
       ;;(set-face-background 'org-block (doom-color 'brightblack))
       (set-face-attribute 'markdown-header-face
                           nil
