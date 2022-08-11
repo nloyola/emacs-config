@@ -1252,6 +1252,44 @@ short bindings with a common prefix - a Hydra.
   (global-set-key (kbd "C-c w") 'hydra-windows-nav/body))
 #+end_src
 
+*** Aligning things
+
+Align by colons (handy for JavaScript), align by commas, and align by
+equal signs.
+
+Borrowed from:
+
+http://danconnor.com/post/5028ac91e8891a000000111f/align_and_columnize_key_value_data_in_emacs
+
+#+begin_src emacs-lisp
+(defun align-colons (beg end)
+  (interactive "r")
+  (align-regexp beg end ":\\(\\s-*\\)" 1 1 t))
+
+(defun align-commas (beg end)
+  (interactive "r")
+  (align-regexp beg end ",\\(\\s-*\\)" 1 1 t))
+
+(defun align-equals (beg end)
+  (interactive "r")
+  (align-regexp beg end "\\(\\s-*\\)=" 1 1 t))
+
+(defun align-dollar-sign (beg end)
+  (interactive "r")
+  (align-regexp beg end "\\(\\s-*\\)\\$" 1 1 t))
+
+(defun align-parameters (beg end)
+  (interactive "r")
+  (align-regexp beg end "\\w+\\(\\s-*\\)\\w+,?" 1 1 t))
+
+(defhydra hydra-nl-align (:hint nil)
+  (":" align-colons "colons" :color blue :column "Align things")
+  ("," align-commas "commas" :color blue)
+  ("=" align-equals "equals" :color blue)
+  ("$" align-dollar-sign "dollar sign" :color blue)
+  ("p" align-parameters "parameters" :color blue))
+#+end_src
+
 ** [[https://github.com/emacs-lsp/lsp-mode][lsp-mode]]
 
 #+begin_src emacs-lisp
@@ -1310,12 +1348,12 @@ short bindings with a common prefix - a Hydra.
   (flycheck-add-next-checker 'lsp-ui 'typescript-tslint)
   :config
   (setq lsp-ui-flycheck-list-position 'bottom
-        ;;lsp-ui-doc-enable t
+        lsp-ui-doc-enable t
         ;;lsp-ui-doc-show-with-cursor t
         ;;lsp-ui-doc-show-with-mouse t
-        ;;lsp-ui-doc-use-childframe t
-        ;;lsp-ui-doc-position 'top
-        ;;lsp-ui-doc-include-signature t
+        lsp-ui-doc-use-childframe t
+        lsp-ui-doc-position 'bottom
+        lsp-ui-doc-include-signature t
         lsp-ui-peek-always-show nil
         lsp-ui-peek-list-width 60
         lsp-ui-peek-peek-height 25
@@ -1374,8 +1412,8 @@ the screen to center on each cursor with ~C-v~ and ~M-v~.
          ("C-M-<"       . mc/unmark-previous-like-this)
          ("C-c C-<"     . mc/mark-all-like-this)
          ("C-!"         . mc/mark-next-symbol-like-this)
-         ("C-x C-m"     . mc/mark-all-dwim))
-  :bind (:map selected-keymap
+         ("C-x C-m"     . mc/mark-all-dwim)
+         (:map selected-keymap
               ("C-'" . mc/edit-lines)
               ("."   . mc/mark-next-like-this)
               ("<"   . mc/unmark-next-like-this)
@@ -1386,7 +1424,7 @@ the screen to center on each cursor with ~C-v~ and ~M-v~.
               ("y"   . mc/mark-next-symbol-like-this)
               ("Y"   . mc/mark-previous-symbol-like-this)
               ("w"   . mc/mark-next-word-like-this)
-              ("W"   . mc/mark-previous-word-like-this)))
+              ("W"   . mc/mark-previous-word-like-this))))
 #+end_src
 
 *
@@ -1407,12 +1445,14 @@ checker is loaded.
     "My PHP mode configuration."
     (lsp)
     (flycheck-mode t)
+    (subword-mode +1)
     (php-set-style "nl/php"));; this style is based on the symfony2 style
 
   (defun nl/nordita-php-mode-hook ()
     "Nordita's PHP mode configuration."
     (lsp)
     (flycheck-mode t)
+    (subword-mode +1)
     ;; for help with enabling python-flake8 see https://github.com/emacs-lsp/lsp-mode/issues/2594
     (require 'lsp-diagnostics)
     (lsp-diagnostics-flycheck-enable)
@@ -1643,6 +1683,8 @@ Project navigation and management library for Emacs.
 (use-package typescript-mode
   :diminish typescript-mode
   :mode ("\\.ts\\'" "\\.tsx\\'" "\\.js\\'")
+  :bind (:map typescript-mode-map
+              ("M-j" . c-indent-new-comment-line))
   :hook
   (typescript-mode . display-line-numbers-mode)
   (typescript-mode . lsp-deferred)
