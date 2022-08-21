@@ -1715,6 +1715,32 @@ Project navigation and management library for Emacs.
   )
 #+end_src
 
+** [[https://github.com/mhayashi1120/Emacs-wgrep][wgrep]]
+
+You can edit the text in the grep buffer after typing =C-c C-p=. After that the changed text is
+highlighted. The following keybindings are defined:
+
+=C-c C-e=: Apply the changes to file buffers.
+
+=C-c C-u=: All changes are unmarked and ignored.
+
+=C-c C-d=: Mark as delete to current line (including newline).
+
+=C-c C-r=: Remove the changes in the region (these changes are not applied to the files. Of course, the remaining changes can still be applied to the files.)
+
+=C-c C-p=: Toggle read-only area.
+
+=C-c C-k=: Discard all changes and exit.
+
+=C-x C-q=: Exit wgrep mode.
+
+To save all buffers that wgrep has changed, run
+
+#+begin_src emacs-lisp
+(use-package wgrep
+  :demand)
+#+end_src
+
 ** [[https://github.com/fxbois/web-mode][web-mode]]
 
 For TSX see: https://github.com/emacs-typescript/typescript.el/issues/4#issuecomment-947866123
@@ -1768,69 +1794,70 @@ Large collection of snippets: [[https://github.com/AndreaCrotti/yasnippet-snippe
 ** Org mode
 
 #+begin_src emacs-lisp
-  (use-package org
-    :pin org
-    :bind
-    ("C-c c" . org-capture)
-    ;;:hook (org-mode . nl/org-mode-setup)
-    :custom-face
-    (org-table ((t :foreground "#91b831")))
-    :config
-    (setq org-ellipsis " ⤵"
-          org-hide-emphasis-markers t
-          org-catch-invisible-edits 'error
-          org-startup-indented t
-          org-cycle-include-plain-lists 'integrate
-          org-return-follows-link t
-          org-M-RET-may-split-line nil
-          org-src-fontify-natively t
-          org-src-preserve-indentation t
-          org-edit-src-content-indentation 0
-          org-enforce-todo-dependencies t
-          org-enforce-todo-checkbox-dependencies t
-          ;; org-link-frame-setup '((file . find-file))
-          org-export-backends '(ascii html icalendar latex md)
-          org-log-into-drawer t)
+(use-package org
+  :pin org
+  :bind
+  ("C-c c" . org-capture)
+  ;;:hook (org-mode . nl/org-mode-setup)
+  :custom-face
+  (org-table ((t :foreground "#91b831")))
+  :config
+  (setq org-ellipsis " ⤵"
+        org-hide-emphasis-markers t
+        org-catch-invisible-edits 'error
+        org-startup-indented t
+        org-cycle-include-plain-lists 'integrate
+        org-return-follows-link t
+        org-M-RET-may-split-line nil
+        org-src-fontify-natively t
+        org-src-preserve-indentation t
+        org-edit-src-content-indentation 0
+        org-enforce-todo-dependencies t
+        org-enforce-todo-checkbox-dependencies t
+        ;; org-link-frame-setup '((file . find-file))
+        org-export-backends '(ascii html icalendar latex md)
+        org-log-into-drawer t)
 
-    (setq org-capture-templates
-          '(("t" "Todo" entry (file+headline "~/Sync/orgfiles/todo.org" "Tasks")
-             "* TODO %?\n  %i\n  %a")
-            ("l" "Link" entry (file+headline "~/Sync/orgfiles/links.org" "Links")
-             "* %? %^L %^g \n%T" :prepend t)
-            ("n" "Note" entry (file "~/Sync/orgfiles/notes.org")
-             "* NOTE %?\n%U" :empty-lines 1)
-            ("N" "Note with Clipboard" entry (file "~/Sync/orgfiles/notes.org")
-             "* NOTE %?\n%U\n   %c" :empty-lines 1)
-            ("j" "Journal" entry (file+datetree "~/Sync/orgfiles/journal.org")
-             "* %?\nEntered on %U\n  %i\n  %a")))
-    )
+  (setq org-capture-templates
+        '(("t" "Todo" entry (file+headline "~/Sync/orgfiles/todo.org" "Tasks")
+           "* TODO %?\n  %i\n  %a")
+          ("l" "Link" entry (file+headline "~/Sync/orgfiles/links.org" "Links")
+           "* %? %^L %^g \n%T" :prepend t)
+          ("n" "Note" entry (file "~/Sync/orgfiles/notes.org")
+           "* NOTE %?\n%U" :empty-lines 1)
+          ("N" "Note with Clipboard" entry (file "~/Sync/orgfiles/notes.org")
+           "* NOTE %?\n%U\n   %c" :empty-lines 1)
+          ("j" "Journal" entry (file+datetree "~/Sync/orgfiles/journal.org")
+           "* %?\nEntered on %U\n  %i\n  %a")))
+  )
 
-  (with-eval-after-load 'org
-    (defun nl/org-confirm-babel-evaluate (lang body)
-      "Do not confirm evaluation for these languages."
-      (not (or (string= lang "C")
-               (string= lang "emacs-lisp")
-               (string= lang "java")
-               (string= lang "python")
-               (string= lang "sh")
-               (string= lang "sql")
-               (string= lang "sqlite"))))
+(with-eval-after-load 'org
+  (defun nl/org-confirm-babel-evaluate (lang body)
+    "Do not confirm evaluation for these languages."
+    (not (or (string= lang "C")
+             (string= lang "emacs-lisp")
+             (string= lang "java")
+             (string= lang "python")
+             (string= lang "sh")
+             (string= lang "sql")
+             (string= lang "sqlite")
+             )))
+  (setq org-confirm-babel-evaluate 'nl/org-confirm-babel-evaluate)
 
-    (setq org-confirm-babel-evaluate 'nl/org-confirm-babel-evaluate))
-
-    (org-babel-do-load-languages
-     'org-babel-load-languages
-     '((C . t)
-       (calc . t)
-       (emacs-lisp . t)
-       (latex . t)
-       (java . t)
-       (js . t)
-       (python . t)
-       (ruby . t)
-       (shell . t)
-       (sql . t)
-       (sqlite . t)))
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   '((C . t)
+     (emacs-lisp . t)
+     (latex . t)
+     (java . t)
+     (js . t)
+     (python . t)
+     (ruby . t)
+     (shell . t)
+     (sql . t)
+     (sqlite . t)
+     ))
+  )
 #+end_src
 
 *** Structure templates
