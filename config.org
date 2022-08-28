@@ -659,6 +659,20 @@ Also move from window to window using Meta and the direction keys.
 #+end_src
 
 * Elpa packages
+** [[https://github.com/wyuenho/all-the-icons-dired][all-the-icons-dired]]
+
+#+begin_src emacs-lisp
+(use-package all-the-icons)
+
+;; disable hook for now
+;;
+;; now done in treemacs-icons-dired config
+(use-package all-the-icons-dired
+  ;; M-x all-the-icons-install-fonts
+  :hook (dired-mode . all-the-icons-dired-mode)
+        )
+#+end_src
+
 ** [[https://github.com/abo-abo/ace-window][ace-window]]
 
 A package that uses the same idea from ace-jump-mode for
@@ -966,6 +980,26 @@ Complete anything.
   (setq enable-recursive-minibuffers t))
 #+end_src
 *
+** [[https://github.com/emacs-lsp/dap-mode][dap-mode]]
+
+#+begin_src emacs-lisp
+(use-package dap-mode
+  :after lsp-mode
+  ;;:hook ((dap-stopped . (call-interactively #'dap-hydra)))
+  :commands (dap-debug)
+  :config
+  (dap-mode t)
+  (dap-ui-mode t)
+  ;;(require 'dap-node)
+  ;;(require 'dap-java)
+  (require 'dap-php)
+  (require 'dap-python)
+  ;;(require 'dap-lldb)
+  (add-hook 'dap-stopped-hook
+          (lambda (arg) (call-interactively #'dap-hydra)))
+  )
+#+end_src
+
 ** [[https://github.com/emacs-dashboard/emacs-dashboard][dashboard]]
 
 #+begin_src emacs-lisp
@@ -1674,6 +1708,7 @@ Project navigation and management library for Emacs.
   (defun nl/pyright-hook ()
     (require 'lsp-pyright))
   :hook
+  (python-mode . display-line-numbers-mode)
   (python-mode . nl/pyright-hook)
   (python-mode . lsp-deferred))
 #+end_src
@@ -1752,7 +1787,7 @@ For TSX see: https://github.com/emacs-typescript/typescript.el/issues/4#issuecom
   :mode (("\\.html\\'" . web-mode)
          ("\\.html\\.eex\\'" . web-mode)
          ("\\.html\\.tera\\'" . web-mode)
-         ("\\.tsx\\'" . typescript-tsx-mode))
+         ("\\.\\(j\\|t\\)sx\\'" . typescript-tsx-mode))
   :init
   (define-derived-mode typescript-tsx-mode typescript-mode "TypeScript-tsx")
   :config
