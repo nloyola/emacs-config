@@ -14,3 +14,5 @@
 /.dap-breakpoints
 /.cache/
 /.extension/
+/tramp
+/.mc-lists.el
