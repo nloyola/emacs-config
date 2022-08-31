@@ -1341,7 +1341,7 @@ http://danconnor.com/post/5028ac91e8891a000000111f/align_and_columnize_key_value
   (lsp-enable-snippet t)
   (lsp-enable-file-watchers nil)
   (lsp-pyls-plugins-pycodestyle-max-line-length 120)
-  (lsp-intelephense-php-version "7.4.25")
+  (lsp-intelephense-php-version "8.1.9")
   (lsp-intelephense-format-enable nil)
   ;;(setq lsp-response-timeout 25)
   :config
@@ -1394,6 +1394,13 @@ http://danconnor.com/post/5028ac91e8891a000000111f/align_and_columnize_key_value
         lsp-ui-peek-peek-height 25
         lsp-eldoc-enable-hover nil)
   )
+#+end_src
+
+** [[https://github.com/dandavison/magit-delta][magit-delta]]
+
+#+begin_src emacs-lisp
+(use-package magit-delta
+  :hook (magit-mode . magit-delta-mode))
 #+end_src
 
 ** [[https://github.com/defunkt/markdown-mode][markdown-mode]]
@@ -1525,7 +1532,7 @@ checker is loaded.
                            "**/RockMigrations/**"
                            "**/TracyDebugger/**"
                            ])
-                 lsp-intelephense-php-version "7.4")
+                 lsp-intelephense-php-version "8.1")
            ))
     )
 
