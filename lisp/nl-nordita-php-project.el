@@ -11,6 +11,13 @@
 
 (defvar nl/norweb-project-root (projectile-project-root))
 
+(projectile-register-project-type 'php-symfony '("composer.json" "src" "test" "vendor")
+                                  :project-file "composer.json"
+                                  :src-dir "src/"
+				  :test "make test"
+                                  :test-suffix "Test"
+				  :test-dir "test/")
+
 (defconst php-beginning-of-class-regexp
   (rx line-start
       (* (syntax whitespace))

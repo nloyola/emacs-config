@@ -182,6 +182,14 @@
 (setq bookmark-default-file "~/.emacs.d/etc/bookmarks")
 
 (windmove-default-keybindings 'meta)
+
+(electric-pair-mode 1)
+(setq electric-pair-pairs
+      '(
+        (?\" . ?\")
+        (?\' . ?\')
+        (?\{ . ?\})))
+(show-paren-mode 1)
 #+end_src
 
 * Fonts
@@ -363,26 +371,51 @@ Taken from: http://doc.rix.si/org/fsem.html
 
 #+end_src
 
-** Windows
+** COMMENT Windows
 
 #+begin_src emacs-lisp
 (setq split-height-threshold 160
       split-width-threshold nil)
 
-(defun nl/zoom-into-window ()
-  "Removes all other windows but the one the point is at."
+(defun nl/frame-grow-horizontally ()
+  "Set the size and position of the Emacs window."
   (interactive)
-  (while (> (length (window-list)) 1)
-    (delete-other-windows)))
+  (windmove-right)
+  (delete-window))
+
+  ;; (let ((win (selected-window)))
+  ;;   (set-frame-size frame (* 2 (frame-width)) (frame-height)))
+  ;; (split-window-right))
+
+(defun nl/frame-shrink-horizontally ()
+  "Set the size and position of the Emacs window."
+  (interactive)
+  (when (> (length (window-list)) 1)
+    (delete-other-windows))
+  (split-window-right)
+  ;; show the compilation buffer if there is one
+  (let ((win (selected-window))
+        (compile-buf (get-compilation-buffer)))
+    (when compile-buf
+      (switch-to-buffer-other-window compile-buf)
+      (select-window win))))
+
+(defun nl/frame-resize ()
+  "Resizes the frame based on its current width."
+  (interactive)
+  (if (<= (window-total-width) 150)
+      (nl/frame-grow-horizontally)
+    (nl/frame-shrink-horizontally)))
 
 (defun nl/split-window-same-file ()
   "Splits the frame into two windows, with the buffer on the rightmost window in left and right windows."
   (interactive)
-  (nl/zoom-into-window)
+  (windmove-right)
+  (delete-window)
   (split-window-right)
   (windmove-right))
 
-(global-set-key [f9] 'nl/zoom-into-window)
+(global-set-key [f9] 'nl/frame-resize)
 (global-set-key [S-f9] 'nl/split-window-same-file)
 #+end_src
 
@@ -438,6 +471,7 @@ Taken from: http://doc.rix.si/org/fsem.html
     ;;(global-set-key (kbd "S-<f3>")        'helm-projectile-rg)
     ;;(global-set-key (kbd "M-S-<f3>")      'counsel-rg)
     (global-set-key [f5]                  'nl/consult-compile)
+    (global-set-key (kbd "C-<f5>")        'compile)
     (global-set-key (kbd "S-<f5>")        'toggle-truncate-lines)
     (global-set-key (kbd "<f8>")          'window-toggle-side-windows)
     (global-set-key (kbd "S-<f11>")       'eval-region)
@@ -524,13 +558,15 @@ Enable ANSI colors for compilation buffers.
          ;;("C-c c" . compile)
          )
   :preface
+  (defun get-compilation-buffer ()
+    (catch 'found
+      (dolist (buf (buffer-list))
+        (if (string-match "\\*compilation\\*" (buffer-name buf))
+            (throw 'found buf)))))
+
   (defun show-compilation ()
     (interactive)
-    (let ((compile-buf
-           (catch 'found
-             (dolist (buf (buffer-list))
-               (if (string-match "\\*compilation\\*" (buffer-name buf))
-                   (throw 'found buf))))))
+    (let ((compile-buf (get-compilation-buffer))
       (if compile-buf
           (switch-to-buffer-other-window compile-buf)
         (call-interactively 'compile))))
@@ -1396,6 +1432,13 @@ http://danconnor.com/post/5028ac91e8891a000000111f/align_and_columnize_key_value
   )
 #+end_src
 
+** [[https://github.com/immerrr/lua-mode][lua-mode]]
+
+#+begin_src emacs-lisp
+(use-package lua-mode
+  :mode (("\\.lua\\'" . lua-mode)))
+#+end_src
+
 ** [[https://github.com/dandavison/magit-delta][magit-delta]]
 
 #+begin_src emacs-lisp
@@ -1483,9 +1526,12 @@ checker is loaded.
   (php-mode . display-line-numbers-mode)
   (php-mode . nl/nordita-php-mode-hook)
   :preface
+  (use-package flycheck-phpstan)
+
   (defun nl/php-mode-hook ()
     "My PHP mode configuration."
     (lsp)
+    (require 'flycheck-phpstan)
     (flycheck-mode t)
     (subword-mode +1)
     (php-set-style "nl/php"));; this style is based on the symfony2 style
@@ -1493,12 +1539,9 @@ checker is loaded.
   (defun nl/nordita-php-mode-hook ()
     "Nordita's PHP mode configuration."
     (lsp)
+    (require 'flycheck-phpstan)
     (flycheck-mode t)
     (subword-mode +1)
-    ;; for help with enabling python-flake8 see https://github.com/emacs-lsp/lsp-mode/issues/2594
-    (require 'lsp-diagnostics)
-    (lsp-diagnostics-flycheck-enable)
-    (flycheck-add-next-checker 'lsp 'php-phpcs)
     (cond ((string= (projectile-project-root) (expand-file-name "~/src/nordita/norweb-2021/"))
            (setq lsp-intelephense-files-exclude
                  (vconcat lsp-intelephense-files-exclude
@@ -1581,18 +1624,18 @@ checker is loaded.
      (fill-column . 120)
      (require-final-newline . t)))
 
-  (flycheck-define-checker nl/php-checker
-    "A PHP syntax checker using the PHP command line interpreter.
-     See URL http://php.net/manual/en/features.commandline.php."
-    :command ("php" "-l" "-d" "error_reporting=E_ALL" "-d" "display_errors=1"
-              "-d" "log_errors=0" source)
-    :error-patterns
-    ((error line-start (or "Parse" "Fatal" "syntax") " error" (any ":" ",") " "
-            (message) " in " (file-name) " on line " line line-end))
-    :modes (php-mode web-mode))
+  ;; (flycheck-define-checker nl/php-checker
+  ;;   "A PHP syntax checker using the PHP command line interpreter.
+  ;;    See URL http://php.net/manual/en/features.commandline.php."
+  ;;   :command ("php" "-l" "-d" "error_reporting=E_ALL" "-d" "display_errors=1"
+  ;;             "-d" "log_errors=0" source)
+  ;;   :error-patterns
+  ;;   ((error line-start (or "Parse" "Fatal" "syntax") " error" (any ":" ",") " "
+  ;;           (message) " in " (file-name) " on line " line line-end))
+  ;;   :modes (php-mode web-mode))
 
-  (eval-after-load 'flycheck
-    '(add-to-list 'flycheck-checkers 'nl/php-checker))
+  ;; (eval-after-load 'flycheck
+  ;;   '(add-to-list 'flycheck-checkers 'nl/php-checker))
   :custom
   (php-mode-coding-style (quote nl/php-nordita))
   (php-mode-lineup-cascaded-calls t))
