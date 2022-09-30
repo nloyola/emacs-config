@@ -1,4 +1,5 @@
 #+TITLE: Emacs Configuration
+
 #+AUTHOR: Nelson Loyola
 #+STARTUP: content
 #+INFOJS_OPT: view:t toc:t ltoc:t mouse:underline buttons:0 path:http://thomasf.github.io/solarized-css/org-info.min.j
@@ -371,7 +372,7 @@ Taken from: http://doc.rix.si/org/fsem.html
 
 #+end_src
 
-** COMMENT Windows
+** Windows
 
 #+begin_src emacs-lisp
 (setq split-height-threshold 160
@@ -484,6 +485,8 @@ Taken from: http://doc.rix.si/org/fsem.html
 
 * Theme
 
+See https://github.com/doomemacs/themes/tree/screenshots#screenshots
+
 #+begin_src emacs-lisp
 (use-package doom-themes
       :demand t
@@ -492,7 +495,7 @@ Taken from: http://doc.rix.si/org/fsem.html
       (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
             doom-themes-enable-italic t) ; if nil, italics is universally disabled
 
-      (load-theme 'doom-acario-dark t)
+      (load-theme 'doom-dracula t)
 
       ;; Enable flashing mode-line on errors
       (doom-themes-visual-bell-config)
@@ -553,38 +556,38 @@ is opened.
 Enable ANSI colors for compilation buffers.
 
 #+begin_src emacs-lisp
+(defun get-compilation-buffer ()
+  (catch 'found
+    (dolist (buf (buffer-list))
+      (if (string-match "\\*compilation\\*" (buffer-name buf))
+          (throw 'found buf)))))
+
+(defun show-compilation ()
+  (interactive)
+  (let ((compile-buf (get-compilation-buffer)))
+    (if compile-buf
+        (switch-to-buffer-other-window compile-buf)
+      (call-interactively 'compile))))
+
+(defun nl/compilation-ansi-color-process-output ()
+  (ansi-color-process-output nil)
+  (set (make-local-variable 'comint-last-output-start)
+       (point-marker)))
+
+(defun nl/compile-hook ()
+  (setq-local compilation-scroll-output t)
+  (setq-local scroll-conservatively most-positive-fixnum)
+  (setq-local scroll-margin 0))
+
+;; (defun colorize-compilation-buffer ()
+;;   (let ((inhibit-read-only t))
+;;     (ansi-color-apply-on-region (point-min) (point-max))))
+;; (add-hook 'compilation-filter-hook 'colorize-compilation-buffer)
+
 (use-package compile
   :bind (("M-O"   . show-compilation)
          ;;("C-c c" . compile)
          )
-  :preface
-  (defun get-compilation-buffer ()
-    (catch 'found
-      (dolist (buf (buffer-list))
-        (if (string-match "\\*compilation\\*" (buffer-name buf))
-            (throw 'found buf)))))
-
-  (defun show-compilation ()
-    (interactive)
-    (let ((compile-buf (get-compilation-buffer))
-      (if compile-buf
-          (switch-to-buffer-other-window compile-buf)
-        (call-interactively 'compile))))
-
-  (defun nl/compilation-ansi-color-process-output ()
-    (ansi-color-process-output nil)
-    (set (make-local-variable 'comint-last-output-start)
-         (point-marker)))
-
-  (defun nl/compile-hook ()
-    (setq-local compilation-scroll-output t)
-    (setq-local scroll-conservatively most-positive-fixnum)
-    (setq-local scroll-margin 0))
-
-  ;; (defun colorize-compilation-buffer ()
-  ;;   (let ((inhibit-read-only t))
-  ;;     (ansi-color-apply-on-region (point-min) (point-max))))
-  ;; (add-hook 'compilation-filter-hook 'colorize-compilation-buffer)
   :config
   (setq compilation-ask-about-save nil
         compilation-always-kill t
@@ -984,8 +987,8 @@ Complete anything.
 ;; You may prefer to use `initials' instead of `partial-completion'.
 (use-package orderless
   :init
-  (setq completion-styles '(orderless)
-        completion-category-defaults nil
+  (setq completion-styles '(orderless basic)
+        ;;completion-category-defaults nil
         completion-category-overrides '((file (styles partial-completion)))))
 
 ;; Persist history over Emacs restarts. Vertico sorts by history position.
@@ -1380,6 +1383,18 @@ http://danconnor.com/post/5028ac91e8891a000000111f/align_and_columnize_key_value
   (lsp-intelephense-php-version "8.1.9")
   (lsp-intelephense-format-enable nil)
   ;;(setq lsp-response-timeout 25)
+  ;; what to use when checking on-save. "check" is default, I prefer clippy
+  (lsp-rust-analyzer-cargo-watch-command "clippy")
+  (lsp-eldoc-render-all t)
+  (lsp-idle-delay 0.6)
+  ;; enable / disable the hints as you prefer:
+  (lsp-rust-analyzer-server-display-inlay-hints t)
+  (lsp-rust-analyzer-display-lifetime-elision-hints-enable "skip_trivial")
+  (lsp-rust-analyzer-display-chaining-hints t)
+  (lsp-rust-analyzer-display-lifetime-elision-hints-use-parameter-names nil)
+  (lsp-rust-analyzer-display-closure-return-type-hints t)
+  (lsp-rust-analyzer-display-parameter-hints nil)
+  (lsp-rust-analyzer-display-reborrow-hints nil)
   :config
   (lsp-enable-which-key-integration t)
   (setq lsp-prefer-capf t
@@ -1729,6 +1744,35 @@ Project navigation and management library for Emacs.
              (json-mode . prettier-mode)
              (css-mode . prettier-mode)
              (scss-mode . prettier-mode)))
+#+end_src
+
+** rust
+
+See https://robert.kra.hn/posts/rust-emacs-setup/
+
+#+begin_src emacs-lisp
+(use-package rustic
+  :bind (:map rustic-mode-map
+              ("M-j" . lsp-ui-imenu)
+              ("M-?" . lsp-find-references)
+              ("C-c C-c l" . flycheck-list-errors)
+              ("C-c C-c a" . lsp-execute-code-action)
+              ("C-c C-c r" . lsp-rename)
+              ("C-c C-c q" . lsp-workspace-restart)
+              ("C-c C-c Q" . lsp-workspace-shutdown)
+              ("C-c C-c s" . lsp-rust-analyzer-status))
+  :config
+  ;; uncomment for less flashiness
+  ;; (setq lsp-eldoc-hook nil)
+  ;; (setq lsp-enable-symbol-highlighting nil)
+  ;; (setq lsp-signature-auto-activate nil)
+
+  ;; comment to disable rustfmt on save
+  (setq rustic-format-on-save t)
+  (add-hook 'rustic-mode-hook 'nl/rustic-mode-hook))
+
+(defun nl/rustic-mode-hook ()
+  (add-hook 'before-save-hook 'lsp-format-buffer nil t))
 #+end_src
 
 ** [[https://github.com/Kungsgeten/selected.el][selected]]
