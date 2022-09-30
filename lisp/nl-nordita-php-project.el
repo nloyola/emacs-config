@@ -64,25 +64,50 @@
     file-name)
   )
 
+(defun nl/php-create-command-in-project-root (command)
+  "Create a compile COMMAND that can be run from project's root directory."
+  (format "cd %s && %s" nl/norweb-project-root command))
+
+(defun nl/php-create-docker-command (command)
+  "Create a COMMAND that can be run using the docker-wrapper.sh shell script."
+  (format "cd %s && ./docker-wrapper.sh app-cmd \"%s\"" nl/norweb-project-root command))
+
+(defun nl/phpunit-create-command (command)
+  "Create a COMMAND that can run a test using PHPUnit."
+  (format "vendor/bin/phpunit -c test/phpunit.xml --no-coverage --color=always %s" command))
+
 (defun nl/php-command-in-proj-root (command)
   "Run the compile COMMAND in project's root directory."
   (interactive)
-  (compile (format "cd %s && %s" nl/norweb-project-root command)))
+  (compile (nl/php-create-command-in-project-root command)))
 
 (defun nl/php-docker-command-in-proj-root (command)
-  "Run the compile COMMAND docker-wrapper.sh script at the project's root directory."
+  "Run the COMMAND under the docker-wrapper.sh shell script."
   (interactive)
-  (compile (format "cd %s && ./docker-wrapper.sh app-cmd \"%s\"" nl/norweb-project-root command)))
+  (compile (nl/php-create-docker-command command)))
 
 (defun nl/phpunit-run (command)
   "Run PHPUnit with COMMAND in Norweb docker container."
   (nl/php-command-in-proj-root
-   (format "vendor/bin/phpunit -c test/phpunit.xml --no-coverage --color=always %s" command)))
+   (nl/phpunit-create-command command)))
 
 (defun nl/phpunit-test-this-file ()
   "For the class the cursor is in, run the scalatest test suite."
   (interactive)
   (nl/phpunit-run (nl/phpunit-file-name)))
+
+(defun nl/phpunit-run-this-method-with-debug-logging ()
+  "Run PHPUnit with COMMAND in Norweb docker container."
+  (interactive)
+  (let ((command (format "LOG_LEVEL=DEBUG %s"
+                         (nl/phpunit-create-command
+                          (string-join (list
+                                        "--filter "
+                                        (nl/phpunit-test-find-method-name)
+                                        " "
+                                        (nl/phpunit-file-name)))))))
+    ;;(message "command: %s" command)
+    (nl/php-command-in-proj-root command)))
 
 (defun nl/phpunit-only-this-method ()
   "Run the PHPUnit test for the test the cursor is in."
@@ -111,9 +136,10 @@
 
 (defhydra hydra-nl/php-test (:color blue)
   "Test"
+  ("d" nl/phpunit-run-this-method-with-debug-logging "only this method (with debug logging)")
   ("p" nl/phpunit-project "All tests" :column "Test")
   ("f" nl/phpunit-test-this-file "only this file")
-  ("m" nl/phpunit-only-this-method "only this file")
+  ("m" nl/phpunit-only-this-method "only this method")
   ("r" nl/phpunit-coverage-report-in-chrome "Open coverage report in Chrome"))
 
 (defhydra hydra-nl-php-project (:color red :hint nil)
@@ -123,6 +149,7 @@
   ("t" hydra-nl/php-test/body "test" :color blue)
   ("c" nl/php-code-sniffer "Run PHP CodeSniifer" :column "Make"))
 
+(define-key php-mode-map (kbd "C-c , d") 'nl/phpunit-run-this-method-with-debug-logging)
 (define-key php-mode-map (kbd "C-c , m") 'nl/phpunit-only-this-method)
 (define-key php-mode-map (kbd "C-c , f") 'nl/phpunit-test-this-file)
 (define-key php-mode-map (kbd "C-c , p") 'nl/phpunit-project)

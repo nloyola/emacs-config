@@ -53,7 +53,5 @@ The class name must have the postfix 'Spec' for this function to work."
 ;; this def uses a lambda to show that it is possible, id does not need to use it
 (key-chord-define php-mode-map "jc" '(lambda () (interactive) (hydra-nl-php-project/body)))
 
-(define-key php-mode-map (kbd "C-c , d") 'nl/phpunit-test-this-package)
-
 (provide 'nl-php-project)
 ;;; nl-php-project.el ends here
