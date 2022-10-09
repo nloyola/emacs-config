@@ -7,6 +7,9 @@
 #+OPTIONS: broken-links:t
 #+PROPERTY: header-args  :results silent
 
+Links:
+- ~use-pacakge~: https://github.com/jwiegley/use-package
+
 * Basic settings
 
 #+begin_src emacs-lisp
@@ -1702,8 +1705,7 @@ Project navigation and management library for Emacs.
 #+begin_src emacs-lisp
 (use-package projectile
   :diminish projectile-mode
-  :bind-keymap
-  ("C-c p" . projectile-command-map)
+  :bind (("C-c p" . projectile-command-map))
   :bind (:map projectile-command-map ("f" . consult-projectile))
   :init (projectile-mode +1)
   :config
@@ -1745,6 +1747,24 @@ Project navigation and management library for Emacs.
              (css-mode . prettier-mode)
              (scss-mode . prettier-mode)))
 #+end_src
+
+** [[https://protesilaos.com/emacs/pulsar][pulsar]]
+
+Pulse highlight line on demand or after running select functions
+
+#+begin_src emacs-lisp
+(use-package pulsar
+  :bind (("C-c l p" . pulsar-pulse-line)
+         ("C-c l h" . pulsar-highlight-line))
+  :init
+  (pulsar-global-mode 1)
+  :config
+  (setq pulsar-pulse t)
+  (setq pulsar-delay 0.055)
+  (setq pulsar-iterations 10)
+  (setq pulsar-face 'pulsar-magenta)
+  (setq pulsar-highlight-face 'pulsar-yellow))
+#+end_src>
 
 ** rust
 
