@@ -447,7 +447,7 @@ Taken from: http://doc.rix.si/org/fsem.html
                    ,nl/side-window-parameters))
 
     (add-to-list 'display-buffer-alist
-                 '("\\*\\(?:[Hh]elp\\|Backtrace\\|Warnings\\|Completions\\|Compile-Log\\|\\*Flycheck.*\\|shell\\|compilation\\|ng-compile\\|ng-test\\|tide-references\\|sbt\\|coverlay-stats\\)\\*"
+                 '("\\*\\(?:[Hh]elp\\|Backtrace\\|Warnings\\|Completions\\|Compile-Log\\|cargo-run\\|\\*Flycheck.*\\|shell\\|compilation\\|ng-compile\\|ng-test\\|tide-references\\|sbt\\|coverlay-stats\\)\\*"
                    display-buffer-in-side-window
                    (window-height . 0.15)
                    (side . bottom)
@@ -894,6 +894,16 @@ Complete anything.
   (autoload 'projectile-project-root "projectile")
   (setq consult-project-root-function #'projectile-project-root)
 )
+#+end_src
+
+**** My functions
+
+#+begin_src emacs-lisp
+(defun nl/consult-ripgrep-pwd ()
+   (interactive)
+   (consult-ripgrep (if (buffer-file-name)
+                        default-directory
+                      dired-directory)))
 #+end_src
 
 *** [[https://gitlab.com/OlMon/consult-projectile][consult-projectile]]
@@ -1560,6 +1570,7 @@ checker is loaded.
     (require 'flycheck-phpstan)
     (flycheck-mode t)
     (subword-mode +1)
+    (add-hook 'before-save-hook 'php-cs-fixer-before-save)
     (cond ((string= (projectile-project-root) (expand-file-name "~/src/nordita/norweb-2021/"))
            (setq lsp-intelephense-files-exclude
                  (vconcat lsp-intelephense-files-exclude
@@ -1691,8 +1702,7 @@ PSR-1 and PSR-2.
 
 #+begin_src emacs-lisp
 (use-package php-cs-fixer
-  :load-path "~/src/github/elisp/php-cs-fixer"
-  :hook ((before-save . php-cs-fixer-before-save)))
+  :load-path "~/src/github/elisp/php-cs-fixer")
 #+end_src
 
 ** [[https://github.com/bbatsov/projectile][projectile]]
@@ -1705,7 +1715,7 @@ Project navigation and management library for Emacs.
 #+begin_src emacs-lisp
 (use-package projectile
   :diminish projectile-mode
-  :bind (("C-c p" . projectile-command-map))
+  :bind-keymap ("C-c p" . projectile-command-map)
   :bind (:map projectile-command-map ("f" . consult-projectile))
   :init (projectile-mode +1)
   :config
@@ -1764,14 +1774,30 @@ Pulse highlight line on demand or after running select functions
   (setq pulsar-iterations 10)
   (setq pulsar-face 'pulsar-magenta)
   (setq pulsar-highlight-face 'pulsar-yellow))
-#+end_src>
+
+#+end_src
 
 ** rust
 
 See https://robert.kra.hn/posts/rust-emacs-setup/
 
 #+begin_src emacs-lisp
+(defun nl/rustic-mode-hook ()
+  (setq-local buffer-save-without-query t
+              ;;compilation-ask-about-save nil
+              )
+  (display-line-numbers-mode)
+  (add-hook 'before-save-hook 'lsp-format-buffer nil t))
+
+(defun nl/toml-mode-hook ()
+  (setq-local buffer-save-without-query t
+              ;;compilation-ask-about-save nil
+              )
+  (display-line-numbers-mode))
+
 (use-package rustic
+  :hook ((rustic-mode . nl/rustic-mode-hook)
+         (conf-toml-mode . nl/toml-mode-hook))
   :bind (:map rustic-mode-map
               ("M-j" . lsp-ui-imenu)
               ("M-?" . lsp-find-references)
@@ -1788,11 +1814,7 @@ See https://robert.kra.hn/posts/rust-emacs-setup/
   ;; (setq lsp-signature-auto-activate nil)
 
   ;; comment to disable rustfmt on save
-  (setq rustic-format-on-save t)
-  (add-hook 'rustic-mode-hook 'nl/rustic-mode-hook))
-
-(defun nl/rustic-mode-hook ()
-  (add-hook 'before-save-hook 'lsp-format-buffer nil t))
+  (setq rustic-format-on-save t))
 #+end_src
 
 ** [[https://github.com/Kungsgeten/selected.el][selected]]
