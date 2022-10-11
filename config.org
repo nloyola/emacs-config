@@ -1551,7 +1551,6 @@ checker is loaded.
 (use-package php-mode
   :mode "\\.php[345]?\\'"
   :hook
-  (php-mode . display-line-numbers-mode)
   (php-mode . nl/nordita-php-mode-hook)
   :preface
   (use-package flycheck-phpstan)
@@ -1570,6 +1569,7 @@ checker is loaded.
     (require 'flycheck-phpstan)
     (flycheck-mode t)
     (subword-mode +1)
+    (display-line-numbers-mode)
     (add-hook 'before-save-hook 'php-cs-fixer-before-save)
     (cond ((string= (projectile-project-root) (expand-file-name "~/src/nordita/norweb-2021/"))
            (setq lsp-intelephense-files-exclude
@@ -1702,7 +1702,9 @@ PSR-1 and PSR-2.
 
 #+begin_src emacs-lisp
 (use-package php-cs-fixer
-  :load-path "~/src/github/elisp/php-cs-fixer")
+  :after php-mode
+  :load-path "~/src/github/elisp/php-cs-fixer"
+  :commands (php-cs-fixer-before-save))
 #+end_src
 
 ** [[https://github.com/bbatsov/projectile][projectile]]
