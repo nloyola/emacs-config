@@ -18,83 +18,14 @@
                                   :test-suffix "Test"
 				  :test-dir "test/")
 
-(defconst php-beginning-of-class-regexp
-  (rx line-start
-      (* (syntax whitespace))
-      (zero-or-more "final")
-      (* (syntax whitespace))
-      "class"
-      (+ (syntax whitespace))
-      (group (+ (or (syntax word) (syntax symbol))))
-      (* (syntax whitespace)))
-  "Regular expression for a PHP class name.")
-
-(defconst phpunit-test-beginning-regexp
-  (eval-when-compile
-    (rx line-start
-        (one-or-more (syntax whitespace))
-        "public function"
-        (one-or-more (syntax whitespace))
-        (group "test" (+ (not (syntax open-parenthesis))))
-        (one-or-more (not ":"))
-        ":"
-        ))
-  "Regular expression for a PHPUnit test function.")
-
-(defun nl/phpunit-test-find-class-name ()
-  "Determine the name of the PHPUnit suite name."
-  (save-excursion
-    (when (re-search-backward php-beginning-of-class-regexp nil t)
-      (match-string-no-properties 1))))
-
-(defun nl/phpunit-test-find-method-name ()
-  "Determine the name of the PHPUnit test's method name."
-  (save-excursion
-    (when (re-search-backward phpunit-test-beginning-regexp nil t)
-      (match-string-no-properties 1))))
-
-(defun nl/phpunit-file-name ()
-  "Return the phpunit's file module name for the file that the buffer is visiting."
-  (unless (buffer-file-name) (error "not a file buffer"))
-  (unless (boundp 'nl/norweb-project-root) (error "The unknown norweb project"))
-  (let ((file-name (nth 1 (split-string buffer-file-name nl/norweb-project-root))))
-    (message "%s" (concat nl/norweb-project-root "/"))
-    (unless file-name (error "File not in project"))
-    (unless (nl/php-filename-p file-name) (error "not a PHP file"))
-    file-name)
-  )
-
-(defun nl/php-create-command-in-project-root (command)
-  "Create a compile COMMAND that can be run from project's root directory."
-  (format "cd %s && %s" nl/norweb-project-root command))
-
 (defun nl/php-create-docker-command (command)
   "Create a COMMAND that can be run using the docker-wrapper.sh shell script."
   (format "cd %s && ./docker-wrapper.sh app-cmd \"%s\"" nl/norweb-project-root command))
-
-(defun nl/phpunit-create-command (command)
-  "Create a COMMAND that can run a test using PHPUnit."
-  (format "vendor/bin/phpunit -c test/phpunit.xml --no-coverage --exclude-group=end-to-end %s" command))
-
-(defun nl/php-command-in-proj-root (command)
-  "Run the compile COMMAND in project's root directory."
-  (interactive)
-  (compile (nl/php-create-command-in-project-root command)))
 
 (defun nl/php-docker-command-in-proj-root (command)
   "Run the COMMAND under the docker-wrapper.sh shell script."
   (interactive)
   (compile (nl/php-create-docker-command command)))
-
-(defun nl/phpunit-run (command)
-  "Run PHPUnit with COMMAND in Norweb docker container."
-  (nl/php-command-in-proj-root
-   (nl/phpunit-create-command command)))
-
-(defun nl/phpunit-test-this-file ()
-  "For the class the cursor is in, run the scalatest test suite."
-  (interactive)
-  (nl/phpunit-run (nl/phpunit-file-name)))
 
 (defun nl/phpunit-run-this-method-with-debug-logging ()
   "Run PHPUnit with COMMAND in Norweb docker container."
@@ -108,21 +39,6 @@
                                         (nl/phpunit-file-name)))))))
     ;;(message "command: %s" command)
     (nl/php-command-in-proj-root command)))
-
-(defun nl/phpunit-only-this-method ()
-  "Run the PHPUnit test for the test the cursor is in."
-  (interactive)
-  (nl/phpunit-run
-   (string-join (list "--filter "
-                      (nl/phpunit-test-find-method-name)
-                      " "
-                      (nl/phpunit-file-name)))
-   ))
-
-(defun nl/phpunit-project ()
-  "Run the PHPUnit test suite."
-  (interactive)
-  (nl/phpunit-run ""))
 
 (defun nl/phpunit-coverage-report-in-chrome ()
   "Open the code coverage report in a Google Chrome tab."
@@ -162,13 +78,6 @@
 
 (setq projectile-test-suffix-function 'nl/projectile-test-suffix-function
       projectile-find-dir-includes-top-level t)
-
-;; (projectile-update-project-type
-;;  'php
-;;  :related-files-fn
-;;  (list
-;;   (projectile-related-files-fn-test-with-suffix "php" ".spec")
-;;   (projectile-related-files-fn-test-with-suffix "php" "Test")))
 
 ;;
 ;; override this function, from the projectile package, so that tests are created in the proper

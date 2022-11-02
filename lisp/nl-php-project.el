@@ -6,28 +6,109 @@
 
 ;;; Code:
 
+(require 's)
 (require 'php-mode)
 (eval-and-compile
   (require 'projectile))
 
 (defun nl/php-filename-p (filename)
+  "Return TRUE if the FILENAME ends in '.php''."
   (string-match-p "\\.php$" filename))
 
 (setq-default indent-tabs-mode nil)
-(puthash (projectile-project-root) "grunt karma:unit" projectile-test-cmd-map)
 
-;;
-;; override this function, from the projectile package, so that tests are created in the proper
-;; location for this project
-;;
-(defun projectile-create-test-file-for (impl-file-path)
-  "Create a test file for the file given by IMPL-FILE-PATH."
-  (let* ((test-file (projectile--test-name-for-impl-name impl-file-path))
-         (test-dir (replace-regexp-in-string "public/" "test/" (file-name-directory impl-file-path))))
-    (unless (file-exists-p (expand-file-name test-file test-dir))
-      (progn (unless (file-exists-p test-dir)
-               (make-directory test-dir :create-parents))
-             (concat test-dir test-file)))))
+(defconst php-beginning-of-class-regexp
+  (rx line-start
+      (* (syntax whitespace))
+      (zero-or-more "final")
+      (* (syntax whitespace))
+      "class"
+      (+ (syntax whitespace))
+      (group (+ (or (syntax word) (syntax symbol))))
+      (* (syntax whitespace)))
+  "Regular expression for a PHP class name.")
+
+(defconst phpunit-test-beginning-regexp
+  (eval-when-compile
+    (rx line-start
+        (one-or-more (syntax whitespace))
+        "public function"
+        (one-or-more (syntax whitespace))
+        (group "test" (+ (not (syntax open-parenthesis))))
+        (one-or-more (not ":"))
+        ":"
+        ))
+  "Regular expression for a PHPUnit test function.")
+
+(defun nl/phpunit-file-name ()
+  "Return the phpunit's file module name for the file that the buffer is visiting."
+  (unless (buffer-file-name) (error "not a file buffer"))
+  (let ((file-name (nth 1 (split-string buffer-file-name nl/norweb-project-root))))
+    (message "%s" (concat nl/norweb-project-root "/"))
+    (unless file-name (error "File not in project"))
+    (unless (nl/php-filename-p file-name) (error "not a PHP file"))
+    file-name)
+  )
+
+(defun nl/phpunit-test-find-class-name ()
+  "Determine the name of the PHPUnit suite name."
+  (save-excursion
+    (when (re-search-backward php-beginning-of-class-regexp nil t)
+      (match-string-no-properties 1))))
+
+(defun nl/phpunit-test-find-method-name ()
+  "Determine the name of the PHPUnit test's method name."
+  (save-excursion
+    (when (re-search-backward phpunit-test-beginning-regexp nil t)
+      (match-string-no-properties 1))))
+
+(defun nl/php-file-name ()
+  "Return the module name for the file that the buffer is visiting."
+  (unless (buffer-file-name) (error "not a file buffer"))
+  (let ((file-name (nth 1 (split-string buffer-file-name nl/norweb-project-root))))
+    (message "%s" (concat (projectile-project-root) "/"))
+    (unless file-name (error "File not in project"))
+    (unless (nl/php-filename-p file-name) (error "not a PHP file"))
+    file-name)
+  )
+
+(defun nl/phpunit-create-command (command)
+  "Create a COMMAND that can run a test using PHPUnit."
+  (format "vendor/bin/phpunit -c test/phpunit.xml --no-coverage --exclude-group=end-to-end %s" command))
+
+(defun nl/php-command-in-proj-root (command)
+  "Run the compile COMMAND in project's root directory."
+  (interactive)
+  (compile (nl/php-create-command-in-project-root command)))
+
+(defun nl/php-create-command-in-project-root (command)
+  "Create a compile COMMAND that can be run from project's root directory."
+  (format "cd %s && %s" nl/norweb-project-root command))
+
+(defun nl/phpunit-run (command)
+  "Run PHPUnit with COMMAND in Norweb docker container."
+  (nl/php-command-in-proj-root
+   (nl/phpunit-create-command command)))
+
+(defun nl/phpunit-test-this-file ()
+  "For the class the cursor is in, run the scalatest test suite."
+  (interactive)
+  (nl/phpunit-run (nl/phpunit-file-name)))
+
+(defun nl/phpunit-only-this-method ()
+  "Run the PHPUnit test for the test the cursor is in."
+  (interactive)
+  (nl/phpunit-run
+   (string-join (list "--filter "
+                      (nl/phpunit-test-find-method-name)
+                      " "
+                      (nl/php-file-name)))
+   ))
+
+(defun nl/phpunit-project ()
+  "Run the PHPUnit test suite."
+  (interactive)
+  (nl/phpunit-run ""))
 
 (defun nl/phpunit-test-this-package ()
   "For the class the cursor is in, run the scalatest test suite.
@@ -36,15 +117,9 @@ The class name must have the postfix 'Spec' for this function to work."
   (let ((args (s-concat (file-name-directory (buffer-file-name)))))
     (phpunit-run args)))
 
-;; (defun nl/counsel-ag-php ()
-;;   "Perform counsel-ag on the project's PHP files excluding spec files."
-;;   (interactive)
-;;   (counsel-ag "" (projectile-project-root) "-G '((?!Test)).php$'"))
-
-;; (defun nl/counsel-ag-php-test ()
-;;   "Perform counsel-ag on the project's TypeScript spec files."
-;;   (interactive)
-;;   (counsel-ag "" (projectile-project-root) "-G Test.php$"))
+;; -----------------------------------------
+;;
+;; -----------------------------------------
 
 (defhydra hydra-nl-php-project (:color red :hint nil)
   "PHP project commands"
