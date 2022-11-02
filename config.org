@@ -12,15 +12,17 @@ Links:
 
 * Basic settings
 
+See https://tony-zorman.com/posts/2022-10-22-emacs-potpourri.html
+
 #+begin_src emacs-lisp
 (when (eq system-type 'darwin)
   (require 'ls-lisp)
   (setq ls-lisp-use-insert-directory-program nil))
 
 (setq user-full-name "Nelson Loyola"
-      user-mail-address "nloyola@gmail.com")
+      user-mail-address "nloyola@gmail.com"
+      custom-file (expand-file-name "custom.el" user-emacs-directory))
 
-(setq custom-file (expand-file-name "custom.el" user-emacs-directory))
 (load custom-file)
 
 (setq comp-async-report-warnings-errors nil)
@@ -426,34 +428,33 @@ Taken from: http://doc.rix.si/org/fsem.html
 ** Side windows
 
 #+begin_src emacs-lisp
+(defvar nl/side-window-parameters
+  '(window-parameters . ((no-other-window . nil)
+                         (no-delete-other-windows . t))))
 
-    (defvar nl/side-window-parameters
-      '(window-parameters . ((no-other-window . nil)
-                             (no-delete-other-windows . t))))
+;; (setq display-buffer-alist '())
 
-    ;; (setq display-buffer-alist '())
+;; (defun nl/display-buffer-debug(buf-name action)
+;;   (message "%s" buf-name)
+;;   (numberp (string-match "\\(?:\\*\\(?:[Hh]elp\\|grep\\|Warnings\\|Completions\\|xref\\)\\)\\*\\)\\|\\(?:\\(?:HELM.*\\|helm.*\\)\\)" buf-name)))
 
-    ;; (defun nl/display-buffer-debug(buf-name action)
-    ;;   (message "%s" buf-name)
-    ;;   (numberp (string-match "\\(?:\\*\\(?:[Hh]elp\\|grep\\|Warnings\\|Completions\\|xref\\)\\)\\*\\)\\|\\(?:\\(?:HELM.*\\|helm.*\\)\\)" buf-name)))
+(add-to-list 'display-buffer-alist
+             '("\\(?:\\*\\(?:grep\\|Find\\|Warnings\\|xref\\)\\*\\)\\|\\(?:\\(?:HELM.*\\|helm.*\\)\\)"
+               display-buffer-in-side-window
+               (window-height . 0.18)
+               (side . bottom)
+               (slot . -1) ;; left side
+               (preserve-size . (nil . t))
+               ,nl/side-window-parameters))
 
-    (add-to-list 'display-buffer-alist
-                 '("\\(?:\\*\\(?:grep\\|Find\\|Warnings\\|xref\\)\\*\\)\\|\\(?:\\(?:HELM.*\\|helm.*\\)\\)"
-                   display-buffer-in-side-window
-                   (window-height . 0.15)
-                   (side . bottom)
-                   (slot . -1) ;; left side
-                   (preserve-size . (nil . t))
-                   ,nl/side-window-parameters))
-
-    (add-to-list 'display-buffer-alist
-                 '("\\*\\(?:[Hh]elp\\|Backtrace\\|Warnings\\|Completions\\|Compile-Log\\|cargo-run\\|\\*Flycheck.*\\|shell\\|compilation\\|ng-compile\\|ng-test\\|tide-references\\|sbt\\|coverlay-stats\\)\\*"
-                   display-buffer-in-side-window
-                   (window-height . 0.15)
-                   (side . bottom)
-                   (slot . 1) ;; right side
-                   (preserve-size . (nil . t))
-                   ,nl/side-window-parameters))
+(add-to-list 'display-buffer-alist
+             '("\\*\\(?:[Hh]elp\\|Backtrace\\|Warnings\\|Completions\\|Compile-Log\\|cargo-run\\|\\*Flycheck.*\\|shell\\|compilation\\|ng-compile\\|ng-test\\|tide-references\\|sbt\\|coverlay-stats\\)\\*"
+               display-buffer-in-side-window
+               (window-height . 0.2)
+               (side . bottom)
+               (slot . 1) ;; right side
+               (preserve-size . (nil . t))
+               ,nl/side-window-parameters))
 
 #+end_src
 
@@ -1159,7 +1160,7 @@ No more juggling windows after commiting. It's magit bliss.
 
 See https://tsdh.org/posts/2022-08-01-difftastic-diffing-with-magit.html
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 (defun th/magit--with-difftastic (buffer command)
   "Run COMMAND with GIT_EXTERNAL_DIFF=difft then show result in BUFFER."
   (let ((process-environment
@@ -1574,7 +1575,11 @@ http://danconnor.com/post/5028ac91e8891a000000111f/align_and_columnize_key_value
 
 #+begin_src emacs-lisp
 (use-package lua-mode
-  :mode (("\\.lua\\'" . lua-mode)))
+  :mode (("\\.lua\\'" . lua-mode))
+  :preface
+  (defun nl/lua-mode-hook ()
+    (display-line-numbers-mode))
+  :hook (lua-mode . nl/lua-mode-hook))
 #+end_src
 
 ** [[https://github.com/dandavison/magit-delta][magit-delta]]
@@ -2154,3 +2159,19 @@ Large collection of snippets: [[https://github.com/AndreaCrotti/yasnippet-snippe
   (add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp"))
   (add-to-list 'org-structure-template-alist '("py" . "src python")))
 #+end_src
+
+*** org-roam
+
+#+begin_src emacs-lisp
+(use-package org-roam
+  :init
+  (setq org-roam-v2-ack t)
+  :custom
+  (org-roam-directory "~/Sync/RoamNotes")
+  :bind (("C-c n l" . org-roam-buffer-toggle)
+         ("C-c n f" . org-roam-node-find)
+         ("C-c n i" . org-roam-node-insert))
+  :config
+  (org-roam-setup))
+#+end_src
+[[id:6d48a9f3-31ef-4f74-a880-d2c26062c043][Programming Languages]]
