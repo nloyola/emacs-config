@@ -29,7 +29,9 @@
       gc-cons-threshold 402653184
       gc-cons-percentage 0.6
       read-process-output-max (* 1024 1024)
-      auto-window-vscroll nil)
+      auto-window-vscroll nil
+      frame-inhibit-implied-resize t
+      pixel-scroll-precision-mode t)
 
 (defun nl/after-init ()
   (setq file-name-handler-alist file-name-handler-alist-old
