@@ -499,7 +499,7 @@ See https://github.com/doomemacs/themes/tree/screenshots#screenshots
       (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
             doom-themes-enable-italic t) ; if nil, italics is universally disabled
 
-      (load-theme 'doom-dracula t)
+      (load-theme 'doom-molokai t)
 
       ;; Enable flashing mode-line on errors
       (doom-themes-visual-bell-config)
@@ -747,10 +747,12 @@ Complete anything.
 #+begin_src emacs-lisp
 (use-package company
   :diminish company-mode
-  :bind (:map company-active-map
-              ("C-n" . company-select-next)
-              ("C-p" . company-select-previous)
-              ("M-/" . company-complete-common))
+  :bind
+  (:map company-active-map
+        ("<tab>" . company-complete-common-or-cycle)
+        ("M-/" . company-complete-common)
+        ("C-n" . company-select-next)
+        ("C-p" . company-select-previous))
   :hook
   ((emacs-lisp-mode . (lambda ()
                         (setq-local company-backends '(company-elisp))))
@@ -1033,6 +1035,22 @@ Complete anything.
   (setq enable-recursive-minibuffers t))
 #+end_src
 *
+** [[https://github.com/akermu/emacs-libvterm][emacs-libvterm]]
+
+#+begin_src emacs-lisp
+(when (file-directory-p "~/src/github/elisp/emacs-libvterm")
+  (use-package vterm
+    :load-path "~/src/github/elisp/emacs-libvterm"
+    :bind
+    (:map vterm-mode-map
+          ("M-<right>" . windmove-right)
+          ("M-<left>" . windmove-left)
+          ("M-<up>" . windmove-up)
+          ("M-<down>" . windmove-down))
+    :commands vterm vterm-other-window
+    :config
+    (setq vterm-max-scrollback 10000)))
+#+end_src
 ** [[https://github.com/emacs-lsp/dap-mode][dap-mode]]
 
 #+begin_src emacs-lisp
@@ -1462,11 +1480,11 @@ http://danconnor.com/post/5028ac91e8891a000000111f/align_and_columnize_key_value
 #+begin_src emacs-lisp
 (defun align-colons (beg end)
   (interactive "r")
-  (align-regexp beg end ":\\(\\s-*\\)" 1 1 t))
+  (align-regexp beg end ":\\(\\s-+\\)" 1 1 t))
 
 (defun align-commas (beg end)
   (interactive "r")
-  (align-regexp beg end ",\\(\\s-*\\)" 1 1 t))
+  (align-regexp beg end ",\\(\\s-+\\)" 1 1 t))
 
 (defun align-equals (beg end)
   (interactive "r")
