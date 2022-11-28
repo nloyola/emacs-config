@@ -489,6 +489,8 @@ Taken from: http://doc.rix.si/org/fsem.html
 
 * Theme
 
+** Doom Themes
+
 See https://github.com/doomemacs/themes/tree/screenshots#screenshots
 
 #+begin_src emacs-lisp
@@ -499,7 +501,7 @@ See https://github.com/doomemacs/themes/tree/screenshots#screenshots
       (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
             doom-themes-enable-italic t) ; if nil, italics is universally disabled
 
-      (load-theme 'doom-molokai t)
+      (load-theme 'doom-vibrant t)
 
       ;; Enable flashing mode-line on errors
       (doom-themes-visual-bell-config)
@@ -553,9 +555,8 @@ See https://github.com/doomemacs/themes/tree/screenshots#screenshots
 
 ** =compile=
 
-Do not ask me to save files before compiling, or kill a previous
-compilation. Also scroll to the end of the compilation buffer when it
-is opened.
+Do not ask me to save files before compiling, or kill a previous compilation. Also scroll to the end
+of the compilation buffer when it is opened.
 
 Enable ANSI colors for compilation buffers.
 
@@ -573,32 +574,46 @@ Enable ANSI colors for compilation buffers.
         (switch-to-buffer-other-window compile-buf)
       (call-interactively 'compile))))
 
-(defun nl/compilation-ansi-color-process-output ()
-  (ansi-color-process-output nil)
-  (set (make-local-variable 'comint-last-output-start)
-       (point-marker)))
+;; (defun nl/compilation-ansi-color-process-output ()
+;;   (ansi-color-process-output nil)
+;;   (set (make-local-variable 'comint-last-output-start)
+;;        (point-marker)))
 
 (defun nl/compile-hook ()
   (setq-local compilation-scroll-output t)
   (setq-local scroll-conservatively most-positive-fixnum)
   (setq-local scroll-margin 0))
 
+;; required for TypeScript compile
 ;; (defun colorize-compilation-buffer ()
 ;;   (let ((inhibit-read-only t))
 ;;     (ansi-color-apply-on-region (point-min) (point-max))))
 ;; (add-hook 'compilation-filter-hook 'colorize-compilation-buffer)
 
+(defun display-ansi-colors ()
+  (interactive)
+  (let ((inhibit-read-only t))
+    (ansi-color-apply-on-region (point-min) (point-max)))
+  )
+
 (use-package compile
   :bind (("M-O"   . show-compilation)
          ;;("C-c c" . compile)
          )
+  :init
+  (defun nl/colorize-compilation-buffer ()
+    (let ((inhibit-read-only t))
+      (ansi-color-apply-on-region (point-min) (point-max)))
+    )
   :config
   (setq compilation-ask-about-save nil
         compilation-always-kill t
         compilation-max-output-line-length nil)
 
-  :hook ((compilation-filter . nl/compilation-ansi-color-process-output)
-         (compilation-mode . nl/compile-hook)))
+  :hook ((compilation-mode . nl/compile-hook)
+         (compilation-filter . nl/colorize-compilation-buffer)
+         )
+  )
 #+end_src
 
 ** =dired=
@@ -1969,6 +1984,13 @@ See https://robert.kra.hn/posts/rust-emacs-setup/
   :init (selected-global-mode 1))
 #+end_src
 
+** [[https://github.com/ljos/sparql-mode/tree/15960092e8ce8ebe6a6afd82202ccf47cb306e76][sparql-mode]]
+
+#+begin_src emacs-lisp
+(use-package sparql-mode
+  :mode (("\\.rq$" . sparql-mode)))
+#+end_src
+
 ** [[https://github.com/akicho8/string-inflection][string-inflection]]
 
 #+begin_src emacs-lisp
@@ -2015,14 +2037,6 @@ See https://robert.kra.hn/posts/rust-emacs-setup/
     ;;(eldoc-mode +1)
     (company-mode +1)
     (subword-mode +1)
-
-    ;; need to override the value set in typescript-mode.el
-    (push '(typescript-tsc-pretty
-            "^\\(?:\\(Error\\|Warning\\)\\):[[:blank:]]\\([^:]+\\):\\([[:digit:]]+\\):\\([[:digit:]]+\\)"
-            2 3 4 1)
-          compilation-error-regexp-alist-alist)
-
-    ;;(setq prettify-symbols-alist nl-typescript-prettify-symbols)
     (prettify-symbols-mode))
   :config
   (setq company-tooltip-align-annotations t ;; aligns annotation to the right hand side
