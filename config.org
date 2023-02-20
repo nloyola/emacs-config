@@ -203,7 +203,6 @@ See https://tony-zorman.com/posts/2022-10-22-emacs-potpourri.html
 ** Main font
 
 #+begin_src emacs-lisp
-
     (defvar nl/gui-fixed-font-name "FiraCode Nerd Font")
     ;;(defvar nl/gui-fixed-font-name "CaskaydiaCove Nerd Font Mono")
 
@@ -221,6 +220,14 @@ See https://tony-zorman.com/posts/2022-10-22-emacs-potpourri.html
 
     (defvar nl/gui-current-fixed-font-size nl/gui-fixed-font-size-normal)
     (defvar nl/gui-current-variable-font-size nl/gui-variable-font-size-normal)
+
+(when (string-match "-[Mm]icrosoft" operating-system-release)
+  ;; WSL: WSL1 has "-Microsoft", WSL2 has "-microsoft-standard"
+  (setq nl/gui-fixed-font-size-normal "12"
+        nl/gui-fixed-font-size-large "18"
+        nl/gui-variable-font-size-normal "14"
+        nl/gui-variable-font-size-large "18"
+  ))
 
     (defun nl/gui-font (font-name font-size)
       (concat font-name "-" font-size))
@@ -290,7 +297,8 @@ Taken from: http://doc.rix.si/org/fsem.html
     (set-face-font 'fixed-pitch-serif variable-font)
     (set-face-font 'variable-pitch variable-font)
 
-    (nl/org-mode-faces (* 10 (string-to-number fixed-font-size)))))
+    ;;(nl/org-mode-faces (* 10 (string-to-number fixed-font-size)))
+    ))
 
 (defun nl/zoom-config ()
   "Set a large enough font size for all Emacs frames for screensharing on Zoom meetings."
