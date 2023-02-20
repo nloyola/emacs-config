@@ -315,36 +315,48 @@ Taken from: http://doc.rix.si/org/fsem.html
 * Frame configuration
 
 #+begin_src emacs-lisp
+(defun nl/after-make-frame (frame)
+  ;; disable the toolbar when in daemon mode
+  ;;
+  ;; https://emacs.stackexchange.com/questions/39359/tool-bar-in-emacsclient
+  (unless frame
+    (setq frame (selected-frame)))
+  (when frame
+    (with-selected-frame frame
+      (when (display-graphic-p)
+        (tool-bar-mode -1)
+        (nl/set-fonts frame)
+        ))))
 
-    (defun nl/after-make-frame (frame)
-      ;; disable the toolbar when in daemon mode
-      ;;
-      ;; https://emacs.stackexchange.com/questions/39359/tool-bar-in-emacsclient
-      (unless frame
-        (setq frame (selected-frame)))
-      (when frame
-        (with-selected-frame frame
-          (when (display-graphic-p)
-            (tool-bar-mode -1)
-            (nl/set-fonts frame)
-            ))))
+(add-hook 'after-make-frame-functions 'nl/after-make-frame t)
 
-    (add-hook 'after-make-frame-functions 'nl/after-make-frame t)
-
-    (use-package emacs
-      :hook
+(use-package emacs
+  :hook
       ;; Make completion buffers disappear after 15 seconds.
-      (completion-setup . (lambda ()
-                            (run-at-time 15 nil
-                                         (lambda ()
-                                           (delete-windows-on "*Completions*")))))
+  (completion-setup . (lambda ()
+                        (run-at-time 15 nil
+                                     (lambda ()
+                                       (delete-windows-on "*Completions*")))))
 
-      ;; Remove trailing whitespace
-      (before-save . delete-trailing-whitespace)
-      :bind
-      ("C-z" . nil)     ;; I never want to suspend the frame
-      )
+  ;; Remove trailing whitespace
+  (before-save . delete-trailing-whitespace)
+  :bind
+  ("C-z" . nil)     ;; I never want to suspend the frame
+  )
+#+end_src
 
+* Transparency
+
+See: https://kristofferbalintona.me/posts/202206071000/
+
+#+begin_src emacs-lisp
+(defun kb/toggle-window-transparency ()
+  "Toggle transparency."
+  (interactive)
+  (let ((alpha-transparency 55))
+    (pcase (frame-parameter nil 'alpha-background)
+      (alpha-transparency (set-frame-parameter nil 'alpha-background 100))
+      (t (set-frame-parameter nil 'alpha-background alpha-transparency)))))
 #+end_src
 
 * My functions
@@ -503,60 +515,60 @@ See https://github.com/doomemacs/themes/tree/screenshots#screenshots
 
 #+begin_src emacs-lisp
 (use-package doom-themes
-      :demand t
-      :config
-      ;; Global settings (defaults)
-      (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
-            doom-themes-enable-italic t) ; if nil, italics is universally disabled
+  :demand t
+  :config
+  ;; Global settings (defaults)
+  (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
+        doom-themes-enable-italic t) ; if nil, italics is universally disabled
 
-      (load-theme 'doom-vibrant t)
+  (load-theme 'doom-vibrant t)
 
-      ;; Enable flashing mode-line on errors
-      (doom-themes-visual-bell-config)
+  ;; Enable flashing mode-line on errors
+  (doom-themes-visual-bell-config)
 
-      ;; or for treemacs users
-      ;;(setq doom-themes-treemacs-theme "doom-colors") ; use the colorful treemacs theme
-      (doom-themes-treemacs-config)
+  ;; or for treemacs users
+  ;;(setq doom-themes-treemacs-theme "doom-colors") ; use the colorful treemacs theme
+  (doom-themes-treemacs-config)
 
-      ;; Corrects (and improves) org-mode's native fontification.
-      (doom-themes-org-config)
-      :custom-face
-      ;;(ansi-color-blue ((t (:foreground "#4f57f9"))))
-      (ansi-color-blue ((t (:foreground "DeepSkyBlue1"))))
-      ;;(lsp-face-highlight-read ((t (:foreground "DeepSkyBlue1"))))
-      )
+  ;; Corrects (and improves) org-mode's native fontification.
+  (doom-themes-org-config)
+  :custom-face
+  ;;(ansi-color-blue ((t (:foreground "#4f57f9"))))
+  (ansi-color-blue ((t (:foreground "DeepSkyBlue1"))))
+  ;;(lsp-face-highlight-read ((t (:foreground "DeepSkyBlue1"))))
+  )
 
-    (with-eval-after-load 'markdown-mode
-      (set-face-background 'markdown-code-face "#121212")
-      ;;(set-face-foreground 'markdown-code-face (doom-darken 'green 0.2))
-      ;;(set-face-background 'org-block (doom-color 'brightblack))
-      (set-face-attribute 'markdown-header-face
-                          nil
-                          :font nl/gui-variable-font-name
-                          :weight 'bold
-                          :height (* 12 (string-to-number nl/gui-current-variable-font-size)))
-      (set-face-attribute 'markdown-link-face
-                          nil
-                          :font nl/gui-variable-font-name
-                          :weight 'bold
-                          :height (* 10 (string-to-number nl/gui-current-variable-font-size)))
-      )
+(with-eval-after-load 'markdown-mode
+  (set-face-background 'markdown-code-face "#121212")
+  ;;(set-face-foreground 'markdown-code-face (doom-darken 'green 0.2))
+  ;;(set-face-background 'org-block (doom-color 'brightblack))
+  (set-face-attribute 'markdown-header-face
+                      nil
+                      :font nl/gui-variable-font-name
+                      :weight 'bold
+                      :height (* 12 (string-to-number nl/gui-current-variable-font-size)))
+  (set-face-attribute 'markdown-link-face
+                      nil
+                      :font nl/gui-variable-font-name
+                      :weight 'bold
+                      :height (* 10 (string-to-number nl/gui-current-variable-font-size)))
+  )
 
-    (defun ap/load-doom-theme (theme)
-      "Disable active themes and load a Doom theme."
-      (interactive (list (intern (completing-read "Theme: "
-                                                  (->> (custom-available-themes)
-                                                       (-map #'symbol-name)
-                                                       (--select (string-prefix-p "doom-" it)))))))
-      (ap/switch-theme theme))
+(defun ap/load-doom-theme (theme)
+  "Disable active themes and load a Doom theme."
+  (interactive (list (intern (completing-read "Theme: "
+                                              (->> (custom-available-themes)
+                                                   (-map #'symbol-name)
+                                                   (--select (string-prefix-p "doom-" it)))))))
+  (ap/switch-theme theme))
 
-    (defun ap/switch-theme (theme)
-      "Disable active themes and load THEME."
-      (interactive (list (intern (completing-read "Theme: "
-                                                  (->> (custom-available-themes)
-                                                       (-map #'symbol-name))))))
-      (mapc #'disable-theme custom-enabled-themes)
-      (load-theme theme 'no-confirm))
+(defun ap/switch-theme (theme)
+  "Disable active themes and load THEME."
+  (interactive (list (intern (completing-read "Theme: "
+                                              (->> (custom-available-themes)
+                                                   (-map #'symbol-name))))))
+  (mapc #'disable-theme custom-enabled-themes)
+  (load-theme theme 'no-confirm))
 #+end_src
 
 * Packages bundled with Emacs
@@ -1313,7 +1325,9 @@ See https://tsdh.org/posts/2022-08-01-difftastic-diffing-with-magit.html
 (use-package expand-region
   ;; :load-path (lambda () (expand-file-name "~/src/github/elisp/expand-region.el"))
   :bind
-  ("C-=" . er/expand-region)
+  (("C-=" . er/expand-region)
+   ("M-S-<up>" . er/expand-region)
+   ("M-S-<down>" . er/contract-region))
   :config
   (setq expand-region-smart-cursor t
         er/enable-subword-mode? nil))
@@ -1527,6 +1541,14 @@ http://danconnor.com/post/5028ac91e8891a000000111f/align_and_columnize_key_value
   ("=" align-equals "equals" :color blue)
   ("$" align-dollar-sign "dollar sign" :color blue)
   ("p" align-parameters "parameters" :color blue))
+#+end_src
+
+** [[https://github.com/jschaf/emacs-lorem-ipsum][lorem-ipsum]]
+
+Add filler lorem ipsum text to Emacs.
+
+#+begin_src emacs-lisp
+(use-package lorem-ipsum)
 #+end_src
 
 ** [[https://github.com/emacs-lsp/lsp-mode][lsp-mode]]
@@ -1903,17 +1925,18 @@ Project navigation and management library for Emacs.
   (setq x-gtk-resize-child-frames 'resize-mode))
 #+end_src
 
-** prettier
+** [[https://github.com/jscheid/prettier.el][prettier]]
 
 #+begin_src emacs-lisp
-    (use-package prettier
-      :diminish perttier-mode
-      :hook ((typescript-tsx-mode . prettier-mode)
-             (typescript-mode . prettier-mode)
-             (js-mode . prettier-mode)
-             (json-mode . prettier-mode)
-             (css-mode . prettier-mode)
-             (scss-mode . prettier-mode)))
+(use-package prettier
+  :diminish perttier-mode
+  :hook ((typescript-tsx-mode . prettier-mode)
+         (typescript-mode . prettier-mode)
+         ;;(js-mode . prettier-mode)
+         (json-mode . prettier-mode)
+         (css-mode . prettier-mode)
+         (scss-mode . prettier-mode)
+         (yaml-mode . prettier-mode)))
 #+end_src
 
 ** [[https://protesilaos.com/emacs/pulsar][pulsar]]
@@ -2226,3 +2249,26 @@ Large collection of snippets: [[https://github.com/AndreaCrotti/yasnippet-snippe
   (org-roam-setup))
 #+end_src
 [[id:6d48a9f3-31ef-4f74-a880-d2c26062c043][Programming Languages]]
+
+* Computer-specific settings
+
+Load some computer-specific settings, such as the name and and email address. The way the settings
+are loaded is based off of [[https://github.com/magnars/.emacs.d][Magnar Sveen's]] config.
+
+#+begin_src emacs-lisp
+(defvar nl/user-settings-dir nil
+  "The directory with user-specific Emacs settings for this
+  user.")
+
+;; Settings for currently logged in user
+(require 's)
+(let ((user-dir (concat user-emacs-directory "users")))
+  (when (file-directory-p user-dir)
+    (setq nl/user-settings-dir
+          (concat user-dir "/" (s-trim (shell-command-to-string "hostname -s"))))
+    (add-to-list 'load-path nl/user-settings-dir)))
+
+;; Load settings specific for the current user
+(when (file-exists-p nl/user-settings-dir)
+  (mapc 'load (directory-files nl/user-settings-dir nil "^[^#].*el$")))
+#+end_src
