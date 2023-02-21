@@ -1732,6 +1732,7 @@ checker is loaded.
   (php-mode . nl/nordita-php-mode-hook)
   :preface
   (use-package flycheck-phpstan)
+  (require 'php-cs-fixer)
 
   (defun nl/php-mode-hook ()
     "My PHP mode configuration."
@@ -1741,6 +1742,17 @@ checker is loaded.
     (subword-mode +1)
     (php-set-style "nl/php"));; this style is based on the symfony2 style
 
+  (defun nl/php-before-save-hook ()
+    (when (string-match-p (regexp-quote ".php") buffer-file-name)
+        (let ((file-name (replace-regexp-in-string (projectile-project-root) "" buffer-file-name))
+              (command (concat php-cs-fixer-command
+                               " list-files --config "
+                               (shell-quote-argument php-cs-fixer-config-option)))
+              (default-directory (projectile-project-root)))
+          (when (string-match-p (regexp-quote file-name) (shell-command-to-string command))
+            (php-cs-fixer-fix)
+          ))))
+
   (defun nl/nordita-php-mode-hook ()
     "Nordita's PHP mode configuration."
     (lsp)
@@ -1748,19 +1760,20 @@ checker is loaded.
     (flycheck-mode t)
     (subword-mode +1)
     (display-line-numbers-mode)
-    (add-hook 'before-save-hook 'php-cs-fixer-before-save)
+    (add-hook 'before-save-hook 'nl/php-before-save-hook)
     (cond ((string= (projectile-project-root) (expand-file-name "~/src/nordita/norweb-2021/"))
            (setq lsp-intelephense-files-exclude
                  (vconcat lsp-intelephense-files-exclude
-                          ["public/wire/**"
+                          [
+                           ;;"public/wire/**" -- if uncommented, then wont be able to jump to definitions
+                           ;; "**/FieldtypeCombo/**"
+                           ;; "**/FieldtypeFieldsetGroup/**"
+                           ;; "**/FieldtypeRepeaterMatrix/**"
+                           ;; "**/FieldtypeTextareas/**"
+                           ;; "**/FileValidatorSvgSanitizer/**"
+                           ;; "**/InputfieldCKEditor/**"
                            "public/wire.old/**"
                            "**/AppApi/**"
-                           "**/FieldtypeCombo/**"
-                           "**/FieldtypeFieldsetGroup/**"
-                           "**/FieldtypeRepeaterMatrix/**"
-                           "**/FieldtypeTextareas/**"
-                           "**/FileValidatorSvgSanitizer/**"
-                           "**/InputfieldCKEditor/**"
                            "**/ProcessHannaCode/**"
                            "**/pw-fieldtype-yaml/**"
                            "**/RockMigrations/**"
@@ -1881,7 +1894,6 @@ PSR-1 and PSR-2.
 #+begin_src emacs-lisp
 (use-package php-cs-fixer
   :after php-mode
-  :load-path "~/src/github/elisp/php-cs-fixer"
   :commands (php-cs-fixer-before-save))
 #+end_src
 
