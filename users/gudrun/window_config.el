@@ -1,7 +1,7 @@
 (defun nl/monitor-pixel-dimensions (monitor)
   (let* ((monitor-attributes (display-monitor-attributes-list))
          (num-displays (length (display-monitor-attributes-list))))
-    (if (< monitor num-displays)
+    (if (<= monitor num-displays)
         (list (nth 3 (assq 'geometry (nth monitor monitor-attributes)))
               (nth 4 (assq 'geometry (nth monitor monitor-attributes))))
       (error "invalid monitor number: %d" monitor))))
@@ -17,17 +17,17 @@
   (interactive)
   (let* ((frame (selected-frame))
          (num-displays (length (display-monitor-attributes-list)))
-         (desired-width-in-chars 235)
+         (desired-width-in-chars 94)
          (desired-width-in-pixels (* desired-width-in-chars (frame-char-width))))
     (set-face-attribute 'default frame :font (nl/gui-fixed-font-normal))
     (cond
-     ((eq num-displays 2)
+     ((eq num-displays 1)
       (set-frame-size frame
                       desired-width-in-chars
-                      (/ (nl/monitor-pixel-height 1) (frame-char-height)))
+                      (/ (nl/monitor-pixel-height 0) (+ 1 (frame-char-height))))
       ;; cannot use negative value for X since it is not placed in correct location on startup
       (set-frame-position frame
-                          (- (+ (nl/monitor-pixel-width 0) (nl/monitor-pixel-width 1))
+                          (- (+ (nl/monitor-pixel-width 0) (nl/monitor-pixel-width 0))
                              desired-width-in-pixels)
                           0))
      ((eq num-displays 3)
@@ -71,7 +71,7 @@
 
 (defun nl/window-setup-hook ()
   (let ((frame (selected-frame)))
-    ;; (nl/main-frame-set-size-and-position)
+    (nl/main-frame-set-size-and-position)
     ;; (resume)
     (select-frame-set-input-focus frame)))
 
