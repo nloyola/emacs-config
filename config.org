@@ -2121,11 +2121,16 @@ For TSX see: https://github.com/emacs-typescript/typescript.el/issues/4#issuecom
 
 #+begin_src emacs-lisp
 (use-package web-mode
-  :hook ((web-mode . lsp)
+  :preface
+  (defun nl/web-mode-hook ()
+    (lsp)
+    (display-line-numbers-mode))
+  :hook ((web-mode . nl/web-mode-hook)
          (typescript-tsx-mode . lsp))
   :mode (("\\.html\\'" . web-mode)
          ("\\.html\\.eex\\'" . web-mode)
          ("\\.html\\.tera\\'" . web-mode)
+         ("\\.tpl.php\\'" . web-mode)
          ("\\.\\(j\\|t\\)sx\\'" . typescript-tsx-mode))
   :init
   (define-derived-mode typescript-tsx-mode typescript-mode "TypeScript-tsx")
