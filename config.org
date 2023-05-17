@@ -203,23 +203,24 @@ See https://tony-zorman.com/posts/2022-10-22-emacs-potpourri.html
 ** Main font
 
 #+begin_src emacs-lisp
-    (defvar nl/gui-fixed-font-name "FiraCode Nerd Font")
-    ;;(defvar nl/gui-fixed-font-name "CaskaydiaCove Nerd Font Mono")
+;;(defvar nl/gui-fixed-font-name "FiraCode Nerd Font")
+(defvar nl/gui-fixed-font-name "JetBrainsMono Nerd Font")
+;;(defvar nl/gui-fixed-font-name "CaskaydiaCove Nerd Font Mono")
 
-    ;; (defvar nl/gui-fixed-font-name "IBM Plex Mono Medium")
-    ;; (defvar nl/gui-variable-font-name "DejaVu Sans")
+;; (defvar nl/gui-fixed-font-name "IBM Plex Mono Medium")
+;; (defvar nl/gui-variable-font-name "DejaVu Sans")
 
-    ;;(defvar nl/gui-variable-font-name "GoMono Nerd Font")
-    (defvar nl/gui-variable-font-name "Go")
+;;(defvar nl/gui-variable-font-name "GoMono Nerd Font")
+(defvar nl/gui-variable-font-name "Go")
 
-    (defconst nl/gui-fixed-font-size-normal "10")
-    (defconst nl/gui-fixed-font-size-large "18")
+(defconst nl/gui-fixed-font-size-normal "10")
+(defconst nl/gui-fixed-font-size-large "18")
 
-    (defconst nl/gui-variable-font-size-normal "12")
-    (defconst nl/gui-variable-font-size-large "18")
+(defconst nl/gui-variable-font-size-normal "12")
+(defconst nl/gui-variable-font-size-large "18")
 
-    (defvar nl/gui-current-fixed-font-size nl/gui-fixed-font-size-normal)
-    (defvar nl/gui-current-variable-font-size nl/gui-variable-font-size-normal)
+(defvar nl/gui-current-fixed-font-size nl/gui-fixed-font-size-normal)
+(defvar nl/gui-current-variable-font-size nl/gui-variable-font-size-normal)
 
 (when (string-match "-[Mm]icrosoft" operating-system-release)
   ;; WSL: WSL1 has "-Microsoft", WSL2 has "-microsoft-standard"
@@ -521,7 +522,7 @@ See https://github.com/doomemacs/themes/tree/screenshots#screenshots
   (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
         doom-themes-enable-italic t) ; if nil, italics is universally disabled
 
-  (load-theme 'doom-vibrant t)
+  (load-theme 'doom-molokai t)
 
   ;; Enable flashing mode-line on errors
   (doom-themes-visual-bell-config)
@@ -739,7 +740,7 @@ Also move from window to window using Meta and the direction keys.
 * Elpa packages
 ** [[https://github.com/wyuenho/all-the-icons-dired][all-the-icons-dired]]
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 (use-package all-the-icons)
 
 ;; disable hook for now
@@ -774,7 +775,6 @@ A quick way to jump around text in buffers.
   (("C-c SPC" . avy-goto-char)
    ("C-:" . avy-goto-char-timer)))
 #+end_src
-
 ** [[https://github.com/company-mode/company-mode][company-mode]]
 
 Complete anything.
@@ -807,7 +807,7 @@ Complete anything.
 
 ** [[https://github.com/jordonbiondo/column-enforce-mode][column-enforce-mode]]
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 (use-package column-enforce-mode
   :config
   (setq column-enforce-column 120)
@@ -831,22 +831,25 @@ Complete anything.
 (use-package consult
   ;; Replace bindings. Lazily loaded due by `use-package'.
   :bind (;; C-c bindings (mode-specific-map)
+         ("C-c M-x" . consult-mode-command)
          ("C-c h" . consult-history)
-         ("C-c m" . consult-mode-command)
-         ("C-c b" . consult-bookmark)
          ("C-c k" . consult-kmacro)
+         ("C-c m" . consult-man)
+         ("C-c i" . consult-info)
+         ([remap Info-search] . consult-info)
          ;; C-x bindings (ctl-x-map)
          ("C-x M-:" . consult-complex-command)     ;; orig. repeat-complex-command
          ("C-x b" . consult-buffer)                ;; orig. switch-to-buffer
          ("C-x 4 b" . consult-buffer-other-window) ;; orig. switch-to-buffer-other-window
          ("C-x 5 b" . consult-buffer-other-frame)  ;; orig. switch-to-buffer-other-frame
+         ("C-x r b" . consult-bookmark)            ;; orig. bookmark-jump
+         ("C-x p b" . consult-project-buffer)      ;; orig. project-switch-to-buffer
          ;; Custom M-# bindings for fast register access
          ("M-#" . consult-register-load)
          ("M-'" . consult-register-store)          ;; orig. abbrev-prefix-mark (unrelated)
          ("C-M-#" . consult-register)
          ;; Other custom bindings
          ("M-y" . consult-yank-pop)                ;; orig. yank-pop
-         ("<help> a" . consult-apropos)            ;; orig. apropos-command
          ;; M-g bindings (goto-map)
          ("M-g e" . consult-compile-error)
          ("M-g f" . consult-flymake)               ;; Alternative: consult-flycheck
@@ -856,29 +859,31 @@ Complete anything.
          ("M-g m" . consult-mark)
          ("M-g k" . consult-global-mark)
          ("M-g i" . consult-imenu)
-         ("M-g I" . consult-imenu-project)
+         ("M-g I" . consult-imenu-multi)
          ;; M-s bindings (search-map)
-         ("M-s f" . consult-find)
-         ("M-s F" . consult-locate)
+         ("M-s d" . consult-find)
+         ("M-s D" . consult-locate)
          ("M-s g" . consult-grep)
          ("M-s G" . consult-git-grep)
          ("M-s r" . consult-ripgrep)
          ("M-s l" . consult-line)
          ("M-s L" . consult-line-multi)
-         ("M-s m" . consult-multi-occur)
          ("M-s k" . consult-keep-lines)
          ("M-s u" . consult-focus-lines)
          ;; Isearch integration
-         ("M-s e" . consult-isearch)
+         ("M-s e" . consult-isearch-history)
          :map isearch-mode-map
-         ("M-e" . consult-isearch)                 ;; orig. isearch-edit-string
-         ("M-s e" . consult-isearch)               ;; orig. isearch-edit-string
+         ("M-e" . consult-isearch-history)         ;; orig. isearch-edit-string
+         ("M-s e" . consult-isearch-history)       ;; orig. isearch-edit-string
          ("M-s l" . consult-line)                  ;; needed by consult-line to detect isearch
-         ("M-s L" . consult-line-multi))           ;; needed by consult-line to detect isearch
+         ("M-s L" . consult-line-multi)            ;; needed by consult-line to detect isearch
+         ;; Minibuffer history
+         :map minibuffer-local-map
+         ("M-s" . consult-history)                 ;; orig. next-matching-history-element
+         ("M-r" . consult-history))                ;; orig. previous-matching-history-element
 
-  ;; Enable automatic preview at point in the *Completions* buffer.
-  ;; This is relevant when you use the default completion UI,
-  ;; and not necessary for Vertico, Selectrum, etc.
+  ;; Enable automatic preview at point in the *Completions* buffer. This is
+  ;; relevant when you use the default completion UI.
   :hook (completion-list-mode . consult-preview-at-point-mode)
 
   ;; The :init configuration is always executed (Not lazy)
@@ -887,15 +892,12 @@ Complete anything.
   ;; Optionally configure the register formatting. This improves the register
   ;; preview for `consult-register', `consult-register-load',
   ;; `consult-register-store' and the Emacs built-ins.
-  (setq register-preview-delay 0
+  (setq register-preview-delay 0.5
         register-preview-function #'consult-register-format)
 
   ;; Optionally tweak the register preview window.
   ;; This adds thin lines, sorting and hides the mode line of the window.
   (advice-add #'register-preview :override #'consult-register-window)
-
-  ;; Optionally replace `completing-read-multiple' with an enhanced version.
-  ;;(advice-add #'completing-read-multiple :override #'consult-completing-read-multiple)
 
   ;; Use Consult to select xref locations with preview
   (setq xref-show-xrefs-function #'consult-xref
@@ -908,29 +910,40 @@ Complete anything.
   ;; Optionally configure preview. The default value
   ;; is 'any, such that any key triggers the preview.
   ;; (setq consult-preview-key 'any)
-  ;; (setq consult-preview-key (kbd "M-."))
-  ;; (setq consult-preview-key (list (kbd "<S-down>") (kbd "<S-up>")))
+  ;; (setq consult-preview-key "M-.")
+  ;; (setq consult-preview-key '("S-<down>" "S-<up>"))
   ;; For some commands and buffer sources it is useful to configure the
   ;; :preview-key on a per-command basis using the `consult-customize' macro.
   (consult-customize
-   consult-theme
-   :preview-key '(:debounce 0.2 any)
+   consult-theme :preview-key '(:debounce 0.2 any)
    consult-ripgrep consult-git-grep consult-grep
    consult-bookmark consult-recent-file consult-xref
-   consult--source-recent-file consult--source-project-recent-file consult--source-bookmark
-   :preview-key (kbd "M-."))
+   consult--source-bookmark consult--source-file-register
+   consult--source-recent-file consult--source-project-recent-file
+   ;; :preview-key "M-."
+   :preview-key '(:debounce 0.4 any))
 
   ;; Optionally configure the narrowing key.
   ;; Both < and C-+ work reasonably well.
-  (setq consult-narrow-key "<") ;; (kbd "C-+")
+  (setq consult-narrow-key "<") ;; "C-+"
 
   ;; Optionally make narrowing help available in the minibuffer.
   ;; You may want to use `embark-prefix-help-command' or which-key instead.
   ;; (define-key consult-narrow-map (vconcat consult-narrow-key "?") #'consult-narrow-help)
 
-  ;; configure a function which returns the project root directory.
+  ;; By default `consult-project-function' uses `project-root' from project.el.
+  ;; Optionally configure a different project root function.
+  ;;;; 1. project.el (the default)
+  ;; (setq consult-project-function #'consult--default-project--function)
+  ;;;; 2. vc.el (vc-root-dir)
+  ;; (setq consult-project-function (lambda (_) (vc-root-dir)))
+  ;;;; 3. locate-dominating-file
+  ;; (setq consult-project-function (lambda (_) (locate-dominating-file "." ".git")))
+  ;;;; 4. projectile.el (projectile-project-root)
   (autoload 'projectile-project-root "projectile")
-  (setq consult-project-root-function #'projectile-project-root)
+  (setq consult-project-function (lambda (_) (projectile-project-root)))
+  ;;;; 5. No project support
+  ;; (setq consult-project-function nil)
 )
 #+end_src
 
@@ -1069,7 +1082,18 @@ Complete anything.
   ;; Enable recursive minibuffers
   (setq enable-recursive-minibuffers t))
 #+end_src
-*
+
+** css-mode
+
+#+begin_src emacs-lisp
+(use-package css-mode
+  :preface
+  (defun nl/css-mode-hook ()
+    (display-line-numbers-mode))
+  :hook (css-mode . nl/css-mode-hook)
+  )
+#+end_src
+
 ** [[https://github.com/akermu/emacs-libvterm][emacs-libvterm]]
 
 #+begin_src emacs-lisp
@@ -1551,6 +1575,13 @@ Add filler lorem ipsum text to Emacs.
 (use-package lorem-ipsum)
 #+end_src
 
+** [[https://github.com/emacs-lsp/lsp-docker][lsp-docker]]
+
+#+begin_src emacs-lisp :tangle no
+(use-package lsp-docker
+  :init (setq lsp-keymap-prefix "C-c l"))
+#+end_src
+
 ** [[https://github.com/emacs-lsp/lsp-mode][lsp-mode]]
 
 #+begin_src emacs-lisp
@@ -1587,7 +1618,9 @@ Add filler lorem ipsum text to Emacs.
   (setq lsp-prefer-capf t
         lsp-idle-delay 0.5
         lsp-pyls-plugins-flake8-enabled t
-        lsp-ensabled-clients '(intelephense))
+        ;; lsp-log-io t
+        ;; lsp-ensabled-clients '(intelephense)
+        )
   (setq lsp-clients-angular-language-server-command
         '("node"
           "/home/nelson/.nvm/versions/node/v16.16.0/lib/node_modules/@angular/language-server"
@@ -1719,6 +1752,20 @@ the screen to center on each cursor with ~C-v~ and ~M-v~.
 #+end_src
 
 *
+** [[https://github.com/rainstormstudio/nerd-icons.el][nerd-icons]]
+
+#+begin_src emacs-lisp
+(use-package nerd-icons
+  :custom
+  (nerd-icons-font-family "FiraCode Nerd Font")
+  )
+
+(use-package nerd-icons-dired
+  :load-path "~/src/github/elisp/nerd-icons-dired"
+  :hook
+  (dired-mode . nerd-icons-dired-mode))
+#+end_src
+
 ** PHP
 *** [[https://github.com/ejmr/php-mode][php-mode]]
 
@@ -1736,7 +1783,7 @@ checker is loaded.
 
   (defun nl/php-mode-hook ()
     "My PHP mode configuration."
-    (lsp)
+    (lsp-deferred)
     (require 'flycheck-phpstan)
     (flycheck-mode t)
     (subword-mode +1)
@@ -1744,11 +1791,11 @@ checker is loaded.
 
   (defun nl/php-before-save-hook ()
     (when (string-match-p (regexp-quote ".php") buffer-file-name)
-        (let ((file-name (replace-regexp-in-string (projectile-project-root) "" buffer-file-name))
+        (let ((default-directory (projectile-project-root))
+              (file-name (replace-regexp-in-string (projectile-project-root) "" buffer-file-name))
               (command (concat php-cs-fixer-command
                                " list-files --config "
-                               (shell-quote-argument php-cs-fixer-config-option)))
-              (default-directory (projectile-project-root)))
+                               (shell-quote-argument php-cs-fixer-config-option))))
           (when (string-match-p (regexp-quote file-name) (shell-command-to-string command))
             (php-cs-fixer-fix)
           ))))
@@ -2080,7 +2127,12 @@ See https://robert.kra.hn/posts/rust-emacs-setup/
     ;;(eldoc-mode +1)
     (company-mode +1)
     (subword-mode +1)
-    (prettify-symbols-mode))
+    ;; (push '(">=" . ?≥) prettify-symbols-alist)
+    ;; (push '("<=" . ?≤) prettify-symbols-alist)
+    ;; (push '("->" . ?→) prettify-symbols-alist)
+    ;; (push '("=>" . ?↦) prettify-symbols-alist)
+    ;; (prettify-symbols-mode)
+    (setq column-enforce-column 120))
   :config
   (setq company-tooltip-align-annotations t ;; aligns annotation to the right hand side
         ;;prettify-symbols-unprettify-at-point 'right-edge
@@ -2123,7 +2175,8 @@ For TSX see: https://github.com/emacs-typescript/typescript.el/issues/4#issuecom
 (use-package web-mode
   :preface
   (defun nl/web-mode-hook ()
-    (lsp)
+    (lsp-deferred)
+    (local-set-key (kbd "M-q") #'fill-paragraph) ;; did not work with :bind
     (display-line-numbers-mode))
   :hook ((web-mode . nl/web-mode-hook)
          (typescript-tsx-mode . lsp))
@@ -2144,8 +2197,14 @@ For TSX see: https://github.com/emacs-typescript/typescript.el/issues/4#issuecom
 
 #+begin_src emacs-lisp
 (use-package yaml-mode
+  :mode "\\.yml\\'"
+  :preface
+  (defun nl/yaml-mode-hook ()
+    (set-fill-column 110)
+    (display-line-numbers-mode))
+  :hook (yaml-mode . nl/yaml-mode-hook)
   :config
-  (add-to-list 'auto-mode-alist '("\\.yml\\'" . yaml-mode)))
+  (setq-default fill-column 110))
 #+end_src
 
 ** [[https://github.com/capitaomorte/yasnippet][yasnippet]]

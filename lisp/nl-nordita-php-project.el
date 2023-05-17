@@ -6,7 +6,7 @@
 
 ;;; Code:
 
-(use-package nl-php-project :demand :load-path "~/.emacs.d/lisp")
+(use-package nl-php-project :demand :load-path ("~/.emacs.d/lisp" "~/.emacs.d/elpa"))
 (require 'nl-php-project)
 
 (defvar nl/norweb-project-root (projectile-project-root))
@@ -50,6 +50,31 @@
   (interactive)
   (nl/php-command-in-proj-root "make php-sniff"))
 
+(defun nl/nordita-build-page-from-yaml ()
+  "Builds the ProcessWire page for the visited YAML file."
+  (interactive)
+  (unless (buffer-file-name) (user-error "not a file buffer"))
+  (unless (string-match-p "\.yaml$" (buffer-file-name)) (user-error "not a PHP file"))
+  (let* ((default-directory nl/norweb-project-root)
+         (file-name (nth 1 (split-string buffer-file-name nl/norweb-project-root)))
+         (base-name (replace-regexp-in-string "\.yaml$" "" (file-name-nondirectory file-name))))
+    (unless file-name (user-error "File not in project"))
+    (compile
+     (format "./docker-wrapper.sh cli pw-page %s build -f -i ../default_pages/main_site" base-name))))
+
+(defun nl/nordita-symbol-scss-grep ()
+  "Find text in the project's SCSS subfolder."
+  (interactive)
+  (unless (buffer-file-name) (user-error "not a file buffer"))
+  (let* ((default-directory (format "%s/pw-frontend/src/scss" nl/norweb-project-root)))
+    (compile (format "grep --exclude-dir=_attic -nre \"%s\" ." (symbol-at-point)))))
+
+(defun nl/nordita-symbol-pw-grep ()
+  "Find text in the project's source code."
+  (interactive)
+  (let* ((default-directory (format "%s" nl/norweb-project-root)))
+    (compile (format "grep -nre \"%s\" {default_pages,src,pw-frontend/src/ts}" (symbol-at-point)))))
+
 (defhydra hydra-nl/php-test (:color blue)
   "Test"
   ("d" nl/phpunit-run-this-method-with-debug-logging "only this method (with debug logging)")
@@ -58,12 +83,12 @@
   ("m" nl/phpunit-only-this-method "only this method")
   ("r" nl/phpunit-coverage-report-in-chrome "Open coverage report in Chrome"))
 
-(defhydra hydra-nl-php-project (:color red :hint nil)
-  "PHP project commands"
-  ("a" hydra-nl-align/body "align" :color blue :column "PHP")
-  ("s" hydra-nl/php-search/body "search" :color blue)
-  ("t" hydra-nl/php-test/body "test" :color blue)
-  ("c" nl/php-code-sniffer "Run PHP CodeSniifer" :column "Make"))
+(defhydra hydra-nl-project (:color red :hint nil)
+  "Project commands"
+  ("a" hydra-nl-align/body "align" :color blue :column "General")
+  ("t" hydra-nl/php-test/body "test" :color blue :column "PHP")
+  ("c" nl/php-code-sniffer "Run PHP CodeSniifer" :column "Build")
+  ("y" nl/nordita-build-page-from-yaml "Build ProcessWire page from YAML file" :color blue))
 
 (define-key php-mode-map (kbd "C-c , d") 'nl/phpunit-run-this-method-with-debug-logging)
 (define-key php-mode-map (kbd "C-c , m") 'nl/phpunit-only-this-method)

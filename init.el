@@ -68,6 +68,9 @@
 (unless (assoc-default "org" package-archives)
   (add-to-list 'package-archives '("org" . "https://orgmode.org/elpa/") t))
 
+(unless (assoc-default "gnu" package-archives)
+  (add-to-list 'package-archives '("gnu" . "http://elpa.gnu.org/packages/") t))
+
 (setq package-archive-priorities
       '(;;("melpa-stable" . 10)
         ;; ("marmalade" . 7)

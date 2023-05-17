@@ -9,6 +9,7 @@
 (require 's)
 (require 'php-mode)
 (eval-and-compile
+  (require 'yaml-mode)
   (require 'projectile))
 
 (defun nl/php-filename-p (filename)
@@ -121,12 +122,13 @@ The class name must have the postfix 'Spec' for this function to work."
 ;;
 ;; -----------------------------------------
 
-(defhydra hydra-nl-php-project (:color red :hint nil)
-  "PHP project commands"
+(defhydra hydra-nl-project (:color red :hint nil)
+  "Project commands"
   ("a" hydra-nl-align/body "align" :color blue :column "PHP"))
 
 ;; this def uses a lambda to show that it is possible, id does not need to use it
-(key-chord-define php-mode-map "jc" '(lambda () (interactive) (hydra-nl-php-project/body)))
+(key-chord-define php-mode-map "jc" '(lambda () (interactive) (hydra-nl-project/body)))
+(key-chord-define yaml-mode-map "jc" '(lambda () (interactive) (hydra-nl-project/body)))
 
 (provide 'nl-php-project)
 ;;; nl-php-project.el ends here
