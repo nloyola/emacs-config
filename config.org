@@ -228,46 +228,46 @@ See https://tony-zorman.com/posts/2022-10-22-emacs-potpourri.html
         nl/gui-fixed-font-size-large "18"
         nl/gui-variable-font-size-normal "14"
         nl/gui-variable-font-size-large "18"
-  ))
+        ))
 
-    (defun nl/gui-font (font-name font-size)
-      (concat font-name "-" font-size))
+(defun nl/gui-font (font-name font-size)
+  (concat font-name "-" font-size))
 
-    (defun nl/gui-fixed-font-normal ()
-      (nl/gui-font nl/gui-fixed-font-name nl/gui-fixed-font-size-normal))
+(defun nl/gui-fixed-font-normal ()
+  (nl/gui-font nl/gui-fixed-font-name nl/gui-fixed-font-size-normal))
 
-    (defun nl/gui-fixed-font-large ()
-      (nl/gui-font nl/gui-fixed-font-name nl/gui-fixed-font-size-large))
+(defun nl/gui-fixed-font-large ()
+  (nl/gui-font nl/gui-fixed-font-name nl/gui-fixed-font-size-large))
 
-    (defun nl/gui-variable-font-normal ()
-      (nl/gui-font nl/gui-variable-font-name nl/gui-variable-font-size-normal))
+(defun nl/gui-variable-font-normal ()
+  (nl/gui-font nl/gui-variable-font-name nl/gui-variable-font-size-normal))
 
-    (defun nl/gui-variable-font-large ()
-      (nl/gui-font nl/gui-variable-font-name nl/gui-variable-font-size-large))
+(defun nl/gui-variable-font-large ()
+  (nl/gui-font nl/gui-variable-font-name nl/gui-variable-font-size-large))
 
-    (defun nl/set-fonts (frame)
-      "Set the desired fonts for a frame. FRAME can be nil."
-      (let ((fixed-font (nl/gui-fixed-font-normal)))
-        (set-face-font 'default fixed-font)
-        (set-face-font 'fixed-pitch fixed-font))
-      (set-face-font 'variable-pitch (nl/gui-variable-font-normal))
-      (set-face-attribute 'font-lock-comment-face nil :weight 'semi-bold :slant 'italic)
-      ;;(set-face-background 'region (doom-darken 'green 0.2))
+(defun nl/set-fonts (frame)
+  "Set the desired fonts for a frame. FRAME can be nil."
+  (let ((fixed-font (nl/gui-fixed-font-normal)))
+    (set-face-font 'default fixed-font)
+    (set-face-font 'fixed-pitch fixed-font))
+  (set-face-font 'variable-pitch (nl/gui-variable-font-normal))
+  (set-face-attribute 'font-lock-comment-face nil :weight 'semi-bold :slant 'italic)
+  ;;(set-face-background 'region (doom-darken 'green 0.2))
 
-      (when frame
-        ;;(set-face-attribute 'default frame :font nl/gui-fixed-font-name)
-        (set-face-attribute 'italic frame :font nl/gui-fixed-font-name :weight 'normal :slant 'italic)
-        (set-face-attribute 'bold frame :font nl/gui-fixed-font-name :weight 'bold :weight 'normal)
-        (set-face-attribute 'bold-italic frame :font nl/gui-fixed-font-name :weight 'bold :slant 'italic)
-        (set-fontset-font "fontset-default" nil (font-spec :size 20 :name "Fira Code Retina"))
-        )
+  (when frame
+    ;;(set-face-attribute 'default frame :font nl/gui-fixed-font-name)
+    (set-face-attribute 'italic frame :font nl/gui-fixed-font-name :weight 'normal :slant 'italic)
+    (set-face-attribute 'bold frame :font nl/gui-fixed-font-name :weight 'bold :weight 'normal)
+    (set-face-attribute 'bold-italic frame :font nl/gui-fixed-font-name :weight 'bold :slant 'italic)
+    (set-fontset-font "fontset-default" nil (font-spec :size 20 :name "Fira Code Retina"))
+    )
 
-      (set-face-font 'mode-line (nl/gui-variable-font-normal))
-      (set-face-font 'mode-line-buffer-id (nl/gui-variable-font-normal))
-      (set-face-font 'mode-line-emphasis (nl/gui-variable-font-normal))
-      (set-face-font 'mode-line-highlight (nl/gui-variable-font-normal))
-      (set-face-font 'mode-line-inactive (nl/gui-variable-font-normal))
-      )
+  (set-face-font 'mode-line (nl/gui-variable-font-normal))
+  (set-face-font 'mode-line-buffer-id (nl/gui-variable-font-normal))
+  (set-face-font 'mode-line-emphasis (nl/gui-variable-font-normal))
+  (set-face-font 'mode-line-highlight (nl/gui-variable-font-normal))
+  (set-face-font 'mode-line-inactive (nl/gui-variable-font-normal))
+  )
 #+end_src
 
 ** Change font size
@@ -333,7 +333,7 @@ Taken from: http://doc.rix.si/org/fsem.html
 
 (use-package emacs
   :hook
-      ;; Make completion buffers disappear after 15 seconds.
+  ;; Make completion buffers disappear after 15 seconds.
   (completion-setup . (lambda ()
                         (run-at-time 15 nil
                                      (lambda ()
@@ -363,31 +363,31 @@ See: https://kristofferbalintona.me/posts/202206071000/
 * My functions
 
 #+begin_src emacs-lisp
-    (defun nl/kill-this-buffer ()
-      "Kill the current buffer."
-      (interactive)
-      (kill-buffer (current-buffer)))
+(defun nl/kill-this-buffer ()
+  "Kill the current buffer."
+  (interactive)
+  (kill-buffer (current-buffer)))
 
-    (defun nl/consult-compile ()
-      "Use Consult to choose a compile command."
-      (interactive)
-      (let ((selected-command
-             (completing-read "Select a compile command: " compile-history)))
-        ;; move this command to the front of the history
-        (setq compile-history (remove selected-command compile-history))
-        (add-to-list 'compile-history selected-command)
-        (compile selected-command)))
+(defun nl/consult-compile ()
+  "Use Consult to choose a compile command."
+  (interactive)
+  (let ((selected-command
+         (completing-read "Select a compile command: " compile-history)))
+    ;; move this command to the front of the history
+    (setq compile-history (remove selected-command compile-history))
+    (add-to-list 'compile-history selected-command)
+    (compile selected-command)))
 
-    (defun nl/consult-async-shell-command ()
-      (interactive)
-      (let ((selected-command
-             (completing-read "Select a shell command: " shell-command-history)))
-        (async-shell-command selected-command)))
+(defun nl/consult-async-shell-command ()
+  (interactive)
+  (let ((selected-command
+         (completing-read "Select a shell command: " shell-command-history)))
+    (async-shell-command selected-command)))
 
-    ;; (defun nl/counsel-git-files ()
-    ;;   (interactive)
-    ;;   (let ((counsel-fzf-cmd "git ls-files | fzf -f \"%s\""))
-    ;;     (counsel-fzf)))
+;; (defun nl/counsel-git-files ()
+;;   (interactive)
+;;   (let ((counsel-fzf-cmd "git ls-files | fzf -f \"%s\""))
+;;     (counsel-fzf)))
 
 (defun nl/beginning-of-line-or-indentation ()
   "move to beginning of line, or indentation"
@@ -410,9 +410,9 @@ See: https://kristofferbalintona.me/posts/202206071000/
   (windmove-right)
   (delete-window))
 
-  ;; (let ((win (selected-window)))
-  ;;   (set-frame-size frame (* 2 (frame-width)) (frame-height)))
-  ;; (split-window-right))
+;; (let ((win (selected-window)))
+;;   (set-frame-size frame (* 2 (frame-width)) (frame-height)))
+;; (split-window-right))
 
 (defun nl/frame-shrink-horizontally ()
   "Set the size and position of the Emacs window."
@@ -482,29 +482,29 @@ See: https://kristofferbalintona.me/posts/202206071000/
 * Key bindings
 
 #+begin_src emacs-lisp
-    (global-set-key (kbd "M-%")           'query-replace-regexp)
-    ;;(global-set-key "\C-x\C-e"          'compile)
-    (global-set-key (kbd "C-S-s")         'isearch-forward)
-    (global-set-key (kbd "C-x C-n")       'next-error)
-    (global-set-key (kbd "C-x k")         'nl/kill-this-buffer)
-    (global-set-key (kbd "M-f")           'forward-to-word)
-    (global-set-key (kbd "M-B")           'backward-to-word)
+(global-set-key (kbd "M-%")           'query-replace-regexp)
+;;(global-set-key "\C-x\C-e"          'compile)
+(global-set-key (kbd "C-S-s")         'isearch-forward)
+(global-set-key (kbd "C-x C-n")       'next-error)
+(global-set-key (kbd "C-x k")         'nl/kill-this-buffer)
+(global-set-key (kbd "M-f")           'forward-to-word)
+(global-set-key (kbd "M-B")           'backward-to-word)
 
-    (global-set-key (kbd "<f1>")          'indent-for-tab-command)
-    (global-set-key (kbd "S-<f1>")        'indent-region)
-    (global-set-key (kbd "<f2>")          '(lambda () (interactive) (save-some-buffers t)))
-    (global-set-key (kbd "S-<f2>")        '(lambda () (interactive) (revert-buffer t t)))
-    ;;(global-set-key (kbd "S-<f3>")        'helm-projectile-rg)
-    ;;(global-set-key (kbd "M-S-<f3>")      'counsel-rg)
-    (global-set-key [f5]                  'nl/consult-compile)
-    (global-set-key (kbd "C-<f5>")        'compile)
-    (global-set-key (kbd "S-<f5>")        'toggle-truncate-lines)
-    (global-set-key (kbd "<f8>")          'window-toggle-side-windows)
-    (global-set-key (kbd "S-<f11>")       'eval-region)
-    (global-set-key (kbd "C-S-<f11>")     'align-regexp)
-    ;;(global-set-key (kbd "C-c o")         'nl/counsel-git-files)
+(global-set-key (kbd "<f1>")          'indent-for-tab-command)
+(global-set-key (kbd "S-<f1>")        'indent-region)
+(global-set-key (kbd "<f2>")          '(lambda () (interactive) (save-some-buffers t)))
+(global-set-key (kbd "S-<f2>")        '(lambda () (interactive) (revert-buffer t t)))
+;;(global-set-key (kbd "S-<f3>")        'helm-projectile-rg)
+;;(global-set-key (kbd "M-S-<f3>")      'counsel-rg)
+(global-set-key [f5]                  'nl/consult-compile)
+(global-set-key (kbd "C-<f5>")        'compile)
+(global-set-key (kbd "S-<f5>")        'toggle-truncate-lines)
+(global-set-key (kbd "<f8>")          'window-toggle-side-windows)
+(global-set-key (kbd "S-<f11>")       'eval-region)
+(global-set-key (kbd "C-S-<f11>")     'align-regexp)
+;;(global-set-key (kbd "C-c o")         'nl/counsel-git-files)
 
-    (global-set-key (kbd "<home>")     'nl/beginning-of-line-or-indentation)
+(global-set-key (kbd "<home>")     'nl/beginning-of-line-or-indentation)
 
 #+end_src
 
@@ -749,7 +749,7 @@ Also move from window to window using Meta and the direction keys.
 (use-package all-the-icons-dired
   ;; M-x all-the-icons-install-fonts
   :hook (dired-mode . all-the-icons-dired-mode)
-        )
+  )
 #+end_src
 
 ** [[https://github.com/abo-abo/ace-window][ace-window]]
@@ -818,12 +818,12 @@ Complete anything.
 
 =consult-buffer=
 
- | Keys  | Description            |
- |-------+------------------------|
- | b SPC | Narrow to buffers      |
- | f SPC | Narrow to recent files |
- | m SPC | Narrow to bookmarks    |
- | p SPC | Narrow to project      |
+| Keys  | Description            |
+|-------+------------------------|
+| b SPC | Narrow to buffers      |
+| f SPC | Narrow to recent files |
+| m SPC | Narrow to bookmarks    |
+| p SPC | Narrow to project      |
 
 *** [[https://github.com/minad/consult][consult]]
 
@@ -944,17 +944,17 @@ Complete anything.
   (setq consult-project-function (lambda (_) (projectile-project-root)))
   ;;;; 5. No project support
   ;; (setq consult-project-function nil)
-)
+  )
 #+end_src
 
 **** My functions
 
 #+begin_src emacs-lisp
 (defun nl/consult-ripgrep-pwd ()
-   (interactive)
-   (consult-ripgrep (if (buffer-file-name)
-                        default-directory
-                      dired-directory)))
+  (interactive)
+  (consult-ripgrep (if (buffer-file-name)
+                       default-directory
+                     dired-directory)))
 #+end_src
 
 *** [[https://gitlab.com/OlMon/consult-projectile][consult-projectile]]
@@ -1126,7 +1126,7 @@ Complete anything.
   (require 'dap-python)
   ;;(require 'dap-lldb)
   (add-hook 'dap-stopped-hook
-          (lambda (arg) (call-interactively #'dap-hydra)))
+            (lambda (arg) (call-interactively #'dap-hydra)))
   )
 #+end_src
 
@@ -1382,6 +1382,17 @@ See https://tsdh.org/posts/2022-08-01-difftastic-diffing-with-magit.html
   (flycheck-add-mode 'javascript-eslint 'js-mode))
 #+end_src
 
+** [[https://github.com/minad/jinx][jinx]]
+
+#+begin_src emacs-lisp
+(use-package jinx
+  :hook (emacs-startup . global-jinx-mode)
+  :bind (("M-$" . jinx-correct)
+         ("C-M-$" . jinx-languages))
+  :config
+  (setq jinx-languages "en_CA"))
+#+end_src
+
 ** [[https://github.com/nflath/hungry-delete][hungry-delete]]
 
 So that hungry deletion can be used in all modes.
@@ -1443,90 +1454,116 @@ short bindings with a common prefix - a Hydra.
                            (list -4)
                          '(4)))))
 
-  (defhydra hydra-files (:columns 2 :color red)
-    "Files hydra"
-    ("h" (dired "~/.") "home" :column "System")
-    ("e" (dired "~/.emacs.d") "Emacs")
-    ("c" (dired "~/.config") "Config")
-    ("l" (dired "~/.local") "Local")
-    ("C" (dired "~/home_config") "My config" :column "Mine")
-    ("S" (dired "~/src/nelson/nlscripts") "My scripts")
-    ("O" (dired "~/Dropbox/orgfiles") "Org")
-    )
+  (global-set-key
+   (kbd "C-,")
+   (defhydra hydra-files (:columns 2 :color red)
+     "Files hydra"
+     ("h" (dired "~/.") "home" :column "System" :color blue)
+     ("e" (dired "~/.emacs.d") "Emacs" :color blue)
+     ("c" (dired "~/.config") "Config" :color blue)
+     ("l" (dired "~/.local") "Local" :color blue)
+     ("P" (dired "~/src") "src" :column "Projects" :color blue)
+     ("n" (dired "~/src/nordita/norweb-2021") "Norweb" :color blue)
+     ("N" (dired "~/src/nordita/norweb-2021-dev") "Norweb-dev" :color blue)
+     ("o" (dired "~/src/openTA/openta") "OpenTA" :color blue)
+     ("C" (dired "~/home_config") "My config" :column "Mine" :color blue)
+     ("S" (dired "~/src/nelson/nlscripts") "My scripts" :color blue)
+     ("O" (dired "~/Dropbox/orgfiles") "Org" :color blue)
+     ))
 
-  (global-set-key (kbd "C-,") 'hydra-files/body)
+  (key-chord-define-global
+   "yy"
+   (defhydra hydra-window (:color red)
+     "Window hydra"
+     ("h" windmove-left "move left" :color red :column "move")
+     ("j" windmove-down "move down" :color red)
+     ("k" windmove-up "move up" :color red)
+     ("l" windmove-right "move right" :color red)
+     ("s" ace-swap-window "swap window" :color blue)
+     ("p" nl/pull-window "pull window" :color blue)
+     ("|" (progn (split-window-right) (windmove-right)) "split right and move" :column "split" :color blue)
+     ("_" (progn (split-window-below) (windmove-down)) "split below and move" :color blue)
+     ("v" split-window-right "split right" :color blue)
+     ("x" split-window-below "split below" :color blue)
+     ("u" winner-undo "winner undo" :column "winner / ace " :color blue)
+     ("r" winner-redo "winner redo") ;;Fixme, not working?
+     ("a" ace-window "ace select window" :exit t)
+     ("f" new-frame "new frame" :column "frame" :exit t)
+     ("o" nl/open-buffer-in-other-window "open in other window" :exit t)
+     ("da" ace-delete-window "ace delete window" :column "delete" :color blue)
+     ("dw" delete-window "delete window")
+     ("db" kill-this-buffer "kill this buffer" :color blue)
+     ("df" delete-frame "delete frame" :exit t)
+     ("q" nil "quit")))
 
-  (defhydra hydra-window (:color red :hint nil)
-    ("h" windmove-left)
-    ("j" windmove-down)
-    ("k" windmove-up)
-    ("l" windmove-right)
-    ("|" (progn (split-window-right) (windmove-right)))
-    ("_" (progn (split-window-below) (windmove-down)))
-    ("v" split-window-right)
-    ("x" split-window-below)
-    ("u" winner-undo)
-    ("r" winner-redo) ;;Fixme, not working?
-    ("a" ace-window :exit t)
-    ("f" new-frame :exit t)
-    ("o" nl/open-buffer-in-other-window :exit t)
-    ("p" nl/pull-window :exit t)
-    ("s" ace-swap-window :exit t)
-    ("da" ace-delete-window)
-    ("dw" delete-window)
-    ("db" kill-this-buffer)
-    ("df" delete-frame :exit t)
-    ("q" nil)
-    ;;("i" ace-maximize-window "ace-one" :color blue)
-    ("m" headlong-bookmark-jump))
+  (key-chord-define-global
+   "zz"
+   (defhydra hydra-buffer (:color blue :columns 3)
+     "Buffer hydra"
+     ("n" next-buffer "next" :color red)
+     ;;("b" helm-mini "switch")
+     ("B" ibuffer "ibuffer")
+     ("p" previous-buffer "prev" :color red)
+     ("C-b" buffer-menu "buffer menu")
+     ("d" kill-this-buffer "delete" :color red)
+     ;; don't come back to previous buffer after delete
+     ("D" (progn (kill-this-buffer) (next-buffer)) "Delete" :color red)
+     ("s" save-buffer "save" :color red)))
 
-  (key-chord-define-global "yy" 'hydra-window/body)
+  (global-set-key
+   (kbd "M-g M-g")
+   (defhydra hydra-goto-line (goto-map "")
+     "goto-line"
+     ("g" consult-goto-line "go")
+     ("m" set-mark-command "mark" :bind nil)
+     ("q" nil "quit")))
 
-  (defhydra hydra-buffer (:color blue :columns 3)
-    ("n" next-buffer "next" :color red)
-    ;;("b" helm-mini "switch")
-    ("B" ibuffer "ibuffer")
-    ("p" previous-buffer "prev" :color red)
-    ("C-b" buffer-menu "buffer menu")
-    ("d" kill-this-buffer "delete" :color red)
-    ;; don't come back to previous buffer after delete
-    ("D" (progn (kill-this-buffer) (next-buffer)) "Delete" :color red)
-    ("s" save-buffer "save" :color red))
+  (defun toggle-window-split ()
+    (interactive)
+    (if (= (count-windows) 2)
+        (let* ((this-win-buffer (window-buffer))
+	       (next-win-buffer (window-buffer (next-window)))
+	       (this-win-edges (window-edges (selected-window)))
+	       (next-win-edges (window-edges (next-window)))
+	       (this-win-2nd (not (and (<= (car this-win-edges)
+					   (car next-win-edges))
+				       (<= (cadr this-win-edges)
+					   (cadr next-win-edges)))))
+	       (splitter
+	        (if (= (car this-win-edges)
+		       (car (window-edges (next-window))))
+		    'split-window-horizontally
+		  'split-window-vertically)))
+	  (delete-other-windows)
+	  (let ((first-win (selected-window)))
+	    (funcall splitter)
+	    (if this-win-2nd (other-window 1))
+	    (set-window-buffer (selected-window) this-win-buffer)
+	    (set-window-buffer (next-window) next-win-buffer)
+	    (select-window first-win)
+	    (if this-win-2nd (other-window 1))))))
 
-  (key-chord-define-global "zz" 'hydra-buffer/body)
-
-  (defhydra hydra-goto-line (goto-map "")
-    "goto-line"
-    ("g" consult-goto-line "go")
-    ("m" set-mark-command "mark" :bind nil)
-    ("q" nil "quit"))
-
-  (global-set-key (kbd "M-g M-g") 'hydra-goto-line/body)
-
-  (defhydra hydra-windows-nav (:color red)
-    ("s" shrink-window-horizontally "shrink horizontally" :column "Sizing")
-    ("e" enlarge-window-horizontally "enlarge horizontally")
-    ("S" shrink-window "shrink vertically")
-    ("E" enlarge-window "enlarge vertically")
-    ("b" balance-windows "balance window height")
-    ("m" maximize-window "maximize current window")
-    ("M" minimize-window "minimize current window")
-
-    ("h" split-window-below "split horizontally" :column "Split management")
-    ("v" split-window-right "split vertically")
-    ("d" delete-window "delete current window")
-    ("x" delete-other-windows "delete-other-windows")
-
-
-    ("z" ace-window "ace window" :color blue :column "Navigation")
-    ("h" windmove-left "← window")
-    ("j" windmove-down "↓ window")
-    ("k" windmove-up "↑ window")
-    ("l" windmove-right "→ window")
-    ("r" toggle-window-split "rotate windows") ; Located in utility functions
-    ("q" nil "quit menu" :color blue :column nil))
-
-  (global-set-key (kbd "C-c w") 'hydra-windows-nav/body))
+  (global-set-key
+   (kbd "C-c w")
+   (defhydra hydra-windows-nav (:color red)
+     ("s" shrink-window-horizontally "shrink horizontally" :column "Sizing")
+     ("e" enlarge-window-horizontally "enlarge horizontally")
+     ("S" shrink-window "shrink vertically")
+     ("E" enlarge-window "enlarge vertically")
+     ("b" balance-windows "balance window height")
+     ("m" maximize-window "maximize current window")
+     ("M" minimize-window "minimize current window")
+     ("h" split-window-below "split horizontally" :column "Split management")
+     ("v" split-window-right "split vertically")
+     ("d" delete-window "delete current window")
+     ("x" delete-other-windows "delete-other-windows")
+     ("z" ace-window "ace window" :color blue :column "Navigation")
+     ("h" windmove-left "← window")
+     ("j" windmove-down "↓ window")
+     ("k" windmove-up "↑ window")
+     ("l" windmove-right "→ window")
+     ("r" toggle-window-split "rotate windows") ; Located in utility functions
+     ("q" nil "quit menu" :color blue :column nil))))
 #+end_src
 
 *** Aligning things
@@ -1738,17 +1775,17 @@ the screen to center on each cursor with ~C-v~ and ~M-v~.
          ("C-!"         . mc/mark-next-symbol-like-this)
          ("C-x C-m"     . mc/mark-all-dwim)
          (:map selected-keymap
-              ("C-'" . mc/edit-lines)
-              ("."   . mc/mark-next-like-this)
-              ("<"   . mc/unmark-next-like-this)
-              ("C->" . mc/skip-to-next-like-this)
-              (","   . mc/mark-previous-like-this)
-              (">"   . mc/unmark-previous-like-this)
-              ("C-<" . mc/skip-to-previous-like-this)
-              ("y"   . mc/mark-next-symbol-like-this)
-              ("Y"   . mc/mark-previous-symbol-like-this)
-              ("w"   . mc/mark-next-word-like-this)
-              ("W"   . mc/mark-previous-word-like-this))))
+               ("C-'" . mc/edit-lines)
+               ("."   . mc/mark-next-like-this)
+               ("<"   . mc/unmark-next-like-this)
+               ("C->" . mc/skip-to-next-like-this)
+               (","   . mc/mark-previous-like-this)
+               (">"   . mc/unmark-previous-like-this)
+               ("C-<" . mc/skip-to-previous-like-this)
+               ("y"   . mc/mark-next-symbol-like-this)
+               ("Y"   . mc/mark-previous-symbol-like-this)
+               ("w"   . mc/mark-next-word-like-this)
+               ("W"   . mc/mark-previous-word-like-this))))
 #+end_src
 
 *
@@ -1791,13 +1828,13 @@ checker is loaded.
 
   (defun nl/php-before-save-hook ()
     (when (string-match-p (regexp-quote ".php") buffer-file-name)
-        (let ((default-directory (projectile-project-root))
-              (file-name (replace-regexp-in-string (projectile-project-root) "" buffer-file-name))
-              (command (concat php-cs-fixer-command
-                               " list-files --config "
-                               (shell-quote-argument php-cs-fixer-config-option))))
-          (when (string-match-p (regexp-quote file-name) (shell-command-to-string command))
-            (php-cs-fixer-fix)
+      (let ((default-directory (projectile-project-root))
+            (file-name (replace-regexp-in-string (projectile-project-root) "" buffer-file-name))
+            (command (concat php-cs-fixer-command
+                             " list-files --config "
+                             (shell-quote-argument php-cs-fixer-config-option))))
+        (when (string-match-p (regexp-quote file-name) (shell-command-to-string command))
+          (php-cs-fixer-fix)
           ))))
 
   (defun nl/nordita-php-mode-hook ()
@@ -2348,3 +2385,7 @@ are loaded is based off of [[https://github.com/magnars/.emacs.d][Magnar Sveen's
 (when (file-exists-p nl/user-settings-dir)
   (mapc 'load (directory-files nl/user-settings-dir nil "^[^#].*el$")))
 #+end_src
+
+# Local Variables:
+# jinx-languages: "en_GB"
+# End:
