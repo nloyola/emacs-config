@@ -311,6 +311,33 @@ Taken from: http://doc.rix.si/org/fsem.html
   (interactive)
   (nl/change-font-size nl/gui-fixed-font-size-normal nl/gui-variable-font-size-normal)
   (nl/main-frame-set-size-and-position))
+
+;; Resize the whole frame, and not only a window
+;;
+;; From:
+;;    https://stackoverflow.com/questions/24705984/increase-decrease-font-size-in-an-emacs-frame-not-just-buffer
+;;
+(defun acg/zoom-frame (&optional amt frame)
+  "Increaze FRAME font size by amount AMT. Defaults to selected
+ frame if FRAME is nil, and to 1 if AMT is nil."
+  (interactive "p")
+  (let* ((frame (or frame (selected-frame)))
+         (font (face-attribute 'default :font frame))
+         (size (font-get font :size))
+         (amt (or amt 1))
+         (new-size (+ size amt)))
+    (set-frame-font (font-spec :size new-size) t `(,frame))
+    (message "Frame's font new size: %d" new-size)))
+
+(defun acg/zoom-frame-out (&optional amt frame)
+  "Call `acg/zoom-frame' with negative argument."
+  (interactive "p")
+  (acg/zoom-frame (- (or amt 1)) frame))
+
+(global-set-key (kbd "C-x C-=") 'acg/zoom-frame)
+(global-set-key (kbd "C-x C--") 'acg/zoom-frame-out)
+(global-set-key (kbd "<C-down-mouse-4>") 'acg/zoom-frame)
+(global-set-key (kbd "<C-down-mouse-5>") 'acg/zoom-frame-out)
 #+end_src
 
 * Frame configuration
@@ -509,12 +536,18 @@ See: https://kristofferbalintona.me/posts/202206071000/
 #+end_src
 
 * Theme
+** Catppuccin
+
+#+begin_src emacs-lisp
+(setq catppuccin-flavor 'mocha)
+(load-theme 'catppuccin t)
+#+end_src
 
 ** Doom Themes
 
 See https://github.com/doomemacs/themes/tree/screenshots#screenshots
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 (use-package doom-themes
   :demand t
   :config
@@ -573,7 +606,6 @@ See https://github.com/doomemacs/themes/tree/screenshots#screenshots
 #+end_src
 
 * Packages bundled with Emacs
-
 ** =compile=
 
 Do not ask me to save files before compiling, or kill a previous compilation. Also scroll to the end
@@ -724,6 +756,38 @@ Remember position in a file.
   (save-place-mode t))
 #+end_src
 
+** tree sitter
+
+#+begin_src emacs-lisp
+(use-package tree-sitter
+  :config
+  (setq treesit-language-source-alist
+   '((bash "https://github.com/tree-sitter/tree-sitter-bash")
+     (cmake "https://github.com/uyha/tree-sitter-cmake")
+     (css "https://github.com/tree-sitter/tree-sitter-css")
+     (elisp "https://github.com/Wilfred/tree-sitter-elisp")
+     (go "https://github.com/tree-sitter/tree-sitter-go")
+     (html "https://github.com/tree-sitter/tree-sitter-html")
+     (javascript "https://github.com/tree-sitter/tree-sitter-javascript" "master" "src")
+     (json "https://github.com/tree-sitter/tree-sitter-json")
+     (make "https://github.com/alemuller/tree-sitter-make")
+     (markdown "https://github.com/ikatyang/tree-sitter-markdown")
+     (python "https://github.com/tree-sitter/tree-sitter-python")
+     (toml "https://github.com/tree-sitter/tree-sitter-toml")
+     (tsx "https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src")
+     (typescript "https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src")
+     (yaml "https://github.com/ikatyang/tree-sitter-yaml")))
+  (setq major-mode-remap-alist
+        '((yaml-mode . yaml-ts-mode)
+          (bash-mode . bash-ts-mode)
+          (js2-mode . js-ts-mode)
+          (typescript-mode . typescript-ts-mode)
+          (json-mode . json-ts-mode)
+          (css-mode . css-ts-mode)
+          (python-mode . python-ts-mode)))
+  )
+#+end_src
+
 ** =winner-mode=
 
 Window management. ~C-c left (winner-undo)~ undoes the last window
@@ -798,6 +862,7 @@ Complete anything.
   (company-abort-manual-when-too-short t "Be less enthusiastic about completion.")
   :custom-face
   (company-tooltip ((t (:family "FiraCode Nerd Font" :height 100))))
+  (company-tooltip-selection ((t (:background "#585b70"))))
   :config
   (setq company-idle-delay 0              ;; no delay no autocomplete
         company-minimum-prefix-length 1
@@ -1175,7 +1240,7 @@ command line. Use an easy keybinding to access magit.
                           'append))
 #+end_src
 
-**** Fullscreen magit
+**** Full-screen magit
 
 #+BEGIN_QUOTE
 The following code makes magit-status run alone in the frame, and then restores the old window
@@ -2054,6 +2119,21 @@ Pulse highlight line on demand or after running select functions
 
 #+end_src
 
+** Python
+
+*** lsp-pyright
+
+#+begin_src emacs-lisp
+(use-package lsp-pyright
+  :preface
+  (defun nl/pyright-hook ()
+    (require 'lsp-pyright))
+  :hook
+  (python-mode . display-line-numbers-mode)
+  (python-mode . nl/pyright-hook)
+  (python-mode . lsp-deferred))
+#+end_src
+
 ** rust
 
 See https://robert.kra.hn/posts/rust-emacs-setup/
@@ -2129,19 +2209,20 @@ See https://robert.kra.hn/posts/rust-emacs-setup/
   )
 #+end_src
 
-** Python
+** `[[https://github.com/orzechowskid/tsx-mode.el/tree/emacs29][tsx-mode]]
 
-*** lsp-pyright
+Checked out branch ~emacs29~.
 
-#+begin_src emacs-lisp
-(use-package lsp-pyright
-  :preface
-  (defun nl/pyright-hook ()
-    (require 'lsp-pyright))
-  :hook
-  (python-mode . display-line-numbers-mode)
-  (python-mode . nl/pyright-hook)
-  (python-mode . lsp-deferred))
+#+begin_src emacs-lisp :tangle no
+(use-package tsx-mode
+  :load-path "~/src/github/elisp/tsx-mode.el"
+  :mode ("\\.tsx\\'")
+  :config
+  (use-package tree-sitter-css-in-js
+    :load-path "~/src/github/elisp/tree-sitter-css-in-js")
+  (use-package corfu)
+  (use-package coverlay)
+  (use-package origami))
 #+end_src
 
 ** typescript
@@ -2153,13 +2234,13 @@ See https://robert.kra.hn/posts/rust-emacs-setup/
   :bind (:map typescript-mode-map
               ("M-j" . c-indent-new-comment-line))
   :hook
-  (typescript-mode . display-line-numbers-mode)
-  (typescript-mode . lsp-deferred)
-  (typescript-mode . column-enforce-mode)
+  ;;(typescript-mode . column-enforce-mode)
   ;;(typescript-mode . rainbow-delimiters-mode)
   (typescript-mode . nl/typescript-mode)
   :preface
   (defun nl/typescript-mode ()
+    (lsp-deferred)
+    (display-line-numbers-mode)
     (flycheck-mode +1)
     ;;(eldoc-mode +1)
     (company-mode +1)
@@ -2215,8 +2296,7 @@ For TSX see: https://github.com/emacs-typescript/typescript.el/issues/4#issuecom
     (lsp-deferred)
     (local-set-key (kbd "M-q") #'fill-paragraph) ;; did not work with :bind
     (display-line-numbers-mode))
-  :hook ((web-mode . nl/web-mode-hook)
-         (typescript-tsx-mode . lsp))
+  :hook ((web-mode . nl/web-mode-hook))
   :mode (("\\.html\\'" . web-mode)
          ("\\.html\\.eex\\'" . web-mode)
          ("\\.html\\.tera\\'" . web-mode)
