@@ -188,4 +188,8 @@ See http://emacsninja.com/posts/failing-gracefully.html"
 ;;; Finalization
 
 ;; comment this line out to show the *Messages* buffer on startup
+;; (defun nl/show-messages-on-startup ()
+;;   "Show the *Messages* buffer after starting Emacs."
+;;   (setq initial-buffer-choice (lambda () (get-buffer "*Messages*"))))
+
 ;; (nl/show-messages-on-startup)

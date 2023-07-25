@@ -760,7 +760,7 @@ Remember position in a file.
 
 #+begin_src emacs-lisp
 (use-package tree-sitter
-  :config
+  :init
   (setq treesit-language-source-alist
    '((bash "https://github.com/tree-sitter/tree-sitter-bash")
      (cmake "https://github.com/uyha/tree-sitter-cmake")
@@ -785,6 +785,7 @@ Remember position in a file.
           (json-mode . json-ts-mode)
           (css-mode . css-ts-mode)
           (python-mode . python-ts-mode)))
+  (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode)
   )
 #+end_src
 
@@ -872,7 +873,7 @@ Complete anything.
 
 ** [[https://github.com/jordonbiondo/column-enforce-mode][column-enforce-mode]]
 
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp
 (use-package column-enforce-mode
   :config
   (setq column-enforce-column 120)
@@ -1208,7 +1209,8 @@ Complete anything.
                           (bookmarks . 5)
                           (agenda . 5)
                           (registers . 5)))
-  (dashboard-setup-startup-hook))
+  (dashboard-setup-startup-hook)
+  )
 #+end_src
 ** [[https://github.com/spotify/dockerfile-mode][dockerfile-mode]]
 
@@ -2228,20 +2230,22 @@ Checked out branch ~emacs29~.
 ** typescript
 
 #+begin_src emacs-lisp
-(use-package typescript-mode
-  :diminish typescript-mode
-  :mode ("\\.ts\\'" "\\.tsx\\'" "\\.js\\'")
-  :bind (:map typescript-mode-map
+(use-package typescript-ts-mode
+  :mode (("\\.ts\\'" . typescript-ts-mode)
+         ("\\.tsx\\'" . tsx-ts-mode))
+  :bind (:map typescript-ts-mode-map
               ("M-j" . c-indent-new-comment-line))
   :hook
   ;;(typescript-mode . column-enforce-mode)
   ;;(typescript-mode . rainbow-delimiters-mode)
-  (typescript-mode . nl/typescript-mode)
+  (typescript-ts-mode . nl/typescript-mode)
+  (tsx-ts-mode . nl/typescript-mode)
   :preface
   (defun nl/typescript-mode ()
     (lsp-deferred)
     (display-line-numbers-mode)
     (flycheck-mode +1)
+    (column-enforce-mode)
     ;;(eldoc-mode +1)
     (company-mode +1)
     (subword-mode +1)
@@ -2287,8 +2291,6 @@ To save all buffers that wgrep has changed, run
 
 ** [[https://github.com/fxbois/web-mode][web-mode]]
 
-For TSX see: https://github.com/emacs-typescript/typescript.el/issues/4#issuecomment-947866123
-
 #+begin_src emacs-lisp
 (use-package web-mode
   :preface
@@ -2300,10 +2302,7 @@ For TSX see: https://github.com/emacs-typescript/typescript.el/issues/4#issuecom
   :mode (("\\.html\\'" . web-mode)
          ("\\.html\\.eex\\'" . web-mode)
          ("\\.html\\.tera\\'" . web-mode)
-         ("\\.tpl.php\\'" . web-mode)
-         ("\\.\\(j\\|t\\)sx\\'" . typescript-tsx-mode))
-  :init
-  (define-derived-mode typescript-tsx-mode typescript-mode "TypeScript-tsx")
+         ("\\.tpl.php\\'" . web-mode))
   :config
   (setq web-mode-markup-indent-offset 2
         web-mode-css-indent-offset 2
