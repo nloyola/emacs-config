@@ -10,7 +10,7 @@
 (eval-when-compile
   (require 'seq)
   (require 'projectile)
-  (require 'typescript-mode)
+  (require 'typescript-ts-mode)
   )
 
 (defun typescript-project-source-file-p (filename)
@@ -113,10 +113,11 @@
   ("a" hydra-nl-align/body "align" :color blue)
   ("i" nl/indent-whole-buffer "indent buffer" :color blue))
 
-(key-chord-define typescript-mode-map "jc" '(lambda () (interactive) (hydra-nl/typescript-project/body)))
+(key-chord-define typescript-ts-mode-map "jc" '(lambda () (interactive) (hydra-nl/typescript-project/body)))
+(key-chord-define tsx-ts-mode-map "jc" '(lambda () (interactive) (hydra-nl/typescript-project/body)))
 (key-chord-define web-mode-map "jc" '(lambda () (interactive) (hydra-nl/typescript-project/body)))
 
-(define-key typescript-mode-map (kbd "C-c C-t c") 'nl/typescript-compile-this-file)
+(define-key typescript-ts-mode-map (kbd "C-c C-t c") 'nl/typescript-compile-this-file)
 
 (provide 'nl-typescript)
 ;;; nl-angular.el ends here
