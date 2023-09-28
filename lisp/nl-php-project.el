@@ -29,6 +29,16 @@
       (* (syntax whitespace)))
   "Regular expression for a PHP class name.")
 
+(defconst php-function-name-regexp
+  (eval-when-compile
+    (rx line-start
+        (one-or-more (syntax whitespace))
+        "public function"
+        (one-or-more (syntax whitespace))
+        (group (+ (not (syntax open-parenthesis))))
+        ))
+  "Regular expression for a PHP public function.")
+
 (defconst phpunit-test-beginning-regexp
   (eval-when-compile
     (rx line-start
@@ -41,6 +51,14 @@
         ))
   "Regular expression for a PHPUnit test function.")
 
+(defconst phpunit-test-attribute-beginning-regexp
+  (eval-when-compile
+    (rx line-start
+        (one-or-more (syntax whitespace))
+        "#\[Test\]"
+        ))
+  "Regular expression for a PHPUnit test function that uses a PHP attribute.")
+
 (defun nl/phpunit-file-name ()
   "Return the phpunit's file module name for the file that the buffer is visiting."
   (unless (buffer-file-name) (error "not a file buffer"))
@@ -52,16 +70,20 @@
   )
 
 (defun nl/phpunit-test-find-class-name ()
-  "Determine the name of the PHPUnit suite name."
+  "Return the name of the PHPUnit suite name."
   (save-excursion
     (when (re-search-backward php-beginning-of-class-regexp nil t)
       (match-string-no-properties 1))))
 
 (defun nl/phpunit-test-find-method-name ()
-  "Determine the name of the PHPUnit test's method name."
+  "Return the name of the PHPUnit test's method. The test method can start with 'test' or can use a PHP attribute."
   (save-excursion
-    (when (re-search-backward phpunit-test-beginning-regexp nil t)
-      (match-string-no-properties 1))))
+    (if (re-search-backward phpunit-test-beginning-regexp nil t)
+      (match-string-no-properties 1)
+    (if (and (re-search-backward phpunit-test-attribute-beginning-regexp)
+               (re-search-forward php-function-name-regexp))
+      (match-string-no-properties 1))
+    )))
 
 (defun nl/php-file-name ()
   "Return the module name for the file that the buffer is visiting."
@@ -127,8 +149,18 @@ The class name must have the postfix 'Spec' for this function to work."
   ("a" hydra-nl-align/body "align" :color blue :column "PHP"))
 
 ;; this def uses a lambda to show that it is possible, id does not need to use it
-(key-chord-define php-mode-map "jc" '(lambda () (interactive) (hydra-nl-project/body)))
-(key-chord-define yaml-mode-map "jc" '(lambda () (interactive) (hydra-nl-project/body)))
+(key-chord-define php-mode-map "jc" 'hydra-nl-project/body)
+(key-chord-define yaml-mode-map "jc" 'hydra-nl-project/body)
+
+(defun nl/phpunit-use-attributes ()
+  (interactive)
+  (when (re-search-forward "^\\s-+public function\\s-+test" nil t)
+    (backward-kill-word 1)
+    (downcase-word 1)
+    (back-to-indentation)
+    (insert "#[Test]\n")
+    (c-indent-line-or-region)
+  ))
 
 (provide 'nl-php-project)
 ;;; nl-php-project.el ends here
