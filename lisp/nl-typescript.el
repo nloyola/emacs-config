@@ -1,4 +1,4 @@
-;;; angular --- package to help with development in Angular projects
+;;; nl-typescript --- package to help with development in TypeScript projects
 
 ;;; Commentary:
 
@@ -63,25 +63,25 @@
   (interactive)
   (nl/command-in-typescript-proj-root (format "npm run test:cov")))
 
-(defun nl/counsel-ag-ts ()
-  "Perform counsel-ag on the project's TypeScript files excluding spec files."
-  (interactive)
-  (counsel-ag "" (projectile-project-root) "-G '((?!spec)).ts$'"))
+;; (defun nl/counsel-ag-ts ()
+;;   "Perform counsel-ag on the project's TypeScript files excluding spec files."
+;;   (interactive)
+;;   (counsel-ag "" (projectile-project-root) "-G '((?!spec)).ts$'"))
 
-(defun nl/counsel-ag-ts-spec ()
-  "Perform counsel-ag on the project's TypeScript spec files."
-  (interactive)
-  (counsel-ag "" (projectile-project-root) "-G spec.ts$"))
+;; (defun nl/counsel-ag-ts-spec ()
+;;   "Perform counsel-ag on the project's TypeScript spec files."
+;;   (interactive)
+;;   (counsel-ag "" (projectile-project-root) "-G spec.ts$"))
 
-(defun nl/counsel-ag-html ()
-  "Perform counsel-ag on the project's HTML files."
-  (interactive)
-  (counsel-ag "" (projectile-project-root) "-G .html$"))
+;; (defun nl/counsel-ag-html ()
+;;   "Perform counsel-ag on the project's HTML files."
+;;   (interactive)
+;;   (counsel-ag "" (projectile-project-root) "-G .html$"))
 
-(defun nl/counsel-ag-css ()
-  "Perform counsel-ag on the project's CSS files."
-  (interactive)
-  (counsel-ag "" (projectile-project-root) "-G .s\\?css$"))
+;; (defun nl/counsel-ag-css ()
+;;   "Perform counsel-ag on the project's CSS files."
+;;   (interactive)
+;;   (counsel-ag "" (projectile-project-root) "-G .s\\?css$"))
 
 (defun ts-spec-filename-p (filename)
   "Return TRUE if FILENAME is a match for a TypseScript spec."

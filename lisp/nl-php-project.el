@@ -63,7 +63,6 @@
   "Return the phpunit's file module name for the file that the buffer is visiting."
   (unless (buffer-file-name) (error "not a file buffer"))
   (let ((file-name (nth 1 (split-string buffer-file-name nl/norweb-project-root))))
-    (message "%s" (concat nl/norweb-project-root "/"))
     (unless file-name (error "File not in project"))
     (unless (nl/php-filename-p file-name) (error "not a PHP file"))
     file-name)

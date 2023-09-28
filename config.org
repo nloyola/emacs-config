@@ -1932,18 +1932,19 @@ checker is loaded.
         ;; use php-cs-fixer on files in the project
         (when (string-match-p (regexp-quote file-name) (shell-command-to-string command))
           (php-cs-fixer-fix)
-          )))))
+          ))))
 
   (defun nl/php-mode-hook ()
     "My PHP mode configuration."
     (display-line-numbers-mode)
     (let ((nl-is-nordita-project (string-match-p "nordita" buffer-file-name)))
-      (message "nl/php-mode-hoook: %s" nl-is-nordita-project)
       (when nl-is-nordita-project (nl-nordita-project-settings))
       (when (not nl-is-nordita-project) (nl-php-project-settings))
       (php-set-style "nl/php") ;; this style is based on the symfony2 style)
       (require 'flycheck-phpstan)
+      (setq php-mode-lineup-cascaded-calls t)
       (flycheck-mode t)
+      (message ">>>> nl-nordita-project-settings")
       (subword-mode +1)))
 
   (defun nl-php-project-settings ()
@@ -1951,10 +1952,10 @@ checker is loaded.
 
   (defun nl-nordita-project-settings ()
     "Nordita's PHP mode configuration."
-    (message ">>>> here")
     (add-hook 'before-save-hook 'nl/php-before-save-hook)
     (lsp)
     (setq php-project-root 'auto
+          php-mode-coding-style 'nl/php-nordita
           phpstan-config-file '(root . "phpstan.neon")
           phpstan-memory-limit "1G"
           phpstan-level 6
@@ -2057,9 +2058,7 @@ checker is loaded.
 
   ;; (eval-after-load 'flycheck
   ;;   '(add-to-list 'flycheck-checkers 'nl/php-checker))
-  :custom
-  (php-mode-coding-style (quote nl/php-nordita))
-  (php-mode-lineup-cascaded-calls t))
+  )
 #+end_src
 
 *** [[https://github.com/nlamirault/phpunit.el][php-unit]]
@@ -2288,6 +2287,7 @@ See https://robert.kra.hn/posts/rust-emacs-setup/
   (tsx-ts-mode . nl/typescript-mode)
   (tsx-ts-mode . nl/typescript-mode)
   :preface
+  (use-package nl-react :demand :load-path "~/.emacs.d/lisp"))
   (defun nl/typescript-mode ()
     (lsp-deferred)
     (display-line-numbers-mode)
@@ -2301,7 +2301,8 @@ See https://robert.kra.hn/posts/rust-emacs-setup/
     ;; (push '("->" . ?→) prettify-symbols-alist)
     ;; (push '("=>" . ?↦) prettify-symbols-alist)
     ;; (prettify-symbols-mode)
-    (setq column-enforce-column 120))
+    (setq column-enforce-column 120)
+    (nl/yas-reload-all)
   :config
   (setq company-tooltip-align-annotations t ;; aligns annotation to the right hand side
         ;;prettify-symbols-unprettify-at-point 'right-edge
