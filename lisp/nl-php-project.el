@@ -96,7 +96,7 @@
 
 (defun nl/phpunit-create-command (command)
   "Create a COMMAND that can run a test using PHPUnit."
-  (format "vendor/bin/phpunit -c test/phpunit.xml --no-coverage --exclude-group=end-to-end %s" command))
+  (format "vendor/bin/phpunit -c test/phpunit.xml --testdox --no-coverage --exclude-group=end-to-end %s" command))
 
 (defun nl/php-command-in-proj-root (command)
   "Run the compile COMMAND in project's root directory."

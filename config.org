@@ -677,11 +677,15 @@ Enable ANSI colors for compilation buffers.
   :bind (("M-O"   . show-compilation)
          ;;("C-c c" . compile)
          )
+  :hook
+  (compilation-mode . hl-line-mode)
   :init
   (defun nl/colorize-compilation-buffer ()
     (let ((inhibit-read-only t))
       (ansi-color-apply-on-region (point-min) (point-max)))
     )
+  :custom
+  (compilation-scroll-output 'first-error)
   :config
   (setq compilation-ask-about-save nil
         compilation-always-kill t
@@ -691,6 +695,18 @@ Enable ANSI colors for compilation buffers.
          (compilation-filter . nl/colorize-compilation-buffer)
          )
   )
+#+end_src
+
+*** [[https://codeberg.org/ideasman42/emacs-fancy-compilation][emacs-fancy-compilation]]
+
+A minimalist package that enhances compilation-mode.
+
+#+begin_src emacs-lisp :tangle no
+(use-package fancy-compilation
+  :commands (fancy-compilation-mode))
+
+(with-eval-after-load 'compile
+  (fancy-compilation-mode))
 #+end_src
 
 ** =dired=
@@ -782,7 +798,13 @@ Remember position in a file.
 
 ** tree sitter
 
+Had to install TSX tag =v0.20.2= since the latest in the repository cause a parsing failure
+
 #+begin_src emacs-lisp
+(use-package treesit-auto
+  :config
+  (global-treesit-auto-mode))
+
 (use-package tree-sitter
   :ensure tree-sitter-langs
   :init
@@ -797,10 +819,11 @@ Remember position in a file.
      (json "https://github.com/tree-sitter/tree-sitter-json")
      (make "https://github.com/alemuller/tree-sitter-make")
      (markdown "https://github.com/ikatyang/tree-sitter-markdown")
-     (php . ("https://github.com/tree-sitter/tree-sitter-php"))
+     (php "https://github.com/tree-sitter/tree-sitter-php")
      (python "https://github.com/tree-sitter/tree-sitter-python")
      (toml "https://github.com/tree-sitter/tree-sitter-toml")
-     (tsx "https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src")
+     ;; (tsx "https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src")
+     (tsx "https://github.com/tree-sitter/tree-sitter-typescript" "v0.20.2" "tsx/src")
      (typescript "https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src")
      (yaml "https://github.com/ikatyang/tree-sitter-yaml")))
   (setq major-mode-remap-alist
@@ -813,8 +836,22 @@ Remember position in a file.
           ;;(php-mode . php-ts-mode)
           (python-mode . python-ts-mode))
         )
+  (setq treesit-auto-fallback-alist
+      '((toml-ts-mode . conf-toml-mode)
+        ;; I don't actually know if the future tree-sitter mode for HTML will be
+        ;; called html-ts-mode or mhtml-ts-mode, but if it's the former I'd include this
+        (html-ts-mode . mhtml-mode)
+        ;; See the note in their README: https://github.com/emacs-typescript/typescript.el#a-short-note-on-development-halt
+        (typescript-ts-mode . nil)
+        (tsx-ts-mode . nil)))
   (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode)
   )
+#+end_src
+
+Bulk install all tree sitter language:
+
+#+begin_src emacs-lisp :tangle no
+(mapc #'treesit-install-language-grammar (mapcar #'car treesit-language-source-alist))
 #+end_src
 
 ** =winner-mode=
@@ -1177,6 +1214,13 @@ Complete anything.
 
   ;; Enable recursive minibuffers
   (setq enable-recursive-minibuffers t))
+
+(use-package vertico-posframe
+  :ensure t
+  :custom
+  (vertico-posframe-parameters
+   '((left-fringe . 8)
+     (right-fringe . 8))))
 #+end_src
 
 ** css-mode
@@ -1228,16 +1272,21 @@ Complete anything.
 
 ** [[https://github.com/emacs-dashboard/emacs-dashboard][dashboard]]
 
+Using =all-the-icons= slows down init time.
+
 #+begin_src emacs-lisp
 (use-package dashboard
   :demand t
   :custom
   (dashboard-projects-backend 'projectile)
+  (dashboard-center-content t)
+  ;; (dashboard-set-heading-icons t)
+  ;; (dashboard-icon-type 'all-the-icons)
+  ;; (dashboard-set-file-icons t)
   :config
   (setq dashboard-items '((recents  . 5)
                           (projects . 5)
                           (bookmarks . 5)
-                          (agenda . 5)
                           (registers . 5)))
   (dashboard-setup-startup-hook)
   )
@@ -2073,9 +2122,10 @@ checker is loaded.
   :init
   (push `(php-unit-error-regexp
           ,(rx line-start
-               (group-n 1 "/" (one-or-more (not (in space ":" "\n"))))
+               (zero-or-more (not "/"))
+               (group-n 1 (one-or-more not-newline (not ":")))
                ":" (group-n 2 (one-or-more digit))
-               (zero-or-more not-newline))
+               )
           1 2)
         compilation-error-regexp-alist-alist)
   ;; (push `(php-error-regexp
@@ -2512,7 +2562,3 @@ are loaded is based off of [[https://github.com/magnars/.emacs.d][Magnar Sveen's
 (when (file-exists-p nl/user-settings-dir)
   (mapc 'load (directory-files nl/user-settings-dir nil "^[^#].*el$")))
 #+end_src
-
-# Local Variables:
-# jinx-languages: "en_GB"
-# End:
