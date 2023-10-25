@@ -1252,7 +1252,7 @@ Complete anything.
 #+end_src
 ** [[https://github.com/emacs-lsp/dap-mode][dap-mode]]
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 (use-package dap-mode
   :after lsp-mode
   ;;:hook ((dap-stopped . (call-interactively #'dap-hydra)))
@@ -1753,6 +1753,26 @@ http://danconnor.com/post/5028ac91e8891a000000111f/align_and_columnize_key_value
   ("p" align-parameters "parameters" :color blue))
 #+end_src
 
+** CC mode (Java)
+
+#+begin_src emacs-lisp
+(use-package cc-mode
+  :mode (("\\.h\\(h?\\|xx\\|pp\\)\\'" . c++-mode)
+         ("\\.java\\'"                . java-mode))
+  :hook
+  (java-mode . nl/java-mode-hook)
+  :preface
+  (defun nl/java-mode-hook ()
+    "My Java mode configuration."
+    (lsp-deferred)
+    (display-line-numbers-mode)
+    (flycheck-mode t)
+    (subword-mode +1)
+    (setq indent-tabs-mode nil
+          c-basic-offset 4)
+    )
+  )
+#+end_src
 ** [[https://github.com/jschaf/emacs-lorem-ipsum][lorem-ipsum]]
 
 Add filler lorem ipsum text to Emacs.
@@ -1852,6 +1872,18 @@ Add filler lorem ipsum text to Emacs.
         lsp-ui-peek-list-width 60
         lsp-ui-peek-peek-height 25
         lsp-eldoc-enable-hover nil)
+  )
+#+end_src
+
+** lsp-java
+
+#+begin_src emacs-lisp
+(use-package lsp-java
+  :hook (java-mode . lsp)
+  :custom
+  (lsp-java-compile-null-analysis-mode "automatic")
+  ;;(lsp-java-format-enabled t)
+  ;;(lsp-java-save-actions-organize-imports t)
   )
 #+end_src
 
@@ -1993,7 +2025,6 @@ checker is loaded.
       (require 'flycheck-phpstan)
       (setq php-mode-lineup-cascaded-calls t)
       (flycheck-mode t)
-      (message ">>>> nl-nordita-project-settings")
       (subword-mode +1)))
 
   (defun nl-php-project-settings ()
@@ -2121,11 +2152,8 @@ checker is loaded.
               ("C-c , p" . phpunit-current-project))
   :init
   (push `(php-unit-error-regexp
-          ,(rx line-start
-               (zero-or-more (not "/"))
-               (group-n 1 (one-or-more not-newline (not ":")))
-               ":" (group-n 2 (one-or-more digit))
-               )
+          ,(rx (group-n 1 "/" (one-or-more (or "/" "-" alnum)) ".php")
+               ":" (group-n 2 (one-or-more digit)))
           1 2)
         compilation-error-regexp-alist-alist)
   ;; (push `(php-error-regexp
