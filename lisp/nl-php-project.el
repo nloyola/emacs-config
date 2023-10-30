@@ -62,7 +62,7 @@
 (defun nl/phpunit-file-name ()
   "Return the phpunit's file module name for the file that the buffer is visiting."
   (unless (buffer-file-name) (error "not a file buffer"))
-  (let ((file-name (nth 1 (split-string buffer-file-name nl/norweb-project-root))))
+  (let ((file-name (nth 1 (split-string buffer-file-name (project-root (project-current))))))
     (unless file-name (error "File not in project"))
     (unless (nl/php-filename-p file-name) (error "not a PHP file"))
     file-name)
@@ -87,8 +87,7 @@
 (defun nl/php-file-name ()
   "Return the module name for the file that the buffer is visiting."
   (unless (buffer-file-name) (error "not a file buffer"))
-  (let ((file-name (nth 1 (split-string buffer-file-name nl/norweb-project-root))))
-    (message "%s" (concat (projectile-project-root) "/"))
+  (let ((file-name (nth 1 (split-string buffer-file-name (project-root (project-current))))))
     (unless file-name (error "File not in project"))
     (unless (nl/php-filename-p file-name) (error "not a PHP file"))
     file-name)
@@ -105,7 +104,7 @@
 
 (defun nl/php-create-command-in-project-root (command)
   "Create a compile COMMAND that can be run from project's root directory."
-  (format "cd %s && %s" nl/norweb-project-root command))
+  (format "cd %s && %s" (project-root (project-current)) command))
 
 (defun nl/phpunit-run (command)
   "Run PHPUnit with COMMAND in Norweb docker container."

@@ -9,8 +9,6 @@
 (use-package nl-php-project :demand :load-path ("~/.emacs.d/lisp" "~/.emacs.d/elpa"))
 (require 'nl-php-project)
 
-(defvar nl/norweb-project-root (projectile-project-root))
-
 (projectile-register-project-type 'php-symfony '("composer.json" "src" "test" "vendor")
                                   :project-file "composer.json"
                                   :src-dir "src/"
@@ -20,7 +18,7 @@
 
 (defun nl/php-create-docker-command (command)
   "Create a COMMAND that can be run using the docker-wrapper.sh shell script."
-  (format "cd %s && ./docker-wrapper.sh app-cmd \"%s\"" nl/norweb-project-root command))
+  (format "cd %s && ./docker-wrapper.sh app-cmd \"%s\"" (project-root (project-current)) command))
 
 (defun nl/php-docker-command-in-proj-root (command)
   "Run the COMMAND under the docker-wrapper.sh shell script."
@@ -43,7 +41,7 @@
 (defun nl/phpunit-coverage-report-in-chrome ()
   "Open the code coverage report in a Google Chrome tab."
   (interactive)
-  (browse-url-chrome (format "file://%stest/coverage/report/index.html" (projectile-project-root))))
+  (browse-url-chrome (format "file://%stest/coverage/report/index.html" (project-root (project-current)))))
 
 (defun nl/php-code-sniffer ()
   "Run PHP CodeSniffer through the project's Makefile."
@@ -55,8 +53,8 @@
   (interactive)
   (unless (buffer-file-name) (user-error "not a file buffer"))
   (unless (string-match-p "\.yaml$" (buffer-file-name)) (user-error "not a PHP file"))
-  (let* ((default-directory nl/norweb-project-root)
-         (file-name (nth 1 (split-string buffer-file-name nl/norweb-project-root)))
+  (let* ((default-directory (project-root (project-current)))
+         (file-name (nth 1 (split-string buffer-file-name (project-root (project-current)))))
          (base-name (replace-regexp-in-string "\.yaml$" "" (file-name-nondirectory file-name))))
     (unless file-name (user-error "File not in project"))
     (compile
@@ -66,13 +64,13 @@
   "Find text in the project's SCSS subfolder."
   (interactive)
   (unless (buffer-file-name) (user-error "not a file buffer"))
-  (let* ((default-directory (format "%s/pw-frontend/src/scss" nl/norweb-project-root)))
+  (let* ((default-directory (format "%s/pw-frontend/src/scss" (project-root (project-current)))))
     (compile (format "grep --exclude-dir=_attic -nre \"%s\" ." (symbol-at-point)))))
 
 (defun nl/nordita-symbol-pw-grep ()
   "Find text in the project's source code."
   (interactive)
-  (let* ((default-directory (format "%s" nl/norweb-project-root)))
+  (let* ((default-directory (format "%s" (project-root (project-current)))))
     (compile (format "grep -nre \"%s\" {default_pages,src,pw-frontend/src/ts}" (symbol-at-point)))))
 
 (defhydra hydra-nl/php-test (:color blue)

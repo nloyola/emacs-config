@@ -815,6 +815,7 @@ Had to install TSX tag =v0.20.2= since the latest in the repository cause a pars
      (elisp "https://github.com/Wilfred/tree-sitter-elisp")
      (go "https://github.com/tree-sitter/tree-sitter-go")
      (html "https://github.com/tree-sitter/tree-sitter-html")
+     (java "https://github.com/tree-sitter/tree-sitter-java")
      (javascript "https://github.com/tree-sitter/tree-sitter-javascript" "master" "src")
      (json "https://github.com/tree-sitter/tree-sitter-json")
      (make "https://github.com/alemuller/tree-sitter-make")
@@ -833,6 +834,7 @@ Had to install TSX tag =v0.20.2= since the latest in the repository cause a pars
           (typescript-mode . typescript-ts-mode)
           (json-mode . json-ts-mode)
           (css-mode . css-ts-mode)
+          (java-mode . java-ts-mode)
           ;;(php-mode . php-ts-mode)
           (python-mode . python-ts-mode))
         )
@@ -1753,15 +1755,16 @@ http://danconnor.com/post/5028ac91e8891a000000111f/align_and_columnize_key_value
   ("p" align-parameters "parameters" :color blue))
 #+end_src
 
-** CC mode (Java)
+** Java
 
 #+begin_src emacs-lisp
 (use-package cc-mode
   :mode (("\\.h\\(h?\\|xx\\|pp\\)\\'" . c++-mode)
-         ("\\.java\\'"                . java-mode))
+         ("\\.java\\'"                . java-ts-mode))
   :hook
-  (java-mode . nl/java-mode-hook)
+  (java-ts-mode . nl/java-mode-hook)
   :preface
+  (use-package nl-java-project :demand :load-path "~/.emacs.d/lisp")
   (defun nl/java-mode-hook ()
     "My Java mode configuration."
     (lsp-deferred)
@@ -1770,7 +1773,15 @@ http://danconnor.com/post/5028ac91e8891a000000111f/align_and_columnize_key_value
     (subword-mode +1)
     (setq indent-tabs-mode nil
           c-basic-offset 4)
+    (projectile-update-project-type 'maven
+                                    :test-suffix "Test")
+    (setq projectile-find-dir-includes-top-level t
+          projectile-test-suffix-function (lambda (project-type) "" "Test")
+          )
     )
+  :custom
+  (projectile-create-missing-test-files t)
+  :config
   )
 #+end_src
 ** [[https://github.com/jschaf/emacs-lorem-ipsum][lorem-ipsum]]
@@ -1879,7 +1890,7 @@ Add filler lorem ipsum text to Emacs.
 
 #+begin_src emacs-lisp
 (use-package lsp-java
-  :hook (java-mode . lsp)
+  :hook (java-ts-mode . lsp)
   :custom
   (lsp-java-compile-null-analysis-mode "automatic")
   ;;(lsp-java-format-enabled t)
