@@ -557,6 +557,9 @@ See: https://kristofferbalintona.me/posts/202206071000/
   (setq ef-themes-mixed-fonts t
       ef-themes-variable-pitch-ui t)
   (load-theme 'ef-bio :no-confirm)
+  :custom-face
+  (ansi-color-red ((t (:background "#440F04"))))
+  (ansi-color-bright-red ((t (:background "#A02409"))))
   )
 #+end_src
 
@@ -573,7 +576,6 @@ See https://github.com/doomemacs/themes/tree/screenshots#screenshots
 
 #+begin_src emacs-lisp :tangle no
 (use-package doom-themes
-  :demand t
   :config
   ;; Global settings (defaults)
   (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
@@ -1215,7 +1217,11 @@ Complete anything.
   ;;       #'command-completion-default-include-p)
 
   ;; Enable recursive minibuffers
-  (setq enable-recursive-minibuffers t))
+  (setq enable-recursive-minibuffers t)
+  :custom
+  (frame-background-mode 'dark)
+  :custom
+  (mapc 'frame-set-background-mode (frame-list)))
 
 (use-package vertico-posframe
   :ensure t
@@ -1251,6 +1257,15 @@ Complete anything.
     :commands vterm vterm-other-window
     :config
     (setq vterm-max-scrollback 10000)))
+#+end_src
+
+** ediff
+#+begin_src emacs-lisp
+(use-package ediff
+  :custom
+  (ediff-diff-options "-w")
+  (ediff-split-window-function 'split-window-horizontally)
+  (ediff-window-setup-function 'ediff-setup-windows-plain))
 #+end_src
 ** [[https://github.com/emacs-lsp/dap-mode][dap-mode]]
 
@@ -1309,7 +1324,7 @@ command line. Use an easy keybinding to access magit.
 #+begin_src emacs-lisp
 (use-package magit
   :bind (("C-x g" . magit-status))
-  :hook (magit-mode . magit-todos-mode)
+  ;;:hook (magit-mode . magit-todos-mode)
   :config
   (define-key magit-status-mode-map (kbd "q") 'magit-quit-session)
   (setq-default vc-handled-backends '(Git))
@@ -1772,17 +1787,15 @@ http://danconnor.com/post/5028ac91e8891a000000111f/align_and_columnize_key_value
     (flycheck-mode t)
     (subword-mode +1)
     (setq indent-tabs-mode nil
-          c-basic-offset 4)
-    (projectile-update-project-type 'maven
-                                    :test-suffix "Test")
+          c-basic-offset 4
+          lsp-java-format-settings-url (format "%s/eclipse-java-google-style.xml" (projectile-project-root)))
+
     (setq projectile-find-dir-includes-top-level t
           projectile-test-suffix-function (lambda (project-type) "" "Test")
-          )
-    )
-  :custom
-  (projectile-create-missing-test-files t)
-  :config
-  )
+          projectile-create-missing-test-files t
+          ))
+    :config
+    (projectile-update-project-type 'maven :test-suffix "Test"))
 #+end_src
 ** [[https://github.com/jschaf/emacs-lorem-ipsum][lorem-ipsum]]
 
@@ -1893,7 +1906,7 @@ Add filler lorem ipsum text to Emacs.
   :hook (java-ts-mode . lsp)
   :custom
   (lsp-java-compile-null-analysis-mode "automatic")
-  ;;(lsp-java-format-enabled t)
+  (lsp-java-format-enabled t)
   ;;(lsp-java-save-actions-organize-imports t)
   )
 #+end_src
