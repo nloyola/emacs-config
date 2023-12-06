@@ -640,52 +640,50 @@ of the compilation buffer when it is opened.
 Enable ANSI colors for compilation buffers.
 
 #+begin_src emacs-lisp
-(defun get-compilation-buffer ()
-  (catch 'found
-    (dolist (buf (buffer-list))
-      (if (string-match "\\*compilation\\*" (buffer-name buf))
-          (throw 'found buf)))))
-
-(defun show-compilation ()
-  (interactive)
-  (let ((compile-buf (get-compilation-buffer)))
-    (if compile-buf
-        (switch-to-buffer-other-window compile-buf)
-      (call-interactively 'compile))))
-
-;; (defun nl/compilation-ansi-color-process-output ()
-;;   (ansi-color-process-output nil)
-;;   (set (make-local-variable 'comint-last-output-start)
-;;        (point-marker)))
-
-(defun nl/compile-hook ()
-  (setq-local compilation-scroll-output t)
-  (setq-local scroll-conservatively most-positive-fixnum)
-  (setq-local scroll-margin 0))
-
-;; required for TypeScript compile
-;; (defun colorize-compilation-buffer ()
-;;   (let ((inhibit-read-only t))
-;;     (ansi-color-apply-on-region (point-min) (point-max))))
-;; (add-hook 'compilation-filter-hook 'colorize-compilation-buffer)
-
-(defun display-ansi-colors ()
-  (interactive)
-  (let ((inhibit-read-only t))
-    (ansi-color-apply-on-region (point-min) (point-max)))
-  )
-
 (use-package compile
-  :bind (("M-O"   . show-compilation)
+  :bind (
+         ;;("M-O"   . nl/show-compilation)
          ;;("C-c c" . compile)
          )
-  :hook
-  (compilation-mode . hl-line-mode)
   :init
+  (defun get-compilation-buffer ()
+    (catch 'found
+      (dolist (buf (buffer-list))
+        (if (string-match "\\*compilation\\*" (buffer-name buf))
+            (throw 'found buf)))))
+
+  (defun nl/show-compilation ()
+    (interactive)
+    (let ((compile-buf (get-compilation-buffer)))
+      (if compile-buf
+          (switch-to-buffer-other-window compile-buf)
+        (call-interactively 'compile))))
+
   (defun nl/colorize-compilation-buffer ()
     (let ((inhibit-read-only t))
       (ansi-color-apply-on-region (point-min) (point-max)))
     )
+
+  (defun nl/compile-hook ()
+    (hl-line-mode)
+    (setq-local compilation-scroll-output t)
+    (setq-local scroll-conservatively most-positive-fixnum)
+    (setq-local scroll-margin 0)
+    (nl/colorize-compilation-buffer))
+
+  ;; required for TypeScript compile
+  ;; (defun colorize-compilation-buffer ()
+  ;;   (let ((inhibit-read-only t))
+  ;;     (ansi-color-apply-on-region (point-min) (point-max))))
+  ;; (add-hook 'compilation-filter-hook 'colorize-compilation-buffer)
+
+  (defun display-ansi-colors ()
+    (interactive)
+    (let ((inhibit-read-only t))
+      (ansi-color-apply-on-region (point-min) (point-max)))
+    )
+  :hook ((compilation-mode . nl/compile-hook)
+         (compilation-filter . nl/colorize-compilation-buffer))
   :custom
   (compilation-scroll-output 'first-error)
   :config
@@ -693,9 +691,7 @@ Enable ANSI colors for compilation buffers.
         compilation-always-kill t
         compilation-max-output-line-length nil)
 
-  :hook ((compilation-mode . nl/compile-hook)
-         (compilation-filter . nl/colorize-compilation-buffer)
-         )
+
   )
 #+end_src
 
@@ -1548,7 +1544,7 @@ See https://tsdh.org/posts/2022-08-01-difftastic-diffing-with-magit.html
 
 ** [[https://github.com/minad/jinx][jinx]]
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 (use-package jinx
   :diminish
   :hook (emacs-startup . global-jinx-mode)
