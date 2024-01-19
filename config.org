@@ -253,6 +253,7 @@ See https://tony-zorman.com/posts/2022-10-22-emacs-potpourri.html
     (set-face-font 'fixed-pitch fixed-font))
   (set-face-font 'variable-pitch (nl/gui-variable-font-normal))
   (set-face-attribute 'font-lock-comment-face nil :weight 'semi-bold :slant 'italic)
+
   ;;(set-face-background 'region (doom-darken 'green 0.2))
 
   (when frame
@@ -906,6 +907,16 @@ A quick way to jump around text in buffers.
   (("C-c SPC" . avy-goto-char)
    ("C-:" . avy-goto-char-timer)))
 #+end_src
+** [[https://github.com/jordonbiondo/column-enforce-mode][column-enforce-mode]]
+
+#+begin_src emacs-lisp
+(use-package column-enforce-mode
+  :diminish
+  :config
+  (setq column-enforce-column 120)
+  :hook (progmode-hook . column-enforce-mode))
+#+end_src
+
 ** [[https://github.com/company-mode/company-mode][company-mode]]
 
 Complete anything.
@@ -935,16 +946,6 @@ Complete anything.
         company-minimum-prefix-length 1
         company-tooltip-limit 20)
   )
-#+end_src
-
-** [[https://github.com/jordonbiondo/column-enforce-mode][column-enforce-mode]]
-
-#+begin_src emacs-lisp
-(use-package column-enforce-mode
-  :diminish
-  :config
-  (setq column-enforce-column 120)
-  :hook (progmode-hook . column-enforce-mode))
 #+end_src
 
 ** Completing-Read
@@ -1088,6 +1089,13 @@ Complete anything.
   (consult-ripgrep (if (buffer-file-name)
                        default-directory
                      dired-directory)))
+#+end_src
+
+*** [[https://github.com/gagbo/consult-lsp][consult-lsp]]
+
+#+begin_src emacs-lisp
+(use-package consult-lsp
+  :after lsp)
 #+end_src
 
 *** [[https://gitlab.com/OlMon/consult-projectile][consult-projectile]]
@@ -1771,7 +1779,8 @@ http://danconnor.com/post/5028ac91e8891a000000111f/align_and_columnize_key_value
 #+begin_src emacs-lisp
 (use-package cc-mode
   :mode (("\\.h\\(h?\\|xx\\|pp\\)\\'" . c++-mode)
-         ("\\.java\\'"                . java-ts-mode))
+         ("\\.java\\'"                . java-ts-mode)
+         )
   :hook
   (java-ts-mode . nl/java-mode-hook)
   :preface
@@ -1789,10 +1798,12 @@ http://danconnor.com/post/5028ac91e8891a000000111f/align_and_columnize_key_value
     (setq projectile-find-dir-includes-top-level t
           projectile-test-suffix-function (lambda (project-type) "" "Test")
           projectile-create-missing-test-files t
-          ))
+          )
+    )
     :config
     (projectile-update-project-type 'maven :test-suffix "Test"))
 #+end_src
+
 ** [[https://github.com/jschaf/emacs-lorem-ipsum][lorem-ipsum]]
 
 Add filler lorem ipsum text to Emacs.
@@ -1865,7 +1876,13 @@ Add filler lorem ipsum text to Emacs.
 
 (use-package lsp-ui
   ;; :load-path "~/src/github/elisp/lsp-ui"
-  :hook (lsp-mode . lsp-ui-mode)
+  ;; :init
+  ;; (defun nl-lsp-ui-doc-hook (frame _w)
+  ;;   (message ">>>>>>>>>> here")
+  ;;   (set-face-attribute 'default frame :font "Hack" :height 180))
+  :hook
+  (lsp-mode . lsp-ui-mode)
+  ;;(lsp-ui-doc-frame-hook . nl-lsp-ui-doc-hook)
   :commands lsp-ui-mode
   :bind (:map lsp-ui-mode-map
               ([remap xref-find-definitions] . lsp-ui-peek-find-definitions)
@@ -1881,16 +1898,22 @@ Add filler lorem ipsum text to Emacs.
   (lsp-ui-peek-enable nil)
   (flycheck-add-next-checker 'lsp-ui 'typescript-tslint)
   :config
+  (add-hook 'lsp-ui-doc-frame-hook
+            (lambda (frame _w)
+              (message ">>>>>>>>>>>> here")
+              (set-face-attribute 'default frame :font nl/gui-variable-font-name :height 120)))
   (setq lsp-ui-flycheck-list-position 'bottom
         lsp-ui-doc-enable t
         ;;lsp-ui-doc-show-with-cursor t
         ;;lsp-ui-doc-show-with-mouse t
         lsp-ui-doc-use-childframe t
-        lsp-ui-doc-position 'bottom
+        lsp-ui-doc-position 'top
         lsp-ui-doc-include-signature t
         lsp-ui-peek-always-show nil
         lsp-ui-peek-list-width 60
         lsp-ui-peek-peek-height 25
+        lsp-ui-sideline-diagnostic-max-line-length 80
+        lsp-ui-sideline-diagnostic-max-lines 20
         lsp-eldoc-enable-hover nil)
   )
 #+end_src
@@ -1902,7 +1925,7 @@ Add filler lorem ipsum text to Emacs.
   :hook (java-ts-mode . lsp)
   :custom
   (lsp-java-compile-null-analysis-mode "automatic")
-  (lsp-java-format-enabled t)
+  (lsp-java-format-enabled nil)
   ;;(lsp-java-save-actions-organize-imports t)
   )
 #+end_src
@@ -1948,10 +1971,11 @@ Add filler lorem ipsum text to Emacs.
 #+begin_src emacs-lisp
 (use-package markdown-preview-mode
   :config
-  ;;(add-to-list 'markdown-preview-stylesheets
-  ;;             "https://raw.githubusercontent.com/richleland/pygments-css/master/emacs.css")
-  (setq markdown-preview-stylesheets (list
-                                      "http://thomasf.github.io/solarized-css/solarized-dark.min.css")))
+  (setq markdown-preview-stylesheets
+        (list
+         ;; "https://raw.githubusercontent.com/richleland/pygments-css/master/emacs.css"
+         "http://thomasf.github.io/solarized-css/solarized-light.min.css"
+         )))
 #+end_src
 
 ** [[https://github.com/emacsfodder/move-text][move-text]]

@@ -26,7 +26,7 @@
   (eval-when-compile
     (rx line-start
         (one-or-more (syntax whitespace))
-        "@Test"))
+        (| "@Test" "@ParameterizedTest")))
   "Regular expression for a JUnit test function that uses an annotation.")
 
 (defconst java-function-name-regexp
@@ -54,7 +54,7 @@
 (defun nl/java-junit-create-command (command)
   "Create a COMMAND that can run a test using JUnit."
   ;; mvn test -Dtest="AuthControllerTest#tokenWithBasicThenGetToken"
-  (format "mvn test %s" command))
+  (format "mvn %s test" command))
 
 (defun nl/java-command-in-proj-root (command)
   "Run the compile COMMAND in project's root directory."
@@ -71,6 +71,11 @@
   "Run JUnit with COMMAND in Norweb docker container."
   (nl/java-command-in-proj-root
    (nl/java-junit-create-command (format "-Dtest=\"%s\"" command))))
+
+(defun nl/java-junit-run-with-debug-logging (command)
+  "Run JUnit with COMMAND in Norweb docker container."
+  (nl/java-command-in-proj-root
+   (nl/java-junit-create-command (format "-Dlogging.level.edu.ualberta.med.biobank=DEBUG -Dtest=\"%s\"" command))))
 
 (defun nl/java-class-name ()
   "Return the name of the class in the buffer where the cursor is in."
@@ -99,6 +104,13 @@
    (format "%s#%s" (nl/java-class-name) (nl/junit-test-find-method-name))
    ))
 
+(defun nl/java-junit-only-this-method-with-debug-logging ()
+  "Run the JUnit test for the test the cursor is in."
+  (interactive)
+  (nl/java-junit-run-with-debug-logging
+   (format "%s#%s" (nl/java-class-name) (nl/junit-test-find-method-name))
+   ))
+
 (defun nl/java-test-report-in-chrome ()
   "Open the JUnit report in a Google Chrome tab."
   (interactive)
@@ -107,6 +119,7 @@
 (defhydra hydra-nl/java-test (:color blue)
   "Java Test"
   ("f" nl/java-junit-test-this-file "only this file")
+  ("d" nl/java-junit-only-this-method-with-debug-logging "only this method")
   ("m" nl/java-junit-only-this-method "only this method")
   ("h" nl/java-junit-html "Generate the JUnit HTML report")
   ("r" nl/java-test-report-in-chrome "Open JUnit report in Chrome"))
@@ -118,6 +131,7 @@
 
 (key-chord-define java-ts-mode-map "jc" 'hydra-nl-java-project/body)
 
+(define-key java-ts-mode-map (kbd "C-c , d") 'nl/java-junit-only-this-method-with-debug-logging)
 (define-key java-ts-mode-map (kbd "C-c , m") 'nl/java-junit-only-this-method)
 (define-key java-ts-mode-map (kbd "C-c , f") 'nl/java-junit-test-this-file)
 (define-key java-ts-mode-map (kbd "C-c , s") 'nl/java-junit-html)
