@@ -539,9 +539,27 @@ See: https://kristofferbalintona.me/posts/202206071000/
 #+end_src
 
 * Theme
-** [[https://protesilaos.com/emacs/ef-themes#h:dd9e06f2-eef0-4afe-8a12-b7af5d597108][ef-themes]]
+** [[https://github.com/greduan/emacs-theme-gruvbox][gruvbox]]
 
 #+begin_src emacs-lisp
+(use-package gruvbox-theme
+  :init
+  (load-theme 'gruvbox-dark-hard :no-confirm)
+  :custom-face
+  (org-level-1 ((t (:inherit outline-1 :foreground "dodger blue" :font "Go" :height 196))))
+  (org-level-2 ((t (:inherit outline-2 :foreground "medium slate blue" :font "Go" :height 172))))
+  (org-level-3 ((t (:inherit outline-3 :foreground "sky blue" :font "Go" :height 144))))
+  (org-level-4 ((t (:inherit outline-4 :foreground "cornflower blue" :font "Go" :height 136))))
+  (org-level-5 ((t (:inherit outline-5 :foreground "light blue" :font "Go" :height 124))))
+  (org-link ((t (:foreground "deep sky blue"))))
+  (org-verbatim ((t (:foreground "light steel blue"))))
+  (org-table ((t (:foreground "dark goldenrod"))))
+  )
+#+end_src
+
+** [[https://protesilaos.com/emacs/ef-themes#h:dd9e06f2-eef0-4afe-8a12-b7af5d597108][ef-themes]]
+
+#+begin_src emacs-lisp :tangle no
 (use-package ef-themes
   :init
   (setq ef-themes-to-toggle '(ef-bio ef-deuteranopia-dark))

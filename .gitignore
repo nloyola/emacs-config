@@ -16,3 +16,9 @@
 /.extension/
 /tramp
 /.mc-lists.el
+/eclipse.jdt.ls/
+/tree-sitter/
+/workspace/
+/org-roam.db
+/projects
+/.org-id-locations
