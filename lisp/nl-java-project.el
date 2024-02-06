@@ -54,7 +54,7 @@
 (defun nl/java-junit-create-command (command)
   "Create a COMMAND that can run a test using JUnit."
   ;; mvn test -Dtest="AuthControllerTest#tokenWithBasicThenGetToken"
-  (format "mvn %s test" command))
+  (format "mvn %s clean test" command))
 
 (defun nl/java-command-in-proj-root (command)
   "Run the compile COMMAND in project's root directory."
@@ -82,6 +82,12 @@
   (save-excursion
     (when (re-search-backward java-beginning-of-class-regexp nil t)
       (match-string-no-properties 1))))
+
+(defun nl/java-junit-test-this-project ()
+  "Run the Junit test suite."
+  (interactive)
+  (nl/java-command-in-proj-root
+   (nl/java-junit-create-command "clean")))
 
 (defun nl/java-junit-test-this-file ()
   "For the class the cursor is in, run the Junit test suite."
@@ -116,13 +122,20 @@
   (interactive)
   (browse-url-chrome (format "file://%starget/site/surefire-report.html" (projectile-project-root))))
 
+(defun nl/java-test-coverage-report-in-chrome ()
+  "Open the Jacoco coverage report in a Google Chrome tab."
+  (interactive)
+  (browse-url-chrome (format "file://%starget/site/jacoco/index.html" (projectile-project-root))))
+
 (defhydra hydra-nl/java-test (:color blue)
   "Java Test"
+  ("p" nl/java-junit-test-this-project "this project" :column "JUnit")
   ("f" nl/java-junit-test-this-file "only this file")
-  ("d" nl/java-junit-only-this-method-with-debug-logging "only this method")
   ("m" nl/java-junit-only-this-method "only this method")
-  ("h" nl/java-junit-html "Generate the JUnit HTML report")
-  ("r" nl/java-test-report-in-chrome "Open JUnit report in Chrome"))
+  ("d" nl/java-junit-only-this-method-with-debug-logging "only this method with DEBUG logging")
+  ("h" nl/java-junit-html "Generate the JUnit HTML report" :column "Reports")
+  ("r" nl/java-test-report-in-chrome "Open JUnit report in Chrome")
+  ("c" nl/java-test-coverage-report-in-chrome "Jacoco coverage report in Chrome"))
 
 (defhydra hydra-nl-java-project (:color red :hint nil)
   "Project commands"
