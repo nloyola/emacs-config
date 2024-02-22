@@ -58,7 +58,7 @@
          (base-name (replace-regexp-in-string "\.yaml$" "" (file-name-nondirectory file-name))))
     (unless file-name (user-error "File not in project"))
     (compile
-     (format "./docker-wrapper.sh cli pw-page %s build -f -i ../default_pages/main_site" base-name))))
+     (format "./docker-wrapper.sh cli pw-page %s build --no-ansi -d -f -i ../default_pages/main_site" base-name))))
 
 (defun nl/nordita-symbol-scss-grep ()
   "Find text in the project's SCSS subfolder."

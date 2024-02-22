@@ -269,7 +269,63 @@ See https://tony-zorman.com/posts/2022-10-22-emacs-potpourri.html
   (set-face-font 'mode-line-emphasis (nl/gui-variable-font-normal))
   (set-face-font 'mode-line-highlight (nl/gui-variable-font-normal))
   (set-face-font 'mode-line-inactive (nl/gui-fixed-font-normal))
+
+  (set-face-attribute 'mode-line nil
+                      :background "#353644"
+                      :foreground "white"
+                      :box '(:line-width 4 :color "#353644")
+                      :overline nil
+                      :underline nil)
+
+  (set-face-attribute 'mode-line-inactive nil
+                      :background "#565063"
+                      :foreground "white"
+                      :box '(:line-width 4 :color "#565063")
+                      :overline nil
+                      :underline nil)
   )
+
+;; see https://www.gonsie.com/blorg/modeline.html
+(setq-default mode-line-format
+              (list
+               ;; the buffer name; the file name as a tool tip
+               '(:eval (propertize " %b "
+                                   'face
+                                   (let ((face (buffer-modified-p)))
+                                     (if face 'font-lock-warning-face
+                                       'font-lock-type-face))
+                                   'help-echo (buffer-file-name)))
+
+               ;; line and column
+               " [" ;; '%02' to set to 2 chars at least; prevents flickering
+               (propertize "%02l" 'face 'font-lock-keyword-face) ","
+               (propertize "%02c" 'face 'font-lock-keyword-face)
+               "] "
+
+               ;; relative position, size of file
+               " ("
+               (propertize "%p" 'face 'font-lock-constant-face) ;; % above top
+               "/"
+               (propertize "%I" 'face 'font-lock-constant-face) ;; size
+               ") "
+
+               ;; ansi-term's line or char mode
+               ":"
+               'mode-line-process
+               ":"
+
+               ;; spaces to align right
+               '(:eval (propertize
+                        " " 'display
+                        `((space :align-to (- (+ right right-fringe right-margin)
+                                              ,(+ 3 (string-width (if (listp mode-name) (car mode-name) mode-name))))))))
+
+                                        ;(propertize org-mode-line-string 'face '(:foreground "#5DD8FF"))
+
+               ;; the current major mode
+               (propertize " %m " 'face 'font-lock-string-face)
+               ;;minor-mode-alist
+               ))
 #+end_src
 
 ** Change font size
@@ -494,7 +550,7 @@ See: https://kristofferbalintona.me/posts/202206071000/
                (window-height . 0.18)
                (side . bottom)
                (slot . -1) ;; left side
-               (preserve-size . (nil . t))
+               (preserve-size . (t . nil))
                ,nl/side-window-parameters))
 
 (add-to-list 'display-buffer-alist
@@ -503,7 +559,7 @@ See: https://kristofferbalintona.me/posts/202206071000/
                (window-height . 0.2)
                (side . bottom)
                (slot . 1) ;; right side
-               (preserve-size . (nil . t))
+               (preserve-size . (t . nil))
                ,nl/side-window-parameters))
 
 #+end_src
@@ -541,7 +597,7 @@ See: https://kristofferbalintona.me/posts/202206071000/
 * Theme
 ** [[https://github.com/greduan/emacs-theme-gruvbox][gruvbox]]
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 (use-package gruvbox-theme
   :init
   (load-theme 'gruvbox-dark-hard :no-confirm)
@@ -559,7 +615,7 @@ See: https://kristofferbalintona.me/posts/202206071000/
 
 ** [[https://protesilaos.com/emacs/ef-themes#h:dd9e06f2-eef0-4afe-8a12-b7af5d597108][ef-themes]]
 
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp
 (use-package ef-themes
   :init
   (setq ef-themes-to-toggle '(ef-bio ef-deuteranopia-dark))
@@ -575,7 +631,7 @@ See: https://kristofferbalintona.me/posts/202206071000/
         (t variable-pitch 1.1)))
   (setq ef-themes-mixed-fonts t
       ef-themes-variable-pitch-ui t)
-  (load-theme 'ef-bio :no-confirm)
+  (load-theme 'ef-winter :no-confirm)
   :custom-face
   (ansi-color-red ((t (:background "#440F04"))))
   (ansi-color-bright-red ((t (:background "#A02409"))))
@@ -853,7 +909,8 @@ Had to install TSX tag =v0.20.2= since the latest in the repository cause a pars
           (css-mode . css-ts-mode)
           (java-mode . java-ts-mode)
           ;;(php-mode . php-ts-mode)
-          (python-mode . python-ts-mode))
+          (python-mode . python-ts-mode)
+          (yaml-mode . yaml-ts-mode))
         )
   (setq treesit-auto-fallback-alist
       '((toml-ts-mode . conf-toml-mode)
@@ -1330,6 +1387,73 @@ Using =all-the-icons= slows down init time.
   (dashboard-setup-startup-hook)
   )
 #+end_src
+
+** [[https://github.com/alexluigit/dirvish][dirvish]]
+
+Dirvish is an improved version of the Emacs inbuilt package Dired.
+
+#+begin_src emacs-lisp
+(use-package dirvish
+  :init
+  (dirvish-override-dired-mode)
+  :custom
+  ;; Go back home? Just press `bh'
+  (dirvish-bookmark-entries
+   '(("h" "~/"                          "Home")
+     ("d" "~/Downloads/"                "Downloads")
+     ("m" "/mnt/"                       "Drives")
+     ("t" "~/.local/share/Trash/files/" "TrashCan"))
+     (dirvish-header-line-format '(:left (path) :right (free-space))))
+  (dirvish-mode-line-format ; it's ok to place string inside
+   '(:left (sort file-time " " file-size symlink) :right (omit yank index)))
+  ;; Don't worry, Dirvish is still performant even you enable all these attributes
+  (dirvish-attributes '(all-the-icons file-size collapse subtree-state vc-state))
+  ;; Maybe the icons are too big to your eyes
+  ;; (dirvish-all-the-icons-height 0.8)
+  ;; In case you want the details at startup like `dired'
+  ;; (dirvish-hide-details nil)
+  :config
+  ;; (dirvish-peek-mode)
+  ;; Dired options are respected except a few exceptions, see *In relation to Dired* section above
+  (setq dired-dwim-target t)
+  (setq delete-by-moving-to-trash t)
+  ;; Enable mouse drag-and-drop files to other applications
+  (setq dired-mouse-drag-files t)                   ; added in Emacs 29
+  (setq mouse-drag-and-drop-region-cross-program t) ; added in Emacs 29
+  ;; Make sure to use the long name of flags when exists
+  ;; eg. use "--almost-all" instead of "-A"
+  ;; Otherwise some commands won't work properly
+  (setq dired-listing-switches
+        "-l --almost-all --human-readable --time-style=long-iso --group-directories-first --no-group")
+  :bind
+  ;; Bind `dirvish|dirvish-side|dirvish-dwim' as you see fit
+  (("C-c f" . dirvish-fd)
+   :map dired-mode-map ; Dirvish respects all the keybindings in this map
+   ("<prior>" . dired-up-directory)
+   ;; ("j" . dired-next-line)
+   ;; ("k" . dired-previous-line)
+   ;; ("l" . dired-find-file)
+   ;; ("i" . wdired-change-to-wdired-mode)
+   ;; ("." . dired-omit-mode)
+   ("b"   . dirvish-bookmark-jump)
+   ("f"   . dirvish-file-info-menu)
+   ("y"   . dirvish-yank-menu)
+   ("N"   . dirvish-narrow)
+   ("^"   . dirvish-history-last)
+   ("s"   . dirvish-quicksort) ; remapped `dired-sort-toggle-or-edit'
+   ("?"   . dirvish-dispatch)  ; remapped `dired-summary'
+   ("TAB" . dirvish-subtree-toggle)
+   ("SPC" . dirvish-history-jump)
+   ("M-n" . dirvish-history-go-forward)
+   ("M-p" . dirvish-history-go-backward)
+   ("M-l" . dirvish-ls-switches-menu)
+   ("M-m" . dirvish-mark-menu)
+   ;;("M-f" . dirvish-toggle-fullscreen)
+   ;;("M-s" . dirvish-setup-menu)
+   ("M-e" . dirvish-emerge-menu)
+   ("M-j" . dirvish-fd-jump)))
+#+end_src
+
 ** [[https://github.com/spotify/dockerfile-mode][dockerfile-mode]]
 
 #+begin_src emacs-lisp
@@ -1792,6 +1916,13 @@ http://danconnor.com/post/5028ac91e8891a000000111f/align_and_columnize_key_value
   ("p" align-parameters "parameters" :color blue))
 #+end_src
 
+** [[https://gitlab.com/emacs-stuff/indent-tools/][indent-tools]]
+
+#+begin_src emacs-lisp
+(use-package indent-tools
+  :bind (("C-c >" . indent-tools-hydra/body)))
+#+end_src
+
 ** Java
 
 #+begin_src emacs-lisp
@@ -2036,16 +2167,18 @@ the screen to center on each cursor with ~C-v~ and ~M-v~.
 *
 ** [[https://github.com/rainstormstudio/nerd-icons.el][nerd-icons]]
 
+No longer need nerd-icons-dired when using Dirvish.
+
 #+begin_src emacs-lisp
 (use-package nerd-icons
   :custom
   (nerd-icons-font-family "FiraCode Nerd Font")
   )
 
-(use-package nerd-icons-dired
-  :load-path "~/src/github/elisp/nerd-icons-dired"
-  :hook
-  (dired-mode . nerd-icons-dired-mode))
+;;(use-package nerd-icons-dired
+;;  :load-path "~/src/github/elisp/nerd-icons-dired"
+;;  :hook
+;;  (dired-mode . nerd-icons-dired-mode))
 #+end_src
 
 ** PHP
@@ -2335,6 +2468,22 @@ Pulse highlight line on demand or after running select functions
   (python-ts-mode . nl/pyright-hook))
 #+end_src
 
+** [[https://github.com/purcell/emacs-reformatter][reformatter]]
+
+#+begin_src emacs-lisp
+(use-package reformatter
+  :config
+  (reformatter-define java-format
+    :program "prettier"
+    :args (list "--write" "--parser" "java")
+    :lighter " JavaF")
+  (reformatter-define sql-format
+    :program "prettier"
+    :args (list "--write" "--parser" "sql")
+    :lighter " SqlF")
+  )
+#+end_src
+
 ** rust
 
 See https://robert.kra.hn/posts/rust-emacs-setup/
@@ -2492,17 +2641,18 @@ To save all buffers that wgrep has changed, run
   :preface
   (defun nl/web-mode-hook ()
     (lsp-deferred)
+    (prettier-mode)
     (local-set-key (kbd "M-q") #'fill-paragraph) ;; did not work with :bind
     (display-line-numbers-mode))
   :hook ((web-mode . nl/web-mode-hook))
   :mode (("\\.html\\'" . web-mode)
-         ("\\.html\\.eex\\'" . web-mode)
-         ("\\.html\\.tera\\'" . web-mode)
+         ("\\.css\\'" . web-mode)
          ("\\.tpl.php\\'" . web-mode))
   :config
-  (setq web-mode-markup-indent-offset 2
+  (setq web-mode-auto-quote-style 1
+        web-mode-markup-indent-offset 2
         web-mode-css-indent-offset 2
-        web-mode-code-indent-offset 4))
+        web-mode-code-indent-offset 2))
 #+end_src
 
 ** [[https://github.com/yoshiki/yaml-mode][yaml-mode]]

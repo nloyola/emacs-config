@@ -127,6 +127,10 @@
   (interactive)
   (browse-url-chrome (format "file://%starget/site/jacoco/index.html" (projectile-project-root))))
 
+(defhydra hydra-nl/java-format (:color blue)
+  "Java"
+  ("f" java-format-buffer "Format Java file with Prettier" :column "Format"))
+
 (defhydra hydra-nl/java-test (:color blue)
   "Java Test"
   ("p" nl/java-junit-test-this-project "this project" :column "JUnit")
@@ -140,6 +144,7 @@
 (defhydra hydra-nl-java-project (:color red :hint nil)
   "Project commands"
   ("a" hydra-nl-align/body "align" :color blue :column "Java")
+  ("f" hydra-nl/java-format/body "format" :color blue :column "Format")
   ("t" hydra-nl/java-test/body "test" :color blue :column "Test"))
 
 (key-chord-define java-ts-mode-map "jc" 'hydra-nl-java-project/body)

@@ -146,7 +146,6 @@ The class name must have the postfix 'Spec' for this function to work."
   "Project commands"
   ("a" hydra-nl-align/body "align" :color blue :column "PHP"))
 
-;; this def uses a lambda to show that it is possible, id does not need to use it
 (key-chord-define php-mode-map "jc" 'hydra-nl-project/body)
 (key-chord-define yaml-mode-map "jc" 'hydra-nl-project/body)
 
