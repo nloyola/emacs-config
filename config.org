@@ -1,7 +1,7 @@
 #+TITLE: Emacs Configuration
 
 #+AUTHOR: Nelson Loyola
-#+STARTUP: content
+c#+STARTUP: content
 #+INFOJS_OPT: view:t toc:t ltoc:t mouse:underline buttons:0 path:http://thomasf.github.io/solarized-css/org-info.min.j
 #+HTML_HEAD: <link rel="stylesheet" type="text/css" href="http://thomasf.github.io/solarized-css/solarized-light.min.css" />
 #+OPTIONS: broken-links:t
@@ -901,8 +901,7 @@ Had to install TSX tag =v0.20.2= since the latest in the repository cause a pars
      (typescript "https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src")
      (yaml "https://github.com/ikatyang/tree-sitter-yaml")))
   (setq major-mode-remap-alist
-        '((yaml-mode . yaml-ts-mode)
-          (bash-mode . bash-ts-mode)
+        '((bash-mode . bash-ts-mode)
           (js2-mode . js-ts-mode)
           (typescript-mode . typescript-ts-mode)
           (json-mode . json-ts-mode)
@@ -1316,6 +1315,7 @@ Complete anything.
 (use-package css-mode
   :preface
   (defun nl/css-mode-hook ()
+    (lsp-deferred)
     (display-line-numbers-mode))
   :hook (css-mode . nl/css-mode-hook)
   )
@@ -1953,6 +1953,16 @@ http://danconnor.com/post/5028ac91e8891a000000111f/align_and_columnize_key_value
     (projectile-update-project-type 'maven :test-suffix "Test"))
 #+end_src
 
+** [[https://github.com/minad/jinx][jinx]]
+
+Jinx is a fast just-in-time spell-checker for Emacs.
+
+#+begin_src emacs-lisp
+(use-package jinx
+  :init
+  (global-jinx-mode 1))
+#+end_src
+
 ** [[https://github.com/jschaf/emacs-lorem-ipsum][lorem-ipsum]]
 
 Add filler lorem ipsum text to Emacs.
@@ -1965,7 +1975,10 @@ Add filler lorem ipsum text to Emacs.
 
 #+begin_src emacs-lisp :tangle no
 (use-package lsp-docker
-  :init (setq lsp-keymap-prefix "C-c l"))
+  :init (setq lsp-keymap-prefix "C-c l")
+  :config
+  (add-to-list 'vertico-multiform-categories
+               '(jinx grid (vertico-grid-annotate . 20))))
 #+end_src
 
 ** [[https://github.com/emacs-lsp/lsp-mode][lsp-mode]]
@@ -2108,7 +2121,6 @@ Add filler lorem ipsum text to Emacs.
   :hook
   (markdown-mode . (lambda () (auto-fill-mode -1)))
   (markdown-mode . variable-pitch-mode)
-  (markdown-mode . flyspell-mode)
   :config
   (setq markdown-command "pandoc")
   (dolist (face '(markdown-inline-code-face markdown-code-face))
@@ -2567,6 +2579,17 @@ See https://robert.kra.hn/posts/rust-emacs-setup/
   )
 #+end_src
 
+** [[https://protesilaos.com/emacs/substitute][substitute]]
+
+Substitute is a set of commands that perform text replacement (i) throughout the buffer, (ii) limited to the
+current definition (per narrow-to-defun), (iii) from point to the end of the buffer, and (iv) from point to
+the beginning of the buffer.
+
+#+begin_src emacs-lisp
+(use-package substitute
+  :bind-keymap ("C-c s" . substitute-prefix-map))
+#+end_src
+
 ** typescript
 
 #+begin_src emacs-lisp
@@ -2642,17 +2665,19 @@ To save all buffers that wgrep has changed, run
   (defun nl/web-mode-hook ()
     (lsp-deferred)
     (prettier-mode)
+    (setq web-mode-auto-quote-style 1)
     (local-set-key (kbd "M-q") #'fill-paragraph) ;; did not work with :bind
     (display-line-numbers-mode))
   :hook ((web-mode . nl/web-mode-hook))
   :mode (("\\.html\\'" . web-mode)
          ("\\.css\\'" . web-mode)
          ("\\.tpl.php\\'" . web-mode))
-  :config
-  (setq web-mode-auto-quote-style 1
-        web-mode-markup-indent-offset 2
-        web-mode-css-indent-offset 2
-        web-mode-code-indent-offset 2))
+  :custom
+  (web-mode-auto-quote-style 1)
+  (web-mode-markup-indent-offset 2)
+  (web-mode-css-indent-offset 2)
+  (web-mode-code-indent-offset 2)
+  )
 #+end_src
 
 ** [[https://github.com/yoshiki/yaml-mode][yaml-mode]]
@@ -2760,7 +2785,7 @@ Large collection of snippets: [[https://github.com/AndreaCrotti/yasnippet-snippe
   )
 #+end_src
 
-*** Structure templates
+*** structure templates
 
 #+begin_src emacs-lisp
 (with-eval-after-load 'org
