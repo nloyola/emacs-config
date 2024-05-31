@@ -52,7 +52,7 @@
   "Builds the ProcessWire page for the visited YAML file."
   (interactive)
   (unless (buffer-file-name) (user-error "not a file buffer"))
-  (unless (string-match-p "\.yaml$" (buffer-file-name)) (user-error "not a PHP file"))
+  (unless (string-match-p "\.yaml$" (buffer-file-name)) (user-error "not a YAML file"))
   (let* ((default-directory (project-root (project-current)))
          (file-name (nth 1 (split-string buffer-file-name (project-root (project-current)))))
          (base-name (replace-regexp-in-string "\.yaml$" "" (file-name-nondirectory file-name))))

@@ -10,6 +10,7 @@
 (require 'php-mode)
 (eval-and-compile
   (require 'yaml-mode)
+  (require 'yaml-ts-mode)
   (require 'projectile))
 
 (defun nl/php-filename-p (filename)
@@ -147,7 +148,7 @@ The class name must have the postfix 'Spec' for this function to work."
   ("a" hydra-nl-align/body "align" :color blue :column "PHP"))
 
 (key-chord-define php-mode-map "jc" 'hydra-nl-project/body)
-(key-chord-define yaml-mode-map "jc" 'hydra-nl-project/body)
+(key-chord-define yaml-ts-mode-map "jc" 'hydra-nl-project/body)
 
 (defun nl/phpunit-use-attributes ()
   (interactive)
