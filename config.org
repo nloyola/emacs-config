@@ -1,11 +1,13 @@
 #+TITLE: Emacs Configuration
 
 #+AUTHOR: Nelson Loyola
-c#+STARTUP: content
+#+STARTUP: content
 #+INFOJS_OPT: view:t toc:t ltoc:t mouse:underline buttons:0 path:http://thomasf.github.io/solarized-css/org-info.min.j
 #+HTML_HEAD: <link rel="stylesheet" type="text/css" href="http://thomasf.github.io/solarized-css/solarized-light.min.css" />
 #+OPTIONS: broken-links:t
 #+PROPERTY: header-args  :results silent
+#+EXPORT_FIle_NAME: ~/output/emacs-config.html
+#+OPTIONS: toc:nil html-postamble:nil
 
 Links:
 - ~use-pacakge~: https://github.com/jwiegley/use-package
@@ -995,7 +997,7 @@ A quick way to jump around text in buffers.
 
 Complete anything.
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 (use-package company
   :diminish company-mode
   :bind
@@ -1259,6 +1261,8 @@ Complete anything.
 
   ;; Optionally enable cycling for `vertico-next' and `vertico-previous'.
   (setq vertico-cycle t)
+  :config
+  (vertico-multiform-mode 1)
   )
 
 ;; Use the `orderless' completion style.
@@ -1307,6 +1311,58 @@ Complete anything.
   (vertico-posframe-parameters
    '((left-fringe . 8)
      (right-fringe . 8))))
+#+end_src
+
+** [[https://github.com/minad/corfu][corfu]]
+
+#+begin_src emacs-lisp
+(use-package corfu
+  :preface
+  (defun corfu-lsp-setup ()
+    (setq-local completion-styles '(orderless)
+                completion-category-defaults nil))
+  :hook (lsp-mode . corfu-lsp-setup)
+  ;; Optional customizations
+  :custom
+  (corfu-cycle t)                ;; Enable cycling for `corfu-next/previous'
+  (corfu-auto t)                 ;; Enable auto completion
+  ;; (corfu-separator ?\s)          ;; Orderless field separator
+  ;; (corfu-quit-at-boundary nil)   ;; Never quit at completion boundary
+  ;; (corfu-quit-no-match nil)      ;; Never quit, even if there is no match
+  ;; (corfu-preview-current nil)    ;; Disable current candidate preview
+  ;; (corfu-preselect 'prompt)      ;; Preselect the prompt
+  ;; (corfu-on-exact-match nil)     ;; Configure handling of exact matches
+  ;; (corfu-scroll-margin 5)        ;; Use scroll margin
+
+  ;; Enable Corfu only for certain modes.
+  ;; :hook ((prog-mode . corfu-mode)
+  ;;        (shell-mode . corfu-mode)
+  ;;        (eshell-mode . corfu-mode))
+
+  ;; Recommended: Enable Corfu globally.  This is recommended since Dabbrev can
+  ;; be used globally (M-/).  See also the customization variable
+  ;; `global-corfu-modes' to exclude certain modes.
+  :init
+  (global-corfu-mode))
+
+;; A few more useful configurations...
+(use-package emacs
+  :init
+  ;; TAB cycle if there are only few candidates
+  (setq completion-cycle-threshold 3)
+
+  ;; Enable indentation+completion using the TAB key.
+  ;; `completion-at-point' is often bound to M-TAB.
+  (setq tab-always-indent 'complete)
+
+  ;; Emacs 30 and newer: Disable Ispell completion function. As an alternative,
+  ;; try `cape-dict'.
+  (setq text-mode-ispell-word-completion nil)
+
+  ;; Emacs 28 and newer: Hide commands in M-x which do not apply to the current
+  ;; mode.  Corfu commands are hidden, since they are not used via M-x. This
+  ;; setting is useful beyond Corfu.
+  (setq read-extended-command-predicate #'command-completion-default-include-p))
 #+end_src
 
 ** css-mode
@@ -1692,18 +1748,6 @@ See https://tsdh.org/posts/2022-08-01-difftastic-diffing-with-magit.html
   (flycheck-add-mode 'javascript-eslint 'js-mode))
 #+end_src
 
-** [[https://github.com/minad/jinx][jinx]]
-
-#+begin_src emacs-lisp :tangle no
-(use-package jinx
-  :diminish
-  :hook (emacs-startup . global-jinx-mode)
-  :bind (("M-$" . jinx-correct)
-         ("C-M-$" . jinx-languages))
-  :config
-  (setq jinx-languages "en_CA"))
-#+end_src
-
 ** [[https://github.com/nflath/hungry-delete][hungry-delete]]
 
 So that hungry deletion can be used in all modes.
@@ -1959,8 +2003,14 @@ Jinx is a fast just-in-time spell-checker for Emacs.
 
 #+begin_src emacs-lisp
 (use-package jinx
-  :init
-  (global-jinx-mode 1))
+  :hook (emacs-startup . global-jinx-mode)
+  :bind (("M-$" . jinx-correct)
+         ("C-M-$" . jinx-languages))
+  :config
+  (setq jinx-languages "en_CA")
+  (add-to-list 'vertico-multiform-categories
+               '(jinx grid (vertico-grid-annotate . 20)))
+  )
 #+end_src
 
 ** [[https://github.com/jschaf/emacs-lorem-ipsum][lorem-ipsum]]
@@ -2019,6 +2069,7 @@ Add filler lorem ipsum text to Emacs.
         lsp-prefer-capf t
         lsp-idle-delay 0.5
         lsp-pyls-plugins-flake8-enabled t
+        lsp-completion-provider :none
         ;; lsp-log-io t
         ;; lsp-ensabled-clients '(intelephense)
         )
@@ -2614,7 +2665,7 @@ the beginning of the buffer.
     (flycheck-mode +1)
     (column-enforce-mode)
     ;;(eldoc-mode +1)
-    (company-mode +1)
+    ;;(company-mode +1)
     (subword-mode +1)
     ;; (push '(">=" . ?≥) prettify-symbols-alist)
     ;; (push '("<=" . ?≤) prettify-symbols-alist)
