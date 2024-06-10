@@ -206,128 +206,132 @@ See https://tony-zorman.com/posts/2022-10-22-emacs-potpourri.html
 ** Main font
 
 #+begin_src emacs-lisp
-;;(defvar nl/gui-fixed-font-name "FiraCode Nerd Font")
-(defvar nl/gui-fixed-font-name "JetBrainsMono Nerd Font")
-;;(defvar nl/gui-fixed-font-name "CaskaydiaCove Nerd Font Mono")
+(use-package emacs
+  :preface
+  (defvar nl/gui-fixed-font-name "JetBrainsMono Nerd Font")
+  ;; (defvar nl/gui-fixed-font-name "FiraCode Nerd Font")
+  ;; (defvar nl/gui-fixed-font-name "CaskaydiaCove Nerd Font Mono")
+  ;; (defvar nl/gui-fixed-font-name "IBM Plex Mono Medium")
+  ;; (defvar nl/gui-variable-font-name "DejaVu Sans")
 
-;; (defvar nl/gui-fixed-font-name "IBM Plex Mono Medium")
-;; (defvar nl/gui-variable-font-name "DejaVu Sans")
+  ;;(defvar nl/gui-variable-font-name "GoMono Nerd Font")
+  (defvar nl/gui-variable-font-name "Go")
 
-;;(defvar nl/gui-variable-font-name "GoMono Nerd Font")
-(defvar nl/gui-variable-font-name "Go")
+  (defconst nl/gui-fixed-font-size-normal "11")
+  (defconst nl/gui-fixed-font-size-large "18")
 
-(defconst nl/gui-fixed-font-size-normal "10")
-(defconst nl/gui-fixed-font-size-large "18")
+  (defconst nl/gui-variable-font-size-normal "12")
+  (defconst nl/gui-variable-font-size-large "18")
 
-(defconst nl/gui-variable-font-size-normal "12")
-(defconst nl/gui-variable-font-size-large "18")
+  (defvar nl/gui-current-fixed-font-size nl/gui-fixed-font-size-normal)
+  (defvar nl/gui-current-variable-font-size nl/gui-variable-font-size-normal)
 
-(defvar nl/gui-current-fixed-font-size nl/gui-fixed-font-size-normal)
-(defvar nl/gui-current-variable-font-size nl/gui-variable-font-size-normal)
+  (defun nl/gui-font (font-name font-size)
+    (concat font-name "-" font-size))
 
-(when (string-match "-[Mm]icrosoft" operating-system-release)
-  ;; WSL: WSL1 has "-Microsoft", WSL2 has "-microsoft-standard"
-  (setq nl/gui-fixed-font-size-normal "12"
-        nl/gui-fixed-font-size-large "18"
-        nl/gui-variable-font-size-normal "14"
-        nl/gui-variable-font-size-large "18"
-        ))
+  (defun nl/gui-fixed-font-normal ()
+    (nl/gui-font nl/gui-fixed-font-name nl/gui-fixed-font-size-normal))
 
-(defun nl/gui-font (font-name font-size)
-  (concat font-name "-" font-size))
+  (defun nl/gui-fixed-font-large ()
+    (nl/gui-font nl/gui-fixed-font-name nl/gui-fixed-font-size-large))
 
-(defun nl/gui-fixed-font-normal ()
-  (nl/gui-font nl/gui-fixed-font-name nl/gui-fixed-font-size-normal))
+  (defun nl/gui-variable-font-normal ()
+    (nl/gui-font nl/gui-variable-font-name nl/gui-variable-font-size-normal))
 
-(defun nl/gui-fixed-font-large ()
-  (nl/gui-font nl/gui-fixed-font-name nl/gui-fixed-font-size-large))
+  (defun nl/gui-variable-font-large ()
+    (nl/gui-font nl/gui-variable-font-name nl/gui-variable-font-size-large))
 
-(defun nl/gui-variable-font-normal ()
-  (nl/gui-font nl/gui-variable-font-name nl/gui-variable-font-size-normal))
 
-(defun nl/gui-variable-font-large ()
-  (nl/gui-font nl/gui-variable-font-name nl/gui-variable-font-size-large))
+  (defun nl/set-fonts (frame)
+    "Set the desired fonts for a frame. FRAME can be nil."
+    (let ((fixed-font (nl/gui-fixed-font-normal)))
+      (set-face-font 'default fixed-font)
+      (set-face-font 'fixed-pitch fixed-font))
+    (set-face-font 'variable-pitch (nl/gui-variable-font-normal))
+    (set-face-attribute 'font-lock-comment-face nil :weight 'semi-bold :slant 'italic)
 
-(defun nl/set-fonts (frame)
-  "Set the desired fonts for a frame. FRAME can be nil."
-  (let ((fixed-font (nl/gui-fixed-font-normal)))
-    (set-face-font 'default fixed-font)
-    (set-face-font 'fixed-pitch fixed-font))
-  (set-face-font 'variable-pitch (nl/gui-variable-font-normal))
-  (set-face-attribute 'font-lock-comment-face nil :weight 'semi-bold :slant 'italic)
+    ;;(set-face-background 'region (doom-darken 'green 0.2))
 
-  ;;(set-face-background 'region (doom-darken 'green 0.2))
+    (when frame
+      ;;(set-face-attribute 'default frame :font nl/gui-fixed-font-name)
+      (set-face-attribute 'italic frame :font nl/gui-fixed-font-name :weight 'normal :slant 'italic)
+      (set-face-attribute 'bold frame :font nl/gui-fixed-font-name :weight 'bold :weight 'normal)
+      (set-face-attribute 'bold-italic frame :font nl/gui-fixed-font-name :weight 'bold :slant 'italic)
+      (set-fontset-font "fontset-default" nil (font-spec :size 20 :name "Fira Code Retina"))
+      )
 
-  (when frame
-    ;;(set-face-attribute 'default frame :font nl/gui-fixed-font-name)
-    (set-face-attribute 'italic frame :font nl/gui-fixed-font-name :weight 'normal :slant 'italic)
-    (set-face-attribute 'bold frame :font nl/gui-fixed-font-name :weight 'bold :weight 'normal)
-    (set-face-attribute 'bold-italic frame :font nl/gui-fixed-font-name :weight 'bold :slant 'italic)
-    (set-fontset-font "fontset-default" nil (font-spec :size 20 :name "Fira Code Retina"))
+    (set-face-font 'mode-line (nl/gui-variable-font-normal))
+    (set-face-font 'mode-line-buffer-id (nl/gui-variable-font-normal))
+    (set-face-font 'mode-line-emphasis (nl/gui-variable-font-normal))
+    (set-face-font 'mode-line-highlight (nl/gui-variable-font-normal))
+    (set-face-font 'mode-line-inactive (nl/gui-fixed-font-normal))
+
+    (set-face-attribute 'mode-line nil
+                        :background "#353644"
+                        :foreground "white"
+                        :box '(:line-width 4 :color "#353644")
+                        :overline nil
+                        :underline nil)
+
+    (set-face-attribute 'mode-line-inactive nil
+                        :background "#565063"
+                        :foreground "white"
+                        :box '(:line-width 4 :color "#565063")
+                        :overline nil
+                        :underline nil)
     )
+  :config
+  (when (string-match "-[Mm]icrosoft" operating-system-release)
+    ;; WSL: WSL1 has "-Microsoft", WSL2 has "-microsoft-standard"
+    (setq nl/gui-fixed-font-size-normal "12"
+          nl/gui-fixed-font-size-large "18"
+          nl/gui-variable-font-size-normal "14"
+          nl/gui-variable-font-size-large "18"
+          ))
 
-  (set-face-font 'mode-line (nl/gui-variable-font-normal))
-  (set-face-font 'mode-line-buffer-id (nl/gui-variable-font-normal))
-  (set-face-font 'mode-line-emphasis (nl/gui-variable-font-normal))
-  (set-face-font 'mode-line-highlight (nl/gui-variable-font-normal))
-  (set-face-font 'mode-line-inactive (nl/gui-fixed-font-normal))
+  ;; see https://www.gonsie.com/blorg/modeline.html
+  (setq-default mode-line-format
+                (list
+                 ;; the buffer name; the file name as a tool tip
+                 '(:eval (propertize " %b "
+                                     'face
+                                     (let ((face (buffer-modified-p)))
+                                       (if face 'font-lock-warning-face
+                                         'font-lock-type-face))
+                                     'help-echo (buffer-file-name)))
 
-  (set-face-attribute 'mode-line nil
-                      :background "#353644"
-                      :foreground "white"
-                      :box '(:line-width 4 :color "#353644")
-                      :overline nil
-                      :underline nil)
+                 ;; line and column
+                 " [" ;; '%02' to set to 2 chars at least; prevents flickering
+                 (propertize "%02l" 'face 'font-lock-keyword-face) ","
+                 (propertize "%02c" 'face 'font-lock-keyword-face)
+                 "] "
 
-  (set-face-attribute 'mode-line-inactive nil
-                      :background "#565063"
-                      :foreground "white"
-                      :box '(:line-width 4 :color "#565063")
-                      :overline nil
-                      :underline nil)
-  )
+                 ;; relative position, size of file
+                 " ("
+                 (propertize "%p" 'face 'font-lock-constant-face) ;; % above top
+                 "/"
+                 (propertize "%I" 'face 'font-lock-constant-face) ;; size
+                 ") "
 
-;; see https://www.gonsie.com/blorg/modeline.html
-(setq-default mode-line-format
-              (list
-               ;; the buffer name; the file name as a tool tip
-               '(:eval (propertize " %b "
-                                   'face
-                                   (let ((face (buffer-modified-p)))
-                                     (if face 'font-lock-warning-face
-                                       'font-lock-type-face))
-                                   'help-echo (buffer-file-name)))
+                 ;; ansi-term's line or char mode
+                 ":"
+                 'mode-line-process
+                 ":"
 
-               ;; line and column
-               " [" ;; '%02' to set to 2 chars at least; prevents flickering
-               (propertize "%02l" 'face 'font-lock-keyword-face) ","
-               (propertize "%02c" 'face 'font-lock-keyword-face)
-               "] "
-
-               ;; relative position, size of file
-               " ("
-               (propertize "%p" 'face 'font-lock-constant-face) ;; % above top
-               "/"
-               (propertize "%I" 'face 'font-lock-constant-face) ;; size
-               ") "
-
-               ;; ansi-term's line or char mode
-               ":"
-               'mode-line-process
-               ":"
-
-               ;; spaces to align right
-               '(:eval (propertize
-                        " " 'display
-                        `((space :align-to (- (+ right right-fringe right-margin)
-                                              ,(+ 3 (string-width (if (listp mode-name) (car mode-name) mode-name))))))))
+                 ;; spaces to align right
+                 '(:eval (propertize
+                          " " 'display
+                          `((space :align-to (- (+ right right-fringe right-margin)
+                                                ,(+ 3 (string-width (if (listp mode-name) (car mode-name) mode-name))))))))
 
                                         ;(propertize org-mode-line-string 'face '(:foreground "#5DD8FF"))
 
-               ;; the current major mode
-               (propertize " %m " 'face 'font-lock-string-face)
-               ;;minor-mode-alist
-               ))
+                 ;; the current major mode
+                 (propertize " %m " 'face 'font-lock-string-face)
+                 ;;minor-mode-alist
+                 ))
+  (nl/set-fonts nil)
+  )
 #+end_src
 
 ** Change font size
@@ -597,6 +601,63 @@ See: https://kristofferbalintona.me/posts/202206071000/
 #+end_src
 
 * Theme
+** Doom Themes
+
+See https://github.com/doomemacs/themes/tree/screenshots#screenshots
+
+#+begin_src emacs-lisp
+(use-package doom-themes
+  :init
+  ;; Global settings (defaults)
+  (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
+        doom-themes-enable-italic t) ; if nil, italics is universally disabled
+
+  (load-theme 'doom-oceanic-next t)
+
+  ;; Enable flashing mode-line on errors
+  (doom-themes-visual-bell-config)
+
+  ;;treemacs
+  (setq doom-themes-treemacs-theme "doom-colors")
+  (doom-themes-treemacs-config)
+
+  ;; Corrects (and improves) org-mode's native fontification.
+  (doom-themes-org-config)
+  )
+
+(use-package emacs
+  :init
+  (defun ap/load-doom-theme (theme)
+    "Disable active themes and load a Doom theme."
+    (interactive (list (intern (completing-read "Theme: "
+                                                (->> (custom-available-themes)
+                                                     (-map #'symbol-name)
+                                                     (--select (string-prefix-p "doom-" it))))))))
+  (defun ap/switch-theme (theme)
+    "Disable active themes and load THEME."
+    (interactive (list (intern (completing-read "Theme: "
+                                                (->> (custom-available-themes)
+                                                     (-map #'symbol-name))))))
+    (mapc #'disable-theme custom-enabled-themes)
+    (load-theme theme 'no-confirm)))
+
+(with-eval-after-load 'markdown-mode
+  (set-face-background 'markdown-code-face "#121212")
+  ;;(set-face-foreground 'markdown-code-face (doom-darken 'green 0.2))
+  ;;(set-face-background 'org-block (doom-color 'brightblack))
+  (set-face-attribute 'markdown-header-face
+                      nil
+                      :font nl/gui-variable-font-name
+                      :weight 'bold
+                      :height (* 12 (string-to-number nl/gui-current-variable-font-size)))
+  (set-face-attribute 'markdown-link-face
+                      nil
+                      :font nl/gui-variable-font-name
+                      :weight 'bold
+                      :height (* 10 (string-to-number nl/gui-current-variable-font-size)))
+  )
+#+end_src
+
 ** [[https://github.com/greduan/emacs-theme-gruvbox][gruvbox]]
 
 #+begin_src emacs-lisp :tangle no
@@ -617,7 +678,7 @@ See: https://kristofferbalintona.me/posts/202206071000/
 
 ** [[https://protesilaos.com/emacs/ef-themes#h:dd9e06f2-eef0-4afe-8a12-b7af5d597108][ef-themes]]
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 (use-package ef-themes
   :init
   (setq ef-themes-to-toggle '(ef-bio ef-deuteranopia-dark))
@@ -645,67 +706,6 @@ See: https://kristofferbalintona.me/posts/202206071000/
 #+begin_src emacs-lisp :tangle no
 (setq catppuccin-flavor 'mocha)
 (load-theme 'catppuccin t)
-#+end_src
-
-** Doom Themes
-
-See https://github.com/doomemacs/themes/tree/screenshots#screenshots
-
-#+begin_src emacs-lisp :tangle no
-(use-package doom-themes
-  :config
-  ;; Global settings (defaults)
-  (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
-        doom-themes-enable-italic t) ; if nil, italics is universally disabled
-
-  (load-theme 'doom-molokai t)
-
-  ;; Enable flashing mode-line on errors
-  (doom-themes-visual-bell-config)
-
-  ;; or for treemacs users
-  ;;(setq doom-themes-treemacs-theme "doom-colors") ; use the colorful treemacs theme
-  (doom-themes-treemacs-config)
-
-  ;; Corrects (and improves) org-mode's native fontification.
-  (doom-themes-org-config)
-  :custom-face
-  ;;(ansi-color-blue ((t (:foreground "#4f57f9"))))
-  (ansi-color-blue ((t (:foreground "DeepSkyBlue1"))))
-  ;;(lsp-face-highlight-read ((t (:foreground "DeepSkyBlue1"))))
-  )
-
-(with-eval-after-load 'markdown-mode
-  (set-face-background 'markdown-code-face "#121212")
-  ;;(set-face-foreground 'markdown-code-face (doom-darken 'green 0.2))
-  ;;(set-face-background 'org-block (doom-color 'brightblack))
-  (set-face-attribute 'markdown-header-face
-                      nil
-                      :font nl/gui-variable-font-name
-                      :weight 'bold
-                      :height (* 12 (string-to-number nl/gui-current-variable-font-size)))
-  (set-face-attribute 'markdown-link-face
-                      nil
-                      :font nl/gui-variable-font-name
-                      :weight 'bold
-                      :height (* 10 (string-to-number nl/gui-current-variable-font-size)))
-  )
-
-(defun ap/load-doom-theme (theme)
-  "Disable active themes and load a Doom theme."
-  (interactive (list (intern (completing-read "Theme: "
-                                              (->> (custom-available-themes)
-                                                   (-map #'symbol-name)
-                                                   (--select (string-prefix-p "doom-" it)))))))
-  (ap/switch-theme theme))
-
-(defun ap/switch-theme (theme)
-  "Disable active themes and load THEME."
-  (interactive (list (intern (completing-read "Theme: "
-                                              (->> (custom-available-themes)
-                                                   (-map #'symbol-name))))))
-  (mapc #'disable-theme custom-enabled-themes)
-  (load-theme theme 'no-confirm))
 #+end_src
 
 * Packages bundled with Emacs
@@ -2761,10 +2761,16 @@ Large collection of snippets: [[https://github.com/AndreaCrotti/yasnippet-snippe
   ;;(yas-global-mode 1)
   :config
   (use-package yasnippet-snippets)
+  (setq yas-snippet-dirs
+      '("~/.emacs.d/snippets"                 ;; personal snippets
+        "/usr/share/yasnippet-snippets"
+        ))
   (yas-reload-all))
 #+end_src
 
 *** [[https://github.com/AndreaCrotti/yasnippet-snippets][yasnippet-snippets]]
+
+Installed with ~sudo apt install elpa-yasnippet-snippets~.
 
 
 ** Org mode
