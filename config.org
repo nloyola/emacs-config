@@ -623,6 +623,15 @@ See https://github.com/doomemacs/themes/tree/screenshots#screenshots
 
   ;; Corrects (and improves) org-mode's native fontification.
   (doom-themes-org-config)
+  :custom-face
+  (org-level-1 ((t (:inherit outline-1 :font "Go" :height 196))))
+  (org-level-2 ((t (:inherit outline-2 :font "Go" :height 172))))
+  (org-level-3 ((t (:inherit outline-3 :font "Go" :height 144))))
+  (org-level-4 ((t (:inherit outline-4 :font "Go" :height 136))))
+  (org-level-5 ((t (:inherit outline-5 :font "Go" :height 124))))
+  ;;(org-link ((t (:foreground "deep sky blue"))))
+  ;;(org-verbatim ((t (:foreground "light steel blue"))))
+  ;;(org-table ((t (:foreground "dark goldenrod"))))
   )
 
 (use-package emacs
