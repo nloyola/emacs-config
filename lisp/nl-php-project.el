@@ -13,6 +13,14 @@
   (require 'yaml-ts-mode)
   (require 'projectile))
 
+(defvar nl/phpunit-filter-end-to-end nil
+  "When set to nil end-to-end tests will not be run")
+
+(defun nl/phpunit-end-to-end-toggle ()
+  "Toggle the value nl/phpunit-filter-end-to-end from nil to t and visa-versa."
+  (interactive)
+  (setq nl/phpunit-filter-end-to-end (not (symbol-value 'nl/phpunit-filter-end-to-end))))
+
 (defun nl/php-filename-p (filename)
   "Return TRUE if the FILENAME ends in '.php''."
   (string-match-p "\\.php$" filename))
@@ -96,7 +104,9 @@
 
 (defun nl/phpunit-create-command (command)
   "Create a COMMAND that can run a test using PHPUnit."
-  (format "vendor/bin/phpunit -c test/phpunit.xml --testdox --no-coverage --exclude-group=end-to-end %s" command))
+  (format "vendor/bin/phpunit -c test/phpunit.xml --testdox --no-coverage %s %s"
+        (if nl/phpunit-filter-end-to-end "--exclude-group=end-to-end" "")
+        command))
 
 (defun nl/php-command-in-proj-root (command)
   "Run the compile COMMAND in project's root directory."
@@ -126,6 +136,15 @@
                       " "
                       (nl/php-file-name)))
    ))
+
+(defun nl/phpunit-selenium-only-this-method ()
+  "Run the PHPUnit test for the test the cursor is in."
+  (interactive)
+  (compile (format
+            "LOG_LEVEL=debug cd %s && vendor/bin/phpunit -c test/phpunit.xml --testdox --no-coverage --filter %s %s"
+            (project-root (project-current))
+            (nl/phpunit-test-find-method-name)
+            (nl/php-file-name))))
 
 (defun nl/phpunit-project ()
   "Run the PHPUnit test suite."
@@ -158,7 +177,7 @@ The class name must have the postfix 'Spec' for this function to work."
     (back-to-indentation)
     (insert "#[Test]\n")
     (c-indent-line-or-region)
-  ))
+    ))
 
 (provide 'nl-php-project)
 ;;; nl-php-project.el ends here

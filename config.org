@@ -1,4 +1,4 @@
-#+TITLE: Emacs Configuration
+ash#+TITLE: Emacs Configuration
 
 #+AUTHOR: Nelson Loyola
 #+STARTUP: content
@@ -544,19 +544,29 @@ See: https://kristofferbalintona.me/posts/202206071000/
   '(window-parameters . ((no-other-window . nil)
                          (no-delete-other-windows . t))))
 
-;; (setq display-buffer-alist '())
-
 ;; (defun nl/display-buffer-debug(buf-name action)
 ;;   (message "%s" buf-name)
 ;;   (numberp (string-match "\\(?:\\*\\(?:[Hh]elp\\|grep\\|Warnings\\|Completions\\|xref\\)\\)\\*\\)\\|\\(?:\\(?:HELM.*\\|helm.*\\)\\)" buf-name)))
 
+;; (setq display-buffer-alist '())
+
 (add-to-list 'display-buffer-alist
-             '("\\(?:\\*\\(?:grep\\|Find\\|Warnings\\|xref\\)\\*\\)\\|\\(?:\\(?:HELM.*\\|helm.*\\)\\)"
+             '("\\(?:\\*\\(?:shell-.*\\|eat\\)\\*\\)"
+               display-buffer-in-side-window
+               (window-width . 0.3)
+               (side . right)
+               (slot . 1) ;; right side
+               (preserve-size . (t . nil))
+               ,nl/side-window-parameters))
+
+(add-to-list 'display-buffer-alist
+             ;; '("\\(?:\\*\\(?:grep\\|Find\\|Warnings\\|xref\\|eat\\)\\*\\)"
+             '("\\(?:\\*\\(?:grep\\|Find\\|Warnings\\|xref\\)\\*\\)"
                display-buffer-in-side-window
                (window-height . 0.18)
                (side . bottom)
                (slot . -1) ;; left side
-               (preserve-size . (t . nil))
+               (preserve-size . (nil . nil))
                ,nl/side-window-parameters))
 
 (add-to-list 'display-buffer-alist
@@ -565,7 +575,7 @@ See: https://kristofferbalintona.me/posts/202206071000/
                (window-height . 0.2)
                (side . bottom)
                (slot . 1) ;; right side
-               (preserve-size . (t . nil))
+               (preserve-size . (nil . nil))
                ,nl/side-window-parameters))
 
 #+end_src
@@ -624,6 +634,7 @@ See https://github.com/doomemacs/themes/tree/screenshots#screenshots
   ;; Corrects (and improves) org-mode's native fontification.
   (doom-themes-org-config)
   :custom-face
+  (corfu-current ((t (:background "dark olive green"))))
   (org-level-1 ((t (:inherit outline-1 :font "Go" :height 196))))
   (org-level-2 ((t (:inherit outline-2 :font "Go" :height 172))))
   (org-level-3 ((t (:inherit outline-3 :font "Go" :height 144))))
@@ -1386,9 +1397,18 @@ Complete anything.
   )
 #+end_src
 
-** [[https://github.com/akermu/emacs-libvterm][emacs-libvterm]]
+
+** [[https://codeberg.org/akib/emacs-eat][emacs-eat]]
 
 #+begin_src emacs-lisp
+(use-package eat)
+#+end_src
+
+** [[https://github.com/akermu/emacs-libvterm][emacs-libvterm]]
+
+No longer using this. Using [[https://codeberg.org/akib/emacs-eat][emacs-eat]] instead.
+
+#+begin_src emacs-lisp :tangle no
 (when (file-directory-p "~/src/github/elisp/emacs-libvterm")
   (use-package vterm
     :load-path "~/src/github/elisp/emacs-libvterm"
@@ -1433,23 +1453,24 @@ Complete anything.
 
 ** [[https://github.com/emacs-dashboard/emacs-dashboard][dashboard]]
 
-Using =all-the-icons= slows down init time.
+Using =nerd-icons= or =all-the-icons= slows down init time.
 
 #+begin_src emacs-lisp
 (use-package dashboard
-  :demand t
+  ;; :after nerd-icons
+  :init
+  (dashboard-setup-startup-hook)
   :custom
   (dashboard-projects-backend 'projectile)
   (dashboard-center-content t)
+  ;; (dashboard-icon-type 'nerd-icons)
   ;; (dashboard-set-heading-icons t)
-  ;; (dashboard-icon-type 'all-the-icons)
   ;; (dashboard-set-file-icons t)
   :config
   (setq dashboard-items '((recents  . 5)
                           (projects . 5)
                           (bookmarks . 5)
                           (registers . 5)))
-  (dashboard-setup-startup-hook)
   )
 #+end_src
 
@@ -2057,7 +2078,7 @@ Add filler lorem ipsum text to Emacs.
   (lsp-enable-snippet t)
   (lsp-enable-file-watchers nil)
   (lsp-pyls-plugins-pycodestyle-max-line-length 120)
-  (lsp-intelephense-php-version "8.2")
+  (lsp-intelephense-php-version "8.3")
   (lsp-intelephense-format-enable nil)
   ;;(setq lsp-response-timeout 25)
   ;; what to use when checking on-save. "check" is default, I prefer clippy
@@ -2756,9 +2777,8 @@ To save all buffers that wgrep has changed, run
 
 ** [[https://github.com/capitaomorte/yasnippet][yasnippet]]
 
-It takes a few seconds to load and I don't need them immediately when
-Emacs starts up, so we can defer loading yasnippet until there's some
-idle time.
+It takes a few seconds to load and I don't need them immediately when Emacs starts up, so we can defer loading
+yasnippet until there's some idle time.
 
 Large collection of snippets: [[https://github.com/AndreaCrotti/yasnippet-snippets][Andrea Crotti's collection]].
 
@@ -2772,14 +2792,14 @@ Large collection of snippets: [[https://github.com/AndreaCrotti/yasnippet-snippe
   (use-package yasnippet-snippets)
   (setq yas-snippet-dirs
       '("~/.emacs.d/snippets"                 ;; personal snippets
-        "/usr/share/yasnippet-snippets"
+        "~/.emacs.d/elpa/yasnippet-snippets-20240507.943/snippets"
         ))
   (yas-reload-all))
 #+end_src
 
 *** [[https://github.com/AndreaCrotti/yasnippet-snippets][yasnippet-snippets]]
 
-Installed with ~sudo apt install elpa-yasnippet-snippets~.
+See above.
 
 
 ** Org mode
@@ -2789,11 +2809,39 @@ Installed with ~sudo apt install elpa-yasnippet-snippets~.
   :pin org
   :bind
   ("C-c c" . org-capture)
-  ;;:hook (org-mode . nl/org-mode-setup)
+  :hook
+  ;;(org-mode . nl/org-mode-setup)
+  (org-mode . variable-pitch-mode)
+  :preface
+  (defun nl/org-confirm-babel-evaluate (lang body)
+    "Do not confirm evaluation for these languages."
+    (message ">>>>>>>>>> here")
+    (not (or (string= lang "bash")
+             (string= lang "C")
+             (string= lang "emacs-lisp")
+             (string= lang "java")
+             (string= lang "python")
+             (string= lang "sh")
+             (string= lang "sql")
+             (string= lang "sqlite")
+             )))
   :custom-face
-  (org-table ((t :foreground "#91b831")))
+  ;;(org-table ((t :foreground "#91b831")))
+  (org-block ((t (:inherit fixed-pitch))))
+  (org-code ((t (:inherit (shadow fixed-pitch)))))
+  ;;(org-document-info ((t (:foreground "dark orange"))))
+  (org-document-info-keyword ((t (:inherit (shadow fixed-pitch)))))
+  (org-indent ((t (:inherit (org-hide fixed-pitch)))))
+  (org-link ((t (:underline t))))
+  (org-meta-line ((t (:inherit (font-lock-comment-face fixed-pitch)))))
+  (org-property-value ((t (:inherit fixed-pitch))) t)
+  (org-special-keyword ((t (:inherit (font-lock-comment-face fixed-pitch)))))
+  (org-table ((t (:inherit fixed-pitch))))
+  (org-tag ((t (:inherit (shadow fixed-pitch) :weight bold :height 0.8))))
+  (org-verbatim ((t (:inherit (shadow fixed-pitch)))))
   :config
-  (setq org-ellipsis " ⤵"
+  (setq org-confirm-babel-evaluate 'nl/org-confirm-babel-evaluate
+        org-ellipsis " ⤵"
         org-hide-emphasis-markers t
         org-catch-invisible-edits 'error
         org-startup-indented t
@@ -2820,20 +2868,6 @@ Installed with ~sudo apt install elpa-yasnippet-snippets~.
            "* NOTE %?\n%U\n   %c" :empty-lines 1)
           ("j" "Journal" entry (file+datetree "~/Sync/orgfiles/journal.org")
            "* %?\nEntered on %U\n  %i\n  %a")))
-  )
-
-(with-eval-after-load 'org
-  (defun nl/org-confirm-babel-evaluate (lang body)
-    "Do not confirm evaluation for these languages."
-    (not (or (string= lang "C")
-             (string= lang "emacs-lisp")
-             (string= lang "java")
-             (string= lang "python")
-             (string= lang "sh")
-             (string= lang "sql")
-             (string= lang "sqlite")
-             )))
-  (setq org-confirm-babel-evaluate 'nl/org-confirm-babel-evaluate)
 
   (org-babel-do-load-languages
    'org-babel-load-languages

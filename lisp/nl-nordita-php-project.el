@@ -75,23 +75,27 @@
 
 (defhydra hydra-nl/php-test (:color blue)
   "Test"
-  ("d" nl/phpunit-run-this-method-with-debug-logging "only this method (with debug logging)")
-  ("p" nl/phpunit-project "All tests" :column "Test")
+  ("d" nl/phpunit-run-this-method-with-debug-logging "only this method (with debug logging)" :column "PHP")
+  ("p" nl/phpunit-project "All tests")
   ("f" nl/phpunit-test-this-file "only this file")
   ("m" nl/phpunit-only-this-method "only this method")
-  ("r" nl/phpunit-coverage-report-in-chrome "Open coverage report in Chrome"))
+  ("r" nl/phpunit-coverage-report-in-chrome "Open coverage report in Chrome")
+  ("t" nl/phpunit-end-to-end-toggle "toggle exclude end-to-end" :column "End to End"))
 
-(defhydra hydra-nl-project (:color red :hint nil)
+(defhydra hydra-nl-nordita-project (:color red :hint nil)
   "Project commands"
   ("a" hydra-nl-align/body "align" :color blue :column "General")
   ("t" hydra-nl/php-test/body "test" :color blue :column "PHP")
   ("c" nl/php-code-sniffer "Run PHP CodeSniffer" :column "Build")
   ("y" nl/nordita-build-page-from-yaml "Build ProcessWire page from YAML file" :color blue))
 
+(key-chord-define php-mode-map "jc" 'hydra-nl-nordita-project/body)
+
 (define-key php-mode-map (kbd "C-c , d") 'nl/phpunit-run-this-method-with-debug-logging)
 (define-key php-mode-map (kbd "C-c , m") 'nl/phpunit-only-this-method)
 (define-key php-mode-map (kbd "C-c , f") 'nl/phpunit-test-this-file)
 (define-key php-mode-map (kbd "C-c , p") 'nl/phpunit-project)
+(define-key php-mode-map (kbd "C-c , s") 'nl/phpunit-selenium-only-this-method)
 
 (defun nl/projectile-test-suffix-function (project-type)
   "Return the suffix for test files for PROJECT-TYPE."
