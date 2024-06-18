@@ -1,5 +1,4 @@
-ash#+TITLE: Emacs Configuration
-
+#+TITLE: Emacs Configuration
 #+AUTHOR: Nelson Loyola
 #+STARTUP: content
 #+INFOJS_OPT: view:t toc:t ltoc:t mouse:underline buttons:0 path:http://thomasf.github.io/solarized-css/org-info.min.j
@@ -14,7 +13,7 @@ Links:
 
 * Basic settings
 
-See https://tony-zorman.com/posts/2022-10-22-emacs-potpourri.html
+See https://tony-zorman.com/posts/emacs-potpourri.html
 
 #+begin_src emacs-lisp
 (when (eq system-type 'darwin)
@@ -41,7 +40,6 @@ See https://tony-zorman.com/posts/2022-10-22-emacs-potpourri.html
 
 ;; Set the default major mode to =text-mode=. By default it's =fundamental= mode which is
 ;; not what we want. Also, use =text-mode= for the scratch buffer.
-
 (setq default-major-mode 'text-mode
       initial-major-mode 'text-mode)
 
@@ -202,7 +200,6 @@ See https://tony-zorman.com/posts/2022-10-22-emacs-potpourri.html
 #+end_src
 
 * Fonts
-
 ** Main font
 
 #+begin_src emacs-lisp
@@ -215,78 +212,52 @@ See https://tony-zorman.com/posts/2022-10-22-emacs-potpourri.html
   ;; (defvar nl/gui-variable-font-name "DejaVu Sans")
 
   ;;(defvar nl/gui-variable-font-name "GoMono Nerd Font")
-  (defvar nl/gui-variable-font-name "Go")
+  ;;(defvar nl/gui-variable-font-name "Go")
+  (defvar nl/gui-variable-font-name "Alegreya")
 
-  (defconst nl/gui-fixed-font-size-normal "11")
-  (defconst nl/gui-fixed-font-size-large "18")
-
-  (defconst nl/gui-variable-font-size-normal "12")
-  (defconst nl/gui-variable-font-size-large "18")
-
-  (defvar nl/gui-current-fixed-font-size nl/gui-fixed-font-size-normal)
-  (defvar nl/gui-current-variable-font-size nl/gui-variable-font-size-normal)
-
-  (defun nl/gui-font (font-name font-size)
-    (concat font-name "-" font-size))
-
-  (defun nl/gui-fixed-font-normal ()
-    (nl/gui-font nl/gui-fixed-font-name nl/gui-fixed-font-size-normal))
-
-  (defun nl/gui-fixed-font-large ()
-    (nl/gui-font nl/gui-fixed-font-name nl/gui-fixed-font-size-large))
-
-  (defun nl/gui-variable-font-normal ()
-    (nl/gui-font nl/gui-variable-font-name nl/gui-variable-font-size-normal))
-
-  (defun nl/gui-variable-font-large ()
-    (nl/gui-font nl/gui-variable-font-name nl/gui-variable-font-size-large))
-
+  (defconst nl/gui-fixed-font-size-normal 11)
 
   (defun nl/set-fonts (frame)
     "Set the desired fonts for a frame. FRAME can be nil."
-    (let ((fixed-font (nl/gui-fixed-font-normal)))
-      (set-face-font 'default fixed-font)
-      (set-face-font 'fixed-pitch fixed-font))
-    (set-face-font 'variable-pitch (nl/gui-variable-font-normal))
-    (set-face-attribute 'font-lock-comment-face nil :weight 'semi-bold :slant 'italic)
+    (let ((fixed-font-name (format "%s %s" nl/gui-fixed-font-name nl/gui-fixed-font-size-normal))
+          (variable-font-name (format "%s %s" nl/gui-variable-font-name nl/gui-fixed-font-size-normal)))
+      (set-face-font 'default fixed-font-name)
+      (set-frame-font fixed-font-name)
+      ;;(set-fontset-font "fontset-default" nil (font-spec :size 20 :name "Fira Code Retina"))
 
-    ;;(set-face-background 'region (doom-darken 'green 0.2))
+      (set-face-attribute 'fixed-pitch nil :family nl/gui-fixed-font-name :inherit 'default)
+      (set-face-attribute 'variable-pitch nil :family nl/gui-variable-font-name :height 1.5)
+      (set-face-attribute 'font-lock-comment-face nil :family nl/gui-fixed-font-name :weight 'semi-bold :slant 'italic :inherit 'default)
+      (set-face-attribute 'italic nil :family nl/gui-fixed-font-name :weight 'normal :slant 'italic)
+      (set-face-attribute 'bold nil :family nl/gui-fixed-font-name :weight 'bold :weight 'normal)
+      (set-face-attribute 'bold-italic nil :family nl/gui-fixed-font-name :weight 'bold :slant 'italic)
 
-    (when frame
-      ;;(set-face-attribute 'default frame :font nl/gui-fixed-font-name)
-      (set-face-attribute 'italic frame :font nl/gui-fixed-font-name :weight 'normal :slant 'italic)
-      (set-face-attribute 'bold frame :font nl/gui-fixed-font-name :weight 'bold :weight 'normal)
-      (set-face-attribute 'bold-italic frame :font nl/gui-fixed-font-name :weight 'bold :slant 'italic)
-      (set-fontset-font "fontset-default" nil (font-spec :size 20 :name "Fira Code Retina"))
-      )
+      (set-face-attribute 'mode-line nil
+                          :family nl/gui-variable-font-name
+                          :background "#353644"
+                          :foreground "white"
+                          :box '(:line-width 4 :color "#353644")
+                          :height 1.4
+                          :overline nil
+                          :underline nil)
 
-    (set-face-font 'mode-line (nl/gui-variable-font-normal))
-    (set-face-font 'mode-line-buffer-id (nl/gui-variable-font-normal))
-    (set-face-font 'mode-line-emphasis (nl/gui-variable-font-normal))
-    (set-face-font 'mode-line-highlight (nl/gui-variable-font-normal))
-    (set-face-font 'mode-line-inactive (nl/gui-fixed-font-normal))
+      (set-face-attribute 'mode-line-inactive nil
+                          :family nl/gui-variable-font-name
+                          :background "#565063"
+                          :foreground "white"
+                          :box '(:line-width 4 :color "#565063")
+                          :height 1.4
+                          :overline nil
+                          :underline nil)
 
-    (set-face-attribute 'mode-line nil
-                        :background "#353644"
-                        :foreground "white"
-                        :box '(:line-width 4 :color "#353644")
-                        :overline nil
-                        :underline nil)
-
-    (set-face-attribute 'mode-line-inactive nil
-                        :background "#565063"
-                        :foreground "white"
-                        :box '(:line-width 4 :color "#565063")
-                        :overline nil
-                        :underline nil)
-    )
+      (set-face-attribute 'mode-line-buffer-id nil :family nl/gui-variable-font-name :foreground "goldenrod" :weight 'bold)
+      (set-face-attribute 'mode-line-emphasis nil :family nl/gui-variable-font-name :weight 'bold)
+      (set-face-attribute 'mode-line-highlight nil :family nl/gui-variable-font-name :slant 'italic)
+      ))
   :config
   (when (string-match "-[Mm]icrosoft" operating-system-release)
     ;; WSL: WSL1 has "-Microsoft", WSL2 has "-microsoft-standard"
-    (setq nl/gui-fixed-font-size-normal "12"
-          nl/gui-fixed-font-size-large "18"
-          nl/gui-variable-font-size-normal "14"
-          nl/gui-variable-font-size-large "18"
+    (setq nl/gui-fixed-font-size-normal 12
           ))
 
   ;; see https://www.gonsie.com/blorg/modeline.html
@@ -296,8 +267,8 @@ See https://tony-zorman.com/posts/2022-10-22-emacs-potpourri.html
                  '(:eval (propertize " %b "
                                      'face
                                      (let ((face (buffer-modified-p)))
-                                       (if face 'font-lock-warning-face
-                                         'font-lock-type-face))
+                                       (if face 'mode-line-buffer-id
+                                         'mode-line-highlight))
                                      'help-echo (buffer-file-name)))
 
                  ;; line and column
@@ -332,76 +303,6 @@ See https://tony-zorman.com/posts/2022-10-22-emacs-potpourri.html
                  ))
   (nl/set-fonts nil)
   )
-#+end_src
-
-** Change font size
-
-#+begin_src emacs-lisp
-(defhydra hydra-zoom (global-map "C-c z")
-  "zoom"
-  ("g" text-scale-increase "in")
-  ("l" text-scale-decrease "out"))
-#+end_src
-
-Taken from: http://doc.rix.si/org/fsem.html
-
-#+begin_src emacs-lisp
-(defun nl/change-font-size (fixed-font-size variable-font-size)
-  "Change font size in all buffers."
-  (interactive)
-  (setq nl/gui-current-fixed-font-size fixed-font-size
-        nl/gui-current-variable-font-size variable-font-size)
-  (let* ((frame (selected-frame))
-         (fixed-font (nl/gui-font nl/gui-fixed-font-name fixed-font-size))
-         (variable-font (nl/gui-font nl/gui-variable-font-name variable-font-size)))
-
-    (set-face-attribute 'default frame :font fixed-font)
-    (set-face-font 'default fixed-font)
-    (set-face-font 'italic variable-font)
-    (set-face-font 'bold-italic variable-font)
-    (set-face-font 'fixed-pitch-serif variable-font)
-    (set-face-font 'variable-pitch variable-font)
-
-    ;;(nl/org-mode-faces (* 10 (string-to-number fixed-font-size)))
-    ))
-
-(defun nl/zoom-config ()
-  "Set a large enough font size for all Emacs frames for screensharing on Zoom meetings."
-  (interactive)
-  (nl/change-font-size "16" "18"))
-
-(defun nl/normal-config ()
-  "Set the size and position of the Emacs window."
-  (interactive)
-  (nl/change-font-size nl/gui-fixed-font-size-normal nl/gui-variable-font-size-normal)
-  (nl/main-frame-set-size-and-position))
-
-;; Resize the whole frame, and not only a window
-;;
-;; From:
-;;    https://stackoverflow.com/questions/24705984/increase-decrease-font-size-in-an-emacs-frame-not-just-buffer
-;;
-(defun acg/zoom-frame (&optional amt frame)
-  "Increaze FRAME font size by amount AMT. Defaults to selected
- frame if FRAME is nil, and to 1 if AMT is nil."
-  (interactive "p")
-  (let* ((frame (or frame (selected-frame)))
-         (font (face-attribute 'default :font frame))
-         (size (font-get font :size))
-         (amt (or amt 1))
-         (new-size (+ size amt)))
-    (set-frame-font (font-spec :size new-size) t `(,frame))
-    (message "Frame's font new size: %d" new-size)))
-
-(defun acg/zoom-frame-out (&optional amt frame)
-  "Call `acg/zoom-frame' with negative argument."
-  (interactive "p")
-  (acg/zoom-frame (- (or amt 1)) frame))
-
-(global-set-key (kbd "C-x C-=") 'acg/zoom-frame)
-(global-set-key (kbd "C-x C--") 'acg/zoom-frame-out)
-(global-set-key (kbd "<C-down-mouse-4>") 'acg/zoom-frame)
-(global-set-key (kbd "<C-down-mouse-5>") 'acg/zoom-frame-out)
 #+end_src
 
 * Frame configuration
@@ -551,7 +452,7 @@ See: https://kristofferbalintona.me/posts/202206071000/
 ;; (setq display-buffer-alist '())
 
 (add-to-list 'display-buffer-alist
-             '("\\(?:\\*\\(?:shell-.*\\|eat\\)\\*\\)"
+             '("\\(?:\\*\\(?:[Hh]elp\\|shell\\|eat\\)\\*\\)"
                display-buffer-in-side-window
                (window-width . 0.3)
                (side . right)
@@ -570,7 +471,7 @@ See: https://kristofferbalintona.me/posts/202206071000/
                ,nl/side-window-parameters))
 
 (add-to-list 'display-buffer-alist
-             '("\\*\\(?:[Hh]elp\\|Backtrace\\|Warnings\\|Completions\\|Compile-Log\\|cargo-run\\|\\Flycheck.*\\|shell\\|compilation\\|ng-compile\\|ng-test\\|tide-references\\|sbt\\|coverlay-stats\\)\\*"
+             '("\\*\\(?:Backtrace\\|Warnings\\|Completions\\|Compile-Log\\|cargo-run\\|\\Flycheck.*\\)\\*"
                display-buffer-in-side-window
                (window-height . 0.2)
                (side . bottom)
@@ -618,11 +519,11 @@ See https://github.com/doomemacs/themes/tree/screenshots#screenshots
 #+begin_src emacs-lisp
 (use-package doom-themes
   :init
-  ;; Global settings (defaults)
   (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
         doom-themes-enable-italic t) ; if nil, italics is universally disabled
 
-  (load-theme 'doom-oceanic-next t)
+  ;;(load-theme 'doom-oceanic-next t)
+  (load-theme 'doom-palenight t)
 
   ;; Enable flashing mode-line on errors
   (doom-themes-visual-bell-config)
@@ -635,16 +536,12 @@ See https://github.com/doomemacs/themes/tree/screenshots#screenshots
   (doom-themes-org-config)
   :custom-face
   (corfu-current ((t (:background "dark olive green"))))
-  (org-level-1 ((t (:inherit outline-1 :font "Go" :height 196))))
-  (org-level-2 ((t (:inherit outline-2 :font "Go" :height 172))))
-  (org-level-3 ((t (:inherit outline-3 :font "Go" :height 144))))
-  (org-level-4 ((t (:inherit outline-4 :font "Go" :height 136))))
-  (org-level-5 ((t (:inherit outline-5 :font "Go" :height 124))))
-  ;;(org-link ((t (:foreground "deep sky blue"))))
-  ;;(org-verbatim ((t (:foreground "light steel blue"))))
-  ;;(org-table ((t (:foreground "dark goldenrod"))))
   )
+#+end_src
 
+Allow changing themes on the fly with this.
+
+#+begin_src emacs-lisp
 (use-package emacs
   :init
   (defun ap/load-doom-theme (theme)
@@ -660,22 +557,6 @@ See https://github.com/doomemacs/themes/tree/screenshots#screenshots
                                                      (-map #'symbol-name))))))
     (mapc #'disable-theme custom-enabled-themes)
     (load-theme theme 'no-confirm)))
-
-(with-eval-after-load 'markdown-mode
-  (set-face-background 'markdown-code-face "#121212")
-  ;;(set-face-foreground 'markdown-code-face (doom-darken 'green 0.2))
-  ;;(set-face-background 'org-block (doom-color 'brightblack))
-  (set-face-attribute 'markdown-header-face
-                      nil
-                      :font nl/gui-variable-font-name
-                      :weight 'bold
-                      :height (* 12 (string-to-number nl/gui-current-variable-font-size)))
-  (set-face-attribute 'markdown-link-face
-                      nil
-                      :font nl/gui-variable-font-name
-                      :weight 'bold
-                      :height (* 10 (string-to-number nl/gui-current-variable-font-size)))
-  )
 #+end_src
 
 ** [[https://github.com/greduan/emacs-theme-gruvbox][gruvbox]]
@@ -684,15 +565,6 @@ See https://github.com/doomemacs/themes/tree/screenshots#screenshots
 (use-package gruvbox-theme
   :init
   (load-theme 'gruvbox-dark-hard :no-confirm)
-  :custom-face
-  (org-level-1 ((t (:inherit outline-1 :foreground "dodger blue" :font "Go" :height 196))))
-  (org-level-2 ((t (:inherit outline-2 :foreground "medium slate blue" :font "Go" :height 172))))
-  (org-level-3 ((t (:inherit outline-3 :foreground "sky blue" :font "Go" :height 144))))
-  (org-level-4 ((t (:inherit outline-4 :foreground "cornflower blue" :font "Go" :height 136))))
-  (org-level-5 ((t (:inherit outline-5 :foreground "light blue" :font "Go" :height 124))))
-  (org-link ((t (:foreground "deep sky blue"))))
-  (org-verbatim ((t (:foreground "light steel blue"))))
-  (org-table ((t (:foreground "dark goldenrod"))))
   )
 #+end_src
 
@@ -763,9 +635,10 @@ Enable ANSI colors for compilation buffers.
 
   (defun nl/compile-hook ()
     (hl-line-mode)
-    (setq-local compilation-scroll-output t)
-    (setq-local scroll-conservatively most-positive-fixnum)
-    (setq-local scroll-margin 0)
+    (setq-local compilation-scroll-output t
+                compilation-scroll-output t
+                scroll-conservatively most-positive-fixnum
+                scroll-margin 0)
     (nl/colorize-compilation-buffer))
 
   ;; required for TypeScript compile
@@ -965,21 +838,26 @@ Also move from window to window using Meta and the direction keys.
 #+end_src
 
 * Elpa packages
+** adaptive-wrap
+
+A minor mode which sets the wrap-prefix property on the fly so that single-long-line paragraphs get word-wrapped in a way similar to what you'd get with M-q using adaptive-fill-mode, but without actually changing the buffer's text.
+
+#+begin_src emacs-lisp
+(use-package adaptive-wrap)
+#+end_src
+
 ** [[https://github.com/wyuenho/all-the-icons-dired][all-the-icons-dired]]
 
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp
 (use-package all-the-icons
   :if window-system)
 
-;; disable hook for now
-;;
 ;; now done in treemacs-icons-dired config
 (use-package all-the-icons-dired
   ;; M-x all-the-icons-install-fonts
   :hook (dired-mode . all-the-icons-dired-mode)
   )
 #+end_src
-
 ** [[https://github.com/abo-abo/ace-window][ace-window]]
 
 A package that uses the same idea from ace-jump-mode for
@@ -1054,6 +932,13 @@ Complete anything.
 | f SPC | Narrow to recent files |
 | m SPC | Narrow to bookmarks    |
 | p SPC | Narrow to project      |
+
+*** [[https://github.com/kickingvegas/casual-dired][casual-dired]]
+
+#+begin_src emacs-lisp
+(use-package casual-dired
+  :bind (:map dired-mode-map ("C-o" . #'casual-dired-tmenu)))
+#+end_src
 
 *** [[https://github.com/minad/consult][consult]]
 
@@ -1396,8 +1281,6 @@ Complete anything.
   :hook (css-mode . nl/css-mode-hook)
   )
 #+end_src
-
-
 ** [[https://codeberg.org/akib/emacs-eat][emacs-eat]]
 
 #+begin_src emacs-lisp
@@ -1478,7 +1361,9 @@ Using =nerd-icons= or =all-the-icons= slows down init time.
 
 Dirvish is an improved version of the Emacs inbuilt package Dired.
 
-#+begin_src emacs-lisp
+Stopped using this package since it does not work well on Emacs 30.
+
+#+begin_src emacs-lisp :tangle no
 (use-package dirvish
   :init
   (dirvish-override-dired-mode)
@@ -1573,8 +1458,7 @@ command line. Use an easy keybinding to access magit.
 **** Full-screen magit
 
 #+BEGIN_QUOTE
-The following code makes magit-status run alone in the frame, and then restores the old window
-configuration when you quit out of magit.
+The following code makes magit-status run alone in the frame, and then restores the old window configuration when you quit out of magit.
 
 No more juggling windows after commiting. It's magit bliss.
 #+END_QUOTE
@@ -1622,10 +1506,35 @@ No more juggling windows after commiting. It's magit bliss.
 
 *** [[https://github.com/syohex/emacs-git-gutter][emacs-git-gutter]]
 
+Uses gutter icons to show extra information about files in a git repository. Gutter Icons indicate inserted, modified or deleted lines.
+
 #+begin_src emacs-lisp
 (use-package git-gutter
   :diminish git-gutter-mode
   :hook (prog-mode . git-gutter-mode))
+#+end_src
+
+*** [[https://github.com/10sr/git-walktree-el][git-walktree.el]]
+
+Browse Git tree and blob objects
+
+=M-x git-walktree= to open ~git-walktree~ buffer. Prompt user for revision to show.
+
+When current buffer is visiting a file and it exists in the revision, open blob buffer for that file
+Otherwise, open tree buffer for default-directory In ~git-walktree~ buffers, following keybinds are defined:
+
+- ~^~ Go up to parent tree object
+- ~P~ Move to parent revision
+- ~N~ Move to child revision
+- ~C~ Checkout current blob or tree object to working directory
+- ~G~ Move to another revision (ask user)
+
+Additionally, in tree object buffer:
+
+- ~ENTER~ Visit tree or blob object at point
+
+#+begin_src emacs-lisp
+(use-package git-walktree)
 #+end_src
 
 *** difftastic
@@ -1808,9 +1717,9 @@ short bindings with a common prefix - a Hydra.
   :custom
   (hydra-hint-display-type 'posframe)
   :config
-  ;;(setq hydra-posframe-show-params (plist-put hydra-posframe-show-params :font "Fira Code Retina"))
+  ;;(setq hydra-posframe-show-params (plist-put hydra-posframe-show-params :family "Fira Code Retina"))
   (setq hydra-posframe-show-params
-        (plist-put hydra-posframe-show-params :font nl/gui-fixed-font-name))
+        (plist-put hydra-posframe-show-params :family nl/gui-fixed-font-name))
 
   (defun nl/pull-window ()
     "Pull a window to the window the point is at"
@@ -2121,8 +2030,7 @@ Add filler lorem ipsum text to Emacs.
   ;; :load-path "~/src/github/elisp/lsp-ui"
   ;; :init
   ;; (defun nl-lsp-ui-doc-hook (frame _w)
-  ;;   (message ">>>>>>>>>> here")
-  ;;   (set-face-attribute 'default frame :font "Hack" :height 180))
+  ;;   (set-face-attribute 'default frame :family "Hack" :height 180))
   :hook
   (lsp-mode . lsp-ui-mode)
   ;;(lsp-ui-doc-frame-hook . nl-lsp-ui-doc-hook)
@@ -2143,8 +2051,7 @@ Add filler lorem ipsum text to Emacs.
   :config
   (add-hook 'lsp-ui-doc-frame-hook
             (lambda (frame _w)
-              (message ">>>>>>>>>>>> here")
-              (set-face-attribute 'default frame :font nl/gui-variable-font-name :height 120)))
+              (set-face-attribute 'default frame :family nl/gui-variable-font-name :height 120)))
   (setq lsp-ui-flycheck-list-position 'bottom
         lsp-ui-doc-enable t
         ;;lsp-ui-doc-show-with-cursor t
@@ -2200,18 +2107,41 @@ Add filler lorem ipsum text to Emacs.
          ("\\.markdown\\'" . markdown-mode)
          ("\\.md\\'"       . markdown-mode))
   :hook
-  (markdown-mode . (lambda () (auto-fill-mode -1)))
+  (markdown-mode . (lambda ()
+                     (auto-fill-mode -1)
+                     (setq adaptive-wrap-extra-indent 1)
+                     (adaptive-wrap-prefix-mode)
+                     ))
   (markdown-mode . variable-pitch-mode)
+  (markdown-mode . visual-line-mode)
   :config
   (setq markdown-command "pandoc")
-  (dolist (face '(markdown-inline-code-face markdown-code-face))
-    (set-face-attribute face nil :inherit 'fixed-pitch)))
+  (set-face-attribute 'markdown-code-face
+                      nil
+                      :family nl/gui-fixed-font-name
+                      :background "#303030"
+                      :weight 'normal
+                      :height 0.8)
+  (set-face-attribute 'markdown-inline-code-face nil :family nl/gui-fixed-font-name)
+  (set-face-attribute 'markdown-bold-face nil :family nl/gui-variable-font-name)
+  (set-face-attribute 'markdown-italic-face nil :family nl/gui-variable-font-name)
+  (set-face-attribute 'markdown-list-face nil :family nl/gui-variable-font-name :height 1.3)
+  (set-face-attribute 'markdown-header-face-1 nil :family nl/gui-variable-font-name :height 1.9)
+  (set-face-attribute 'markdown-header-face-2 nil :family nl/gui-variable-font-name :height 1.7)
+  (set-face-attribute 'markdown-header-face-3 nil :family nl/gui-variable-font-name :height 1.5)
+  (set-face-attribute 'markdown-header-face-4 nil :family nl/gui-variable-font-name :height 1.4)
+  (set-face-attribute 'markdown-header-face-5 nil :family nl/gui-variable-font-name :height 1.3)
+  (set-face-attribute 'markdown-header-face-6 nil :family nl/gui-variable-font-name :height 1.2)
+  (set-face-attribute 'markdown-header-face nil :family nl/gui-variable-font-name :height 1.1)
+  (set-face-attribute 'markdown-header-delimiter-face nil :family nl/gui-variable-font-name :height 0.8))
 #+end_src
 
 ** [[https://github.com/ancane/markdown-preview-mode][markdown-preview-mode]]
 
 #+begin_src emacs-lisp
 (use-package markdown-preview-mode
+  :custom
+  (markdown-preview-http-port 9090)
   :config
   (setq markdown-preview-stylesheets
         (list
@@ -2272,6 +2202,26 @@ No longer need nerd-icons-dired when using Dirvish.
 ;;  :load-path "~/src/github/elisp/nerd-icons-dired"
 ;;  :hook
 ;;  (dired-mode . nerd-icons-dired-mode))
+#+end_src
+** [[https://github.com/nex3/perspective-el][perspective.el]]
+
+The Perspective package provides multiple named workspaces (or "perspectives") in Emacs, similar to multiple
+desktops in window managers like Awesome and XMonad, and Spaces on the Mac.
+
+#+begin_src emacs-lisp
+(use-package perspective
+  :after consult
+  :bind (("C-x b" . persp-switch-to-buffer*)
+         ;;("C-x k" . persp-kill-buffer*)
+         ("C-x C-b" . persp-list-buffers))         ; or use a nicer switcher, see below
+  :custom
+  (persp-show-modestring t)
+  (persp-mode-prefix-key (kbd "C-x C-x"))  ; pick your own prefix key here
+  :init
+  (persp-mode)
+  :config
+  (consult-customize consult--source-buffer :hidden t :default nil)
+  (add-to-list 'consult-buffer-sources persp-consult-source))
 #+end_src
 
 ** PHP
@@ -2777,8 +2727,7 @@ To save all buffers that wgrep has changed, run
 
 ** [[https://github.com/capitaomorte/yasnippet][yasnippet]]
 
-It takes a few seconds to load and I don't need them immediately when Emacs starts up, so we can defer loading
-yasnippet until there's some idle time.
+It takes a few seconds to load and I don't need them immediately when Emacs starts up, so we can defer loading yasnippet until there's some idle time.
 
 Large collection of snippets: [[https://github.com/AndreaCrotti/yasnippet-snippets][Andrea Crotti's collection]].
 
@@ -2810,12 +2759,12 @@ See above.
   :bind
   ("C-c c" . org-capture)
   :hook
-  ;;(org-mode . nl/org-mode-setup)
   (org-mode . variable-pitch-mode)
+  (org-mode . visual-line-mode)
+  ;;(org-mode . nl/org-mode-setup)
   :preface
   (defun nl/org-confirm-babel-evaluate (lang body)
     "Do not confirm evaluation for these languages."
-    (message ">>>>>>>>>> here")
     (not (or (string= lang "bash")
              (string= lang "C")
              (string= lang "emacs-lisp")
@@ -2828,17 +2777,23 @@ See above.
   :custom-face
   ;;(org-table ((t :foreground "#91b831")))
   (org-block ((t (:inherit fixed-pitch))))
-  (org-code ((t (:inherit (shadow fixed-pitch)))))
-  ;;(org-document-info ((t (:foreground "dark orange"))))
-  (org-document-info-keyword ((t (:inherit (shadow fixed-pitch)))))
+  (org-code ((t (:inherit (shadow fixed-pitch) :height 0.9))))
+  (org-verbatim ((t (:inherit (shadow fixed-pitch) :height 1.0))))
   (org-indent ((t (:inherit (org-hide fixed-pitch)))))
   (org-link ((t (:underline t))))
-  (org-meta-line ((t (:inherit (font-lock-comment-face fixed-pitch)))))
+  (org-document-info ((t (:inherit fixed-pitch))))
+  (org-document-info-keyword ((t (:inherit fixed-pitch))))
+  ;;(org-meta-line ((t (:inherit (font-lock-comment-face fixed-pitch)))))
+  (org-meta-line ((t (:inherit fixed-pitch))))
   (org-property-value ((t (:inherit fixed-pitch))) t)
   (org-special-keyword ((t (:inherit (font-lock-comment-face fixed-pitch)))))
-  (org-table ((t (:inherit fixed-pitch))))
+  (org-table ((t (:inherit fixed-pitch :height 0.9))))
   (org-tag ((t (:inherit (shadow fixed-pitch) :weight bold :height 0.8))))
-  (org-verbatim ((t (:inherit (shadow fixed-pitch)))))
+  (org-level-1 ((t (:inherit outline-1 :height 2.0))))
+  (org-level-2 ((t (:inherit outline-2 :height 1.8))))
+  (org-level-3 ((t (:inherit outline-3 :height 1.6))))
+  (org-level-4 ((t (:inherit outline-4 :height 1.4))))
+  (org-level-5 ((t (:inherit outline-5 :height 1.2))))
   :config
   (setq org-confirm-babel-evaluate 'nl/org-confirm-babel-evaluate
         org-ellipsis " ⤵"
@@ -2904,6 +2859,7 @@ See above.
   :init
   (setq org-roam-v2-ack t)
   :custom
+  (org-roam-db-location "~/Sync/RoamNotes/org-roam.db")
   (org-roam-directory "~/Sync/RoamNotes")
   :bind (("C-c n l" . org-roam-buffer-toggle)
          ("C-c n f" . org-roam-node-find)
