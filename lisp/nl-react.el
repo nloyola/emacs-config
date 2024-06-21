@@ -5,7 +5,6 @@
 ;; Settings and functions to support software development.
 
 ;;; Code:
-(require 'nl-typescript)
 
 (eval-when-compile
   (require 'yasnippet))

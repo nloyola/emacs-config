@@ -85,7 +85,8 @@
 ;; (setenv "http_proxy" "")
 
 ;;; Bootstrap use-package
-(setq-default use-package-always-ensure t         ; Auto-download package if not exists
+(setq-default use-package-compute-statistics t    ; to check if config is ok
+              use-package-always-ensure t         ; Auto-download package if not exists
               use-package-always-defer t          ; Always defer load package to speed up startup time
               use-package-expand-minimally nil    ; make the expanded code as minimal as possible
               use-package-enable-imenu-support t) ; Let imenu finds use-package definitions
@@ -93,14 +94,14 @@
 ;; use only for debugging startup time
 (setq use-package-verbose t)               ; report loading details)
 
-;; Install use-package if it's not already installed.
-;; use-package is used to configure the rest of the packages.
-(unless (package-installed-p 'use-package)
-  (package-refresh-contents)
-  (package-install 'use-package))
+;; ;; Install use-package if it's not already installed.
+;; ;; use-package is used to configure the rest of the packages.
+;; (unless (package-installed-p 'use-package)
+;;   (package-refresh-contents)
+;;   (package-install 'use-package))
 
-(eval-when-compile
-  (require 'use-package))
+;; (eval-when-compile
+;;   (require 'use-package))
 
 (unless (package-installed-p 'diminish)
   (package-refresh-contents)

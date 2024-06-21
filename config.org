@@ -13,216 +13,237 @@ Links:
 
 * Basic settings
 
+Override various default settings and key bindings.
+
 See https://tony-zorman.com/posts/emacs-potpourri.html
 
 #+begin_src emacs-lisp
-(when (eq system-type 'darwin)
-  (require 'ls-lisp)
-  (setq ls-lisp-use-insert-directory-program nil))
+(use-package emacs
+  :preface
+  (when (eq system-type 'darwin)
+    (require 'ls-lisp)
+    (setq ls-lisp-use-insert-directory-program nil))
 
-(setq user-full-name "Nelson Loyola"
-      user-mail-address "nloyola@gmail.com"
-      custom-file (expand-file-name "custom.el" user-emacs-directory))
+  (setq user-full-name "Nelson Loyola"
+        user-mail-address "nloyola@gmail.com"
+        custom-file (expand-file-name "custom.el" user-emacs-directory))
 
-(load custom-file)
+  (load custom-file)
 
-(setq comp-async-report-warnings-errors nil ;; native-comp warnings
-      byte-compile-warnings '(not free-vars unresolved noruntime lexical make-local))
+  (setq comp-async-report-warnings-errors nil ;; native-comp warnings
+        byte-compile-warnings '(not free-vars unresolved noruntime lexical make-local))
 
-(put 'downcase-region 'disabled nil)
-(put 'upcase-region 'disabled nil)
-(put 'narrow-to-region 'disabled nil)
-(put 'dired-find-alternate-file 'disabled nil)
-(put 'erase-buffer 'disabled nil)
+  (put 'downcase-region 'disabled nil)
+  (put 'upcase-region 'disabled nil)
+  (put 'narrow-to-region 'disabled nil)
+  (put 'dired-find-alternate-file 'disabled nil)
+  (put 'erase-buffer 'disabled nil)
 
-;; Sentences end with a single space.
-(setq sentence-end-double-space nil)
+  ;; Sentences end with a single space.
+  (setq sentence-end-double-space nil)
 
-;; Set the default major mode to =text-mode=. By default it's =fundamental= mode which is
-;; not what we want. Also, use =text-mode= for the scratch buffer.
-(setq default-major-mode 'text-mode
-      initial-major-mode 'text-mode)
+  ;; Set the default major mode to =text-mode=. By default it's =fundamental= mode which is
+  ;; not what we want. Also, use =text-mode= for the scratch buffer.
+  (setq default-major-mode 'text-mode
+        initial-major-mode 'text-mode)
 
-;; Don't scroll to middle of the page. Also, scroll line by line, without
-;; scrolloff and try to keep point at the same visual place when
-;; scrolling by page.
-(setq-default scroll-up-aggressively 0.01 scroll-down-aggressively 0.01)
-(setq redisplay-dont-pause t
-      scroll-step 1
-      scroll-margin 3
-      scroll-conservatively 10
-      scroll-preserve-screen-position t)
+  ;; Don't scroll to middle of the page. Also, scroll line by line, without
+  ;; scrolloff and try to keep point at the same visual place when
+  ;; scrolling by page.
+  (setq-default scroll-up-aggressively 0.01 scroll-down-aggressively 0.01)
+  (setq redisplay-dont-pause t
+        scroll-step 1
+        scroll-margin 3
+        scroll-conservatively 10
+        scroll-preserve-screen-position t)
 
-;; Level of decoration {1 - 3}, t = max.
-(setq font-lock-maximum-decoration t)
+  ;; Level of decoration {1 - 3}, t = max.
+  (setq font-lock-maximum-decoration t)
 
-;; For symlinks, automatically follow the link and visit the real file instead.
-(setq vc-follow-symlinks nil)
+  ;; For symlinks, automatically follow the link and visit the real file instead.
+  (setq vc-follow-symlinks nil)
 
-;; Make searches case insensitive.
-(setq-default case-fold-search t)
+  ;; Make searches case insensitive.
+  (setq-default case-fold-search t)
 
-;; Autosave files are created between saves after a sufficient timeout in
-;; the current directory for crash detection, they begin and end with
-;; =#=.  Change this location to the emacs directory.
-(setq auto-save-list-file-prefix "~/.emacs.d/autosave/"
-      auto-save-file-name-transforms `((".*" "~/.emacs.d/autosave/" t))
-      backup-directory-alist `(("." . ,(concat user-emacs-directory "autosave"))))
+  ;; Autosave files are created between saves after a sufficient timeout in
+  ;; the current directory for crash detection, they begin and end with
+  ;; =#=.  Change this location to the emacs directory.
+  (setq auto-save-list-file-prefix "~/.emacs.d/autosave/"
+        auto-save-file-name-transforms `((".*" "~/.emacs.d/autosave/" t))
+        backup-directory-alist `(("." . ,(concat user-emacs-directory "autosave"))))
 
-;;Set line wrap at column 100.
-(setq-default fill-column 100)
+  ;;Set line wrap at column 100.
+  (setq-default fill-column 100)
 
-;; Replace =yes or no= prompt with =y or n= prompt.
-(fset 'yes-or-no-p 'y-or-n-p)
+  ;; Replace =yes or no= prompt with =y or n= prompt.
+  (fset 'yes-or-no-p 'y-or-n-p)
 
-;; Use UTF-8 everywhere.
-(setq locale-coding-system 'utf-8)
-(set-terminal-coding-system 'utf-8)
-(set-keyboard-coding-system 'utf-8)
-(set-selection-coding-system 'utf-8)
-(prefer-coding-system 'utf-8)
+  ;; Use UTF-8 everywhere.
+  (setq locale-coding-system 'utf-8)
+  (set-terminal-coding-system 'utf-8)
+  (set-keyboard-coding-system 'utf-8)
+  (set-selection-coding-system 'utf-8)
+  (prefer-coding-system 'utf-8)
 
-;; Use spaces instead of tabs.
-(setq-default indent-tabs-mode nil)
+  ;; Use spaces instead of tabs.
+  (setq-default indent-tabs-mode nil)
 
-;; Delete the region when typing, just like as we expect nowadays.
-(delete-selection-mode t)
+  ;; Delete the region when typing, just like as we expect nowadays.
+  (delete-selection-mode t)
 
-;; Highlight matches in query-replace mode.
-(setq query-replace-highlight t)
+  ;; Highlight matches in query-replace mode.
+  (setq query-replace-highlight t)
 
-;; Use visual line mode to display long lines.
-(global-visual-line-mode -1)
+  ;; Use visual line mode to display long lines.
+  (global-visual-line-mode -1)
 
-;;Revert these files without asking.
-(setq revert-without-query '(".*"))
+  ;;Revert these files without asking.
+  (setq revert-without-query '(".*"))
 
-;; Middle-clicking is nice to paste, however it should not adjust point
-;; and paste at the then adjusted point.
-(setq mouse-yank-at-point t)
+  ;; Middle-clicking is nice to paste, however it should not adjust point
+  ;; and paste at the then adjusted point.
+  (setq mouse-yank-at-point t)
 
-;; Save clipboard data of other programs in the kill ring when possible.
-(setq save-interprogram-paste-before-kill t)
+  ;; Save clipboard data of other programs in the kill ring when possible.
+  (setq save-interprogram-paste-before-kill t)
 
-;; Set environment variable for shells.
-(setenv "PAGER" "cat")
+  ;; Set environment variable for shells.
+  (setenv "PAGER" "cat")
 
-;; Configure =next-buffer= and =previous-buffer= to only visit file
-;; buffers (has to be called for each frame):
-(set-frame-parameter (selected-frame) 'buffer-predicate #'buffer-file-name)
+  ;; Configure =next-buffer= and =previous-buffer= to only visit file
+  ;; buffers (has to be called for each frame):
+  (set-frame-parameter (selected-frame) 'buffer-predicate #'buffer-file-name)
 
-;; These are taken from
-;; https://github.com/patrickt/emacs/blob/master/init.el:
-(setq
- kill-whole-line t                      ; Lets C-k delete the whole line
- ;;default-directory "~/src/"             ; My code lives here
- enable-recursive-minibuffers t         ; don't freak out if I use the minibuffer twice
- sentence-end-double-space nil          ; are you kidding me
- confirm-kill-processes nil             ; don't when quitting
- )
+  ;; These are taken from
+  ;; https://github.com/patrickt/emacs/blob/master/init.el:
+  (setq
+   kill-whole-line t                      ; Lets C-k delete the whole line
+   ;;default-directory "~/src/"             ; My code lives here
+   enable-recursive-minibuffers t         ; don't freak out if I use the minibuffer twice
+   sentence-end-double-space nil          ; are you kidding me
+   confirm-kill-processes nil             ; don't when quitting
+   )
 
-(setq-default cursor-type 'box
-              cursor-in-non-selected-windows nil)
+  (setq-default cursor-type 'box
+                cursor-in-non-selected-windows nil)
 
-;; Cursor Movement
-(setq auto-window-vscroll nil)
+  ;; Cursor Movement
+  (setq auto-window-vscroll nil)
 
-;; Turn off auto-save.
-(setq auto-save-default nil)
+  ;; Turn off auto-save.
+  (setq auto-save-default nil)
 
-;; Don't make any backup files.
-(setq make-backup-files nil)
+  ;; Don't make any backup files.
+  (setq make-backup-files nil)
 
-;; Get rid of the menu bar. Tool bar and scroll bars are disabled in
-;; ~init.el~..
-(when (fboundp 'menu-bar-mode) (menu-bar-mode -1))
+  ;; Get rid of the menu bar. Tool bar and scroll bars are disabled in
+  ;; ~init.el~..
+  (when (fboundp 'menu-bar-mode) (menu-bar-mode -1))
 
-;; Turn off the blinking cursor.
-(blink-cursor-mode -1)
+  ;; Turn off the blinking cursor.
+  (blink-cursor-mode -1)
 
-;; Don't use dialog boxes
-(setq use-dialog-box nil)
+  ;; Don't use dialog boxes
+  (setq use-dialog-box nil)
 
-;; Don't want an audible bell.
-(setq visible-bell t)
+  ;; Don't want an audible bell.
+  (setq visible-bell t)
 
-;; Display the running program and the selected buffer in the frame title.
-(setq frame-title-format
-      '("" invocation-name ": " (:eval (replace-regexp-in-string
-                                        "^ +" "" (buffer-name)))))
-;; Don't add new lines past end of file, and indicate unused lines at the
-;; end of the window with a small image in the left fringe.
-(setq next-line-add-newlines nil)
-(setq-default indicate-empty-lines t)
+  ;; Display the running program and the selected buffer in the frame title.
+  (setq frame-title-format
+        '("" invocation-name ": " (:eval (replace-regexp-in-string
+                                          "^ +" "" (buffer-name)))))
+  ;; Don't add new lines past end of file, and indicate unused lines at the
+  ;; end of the window with a small image in the left fringe.
+  (setq next-line-add-newlines nil)
+  (setq-default indicate-empty-lines t)
 
-;; Add =\n= to end of file if required.
-(setq require-final-newline t)
+  ;; Add =\n= to end of file if required.
+  (setq require-final-newline t)
 
-;; Eshell
-(setq eshell-history-size 100000)
+  ;; Eshell
+  (setq eshell-history-size 100000)
 
-;; Follow Buffer
+  ;; Follow Buffer
 
-(add-to-list 'auto-mode-alist '("\\.log\\'" . auto-revert-mode))
+  (add-to-list 'auto-mode-alist '("\\.log\\'" . auto-revert-mode))
 
-;; Don’t compact font caches during GC.
-(setq inhibit-compacting-font-caches t)
+  ;; Don’t compact font caches during GC.
+  (setq inhibit-compacting-font-caches t)
 
-;; Automatically cycle through the highlighting faces listed in
-;; ~hi-lock-face-defaults~ instead of bothering the user to pick a face
-;; each time.
-(setq hi-lock-auto-select-face t)
+  ;; Automatically cycle through the highlighting faces listed in
+  ;; ~hi-lock-face-defaults~ instead of bothering the user to pick a face
+  ;; each time.
+  (setq hi-lock-auto-select-face t)
 
-;; History
-(setq history-delete-duplicates t)
+  ;; History
+  (setq history-delete-duplicates t)
 
-;; Use the directory name to make buffer names unique.
-(setq uniquify-buffer-name-style 'forward)
+  ;; Use the directory name to make buffer names unique.
+  (setq uniquify-buffer-name-style 'forward)
 
-(global-so-long-mode 1)
+  (global-so-long-mode 1)
 
-(setq fit-window-to-buffer-horizontally t)
-(setq window-resize-pixelwise t)
+  (setq fit-window-to-buffer-horizontally t)
+  (setq window-resize-pixelwise t)
 
-(setq-default indent-tabs-mode nil)
+  (setq-default indent-tabs-mode nil)
 
-(setq bookmark-default-file "~/.emacs.d/etc/bookmarks")
+  (setq bookmark-default-file "~/.emacs.d/etc/bookmarks")
 
-(windmove-default-keybindings 'meta)
+  (windmove-default-keybindings 'meta)
 
-(electric-pair-mode 1)
-(setq electric-pair-pairs
-      '(
-        (?\" . ?\")
-        (?\' . ?\')
-        (?\{ . ?\})))
-(show-paren-mode 1)
+  (electric-pair-mode 1)
+  (setq electric-pair-pairs
+        '(
+          (?\" . ?\")
+          (?\' . ?\')
+          (?\{ . ?\})))
+  (show-paren-mode 1)
+  :bind
+  ("C-z" . nil)     ;; I never want to suspend the frame
+  ("M-%" . query-replace-regexp)
+  ("C-S-s" . isearch-forward)
+  ("C-x C-n" . next-error)
+  ("C-x k" . nl/kill-this-buffer)
+  ("M-f" . forward-to-word)
+  ("M-B" . backward-to-word)
+  ("<f1>" . indent-for-tab-command)
+  ("S-<f1>" . indent-region)
+  ("C-<f1>" . find-file-at-point)
+  ("<f2>" . (lambda () (interactive) (save-some-buffers t)))
+  ("S-<f2>" . (lambda () (interactive) (revert-buffer t t)))
+  ("S-<f5>" . toggle-truncate-lines)
+  ("<f8>" . window-toggle-side-windows)
+  ("S-<f11>" . eval-region)
+  ("C-S-<f11>" . align-regexp)
+  )
 #+end_src
 
 * Fonts
 ** Main font
 
 #+begin_src emacs-lisp
+(defvar nl/gui-fixed-font-name "JetBrainsMono Nerd Font")
+;; (defvar nl/gui-fixed-font-name "FiraCode Nerd Font")
+;; (defvar nl/gui-fixed-font-name "CaskaydiaCove Nerd Font Mono")
+;; (defvar nl/gui-fixed-font-name "IBM Plex Mono Medium")
+;; (defvar nl/gui-variable-font-name "DejaVu Sans")
+
+(defvar nl/gui-variable-font-name "Alegreya")
+;;(defvar nl/gui-variable-font-name "Go")
+
+(defconst nl/gui-fixed-font-size-normal 11)
+
 (use-package emacs
   :preface
-  (defvar nl/gui-fixed-font-name "JetBrainsMono Nerd Font")
-  ;; (defvar nl/gui-fixed-font-name "FiraCode Nerd Font")
-  ;; (defvar nl/gui-fixed-font-name "CaskaydiaCove Nerd Font Mono")
-  ;; (defvar nl/gui-fixed-font-name "IBM Plex Mono Medium")
-  ;; (defvar nl/gui-variable-font-name "DejaVu Sans")
-
-  ;;(defvar nl/gui-variable-font-name "GoMono Nerd Font")
-  ;;(defvar nl/gui-variable-font-name "Go")
-  (defvar nl/gui-variable-font-name "Alegreya")
-
-  (defconst nl/gui-fixed-font-size-normal 11)
-
   (defun nl/set-fonts (frame)
     "Set the desired fonts for a frame. FRAME can be nil."
     (let ((fixed-font-name (format "%s %s" nl/gui-fixed-font-name nl/gui-fixed-font-size-normal))
           (variable-font-name (format "%s %s" nl/gui-variable-font-name nl/gui-fixed-font-size-normal)))
-      (set-face-font 'default fixed-font-name)
-      (set-frame-font fixed-font-name)
+      (set-face-attribute 'default nil :family nl/gui-fixed-font-name :height 120)
+      ;;(set-frame-font fixed-font-name)
       ;;(set-fontset-font "fontset-default" nil (font-spec :size 20 :name "Fira Code Retina"))
 
       (set-face-attribute 'fixed-pitch nil :family nl/gui-fixed-font-name :inherit 'default)
@@ -250,7 +271,7 @@ See https://tony-zorman.com/posts/emacs-potpourri.html
                           :overline nil
                           :underline nil)
 
-      (set-face-attribute 'mode-line-buffer-id nil :family nl/gui-variable-font-name :foreground "goldenrod" :weight 'bold)
+      (set-face-attribute 'mode-line-buffer-id nil :family nl/gui-variable-font-name :foreground "goldenrod" :weight 'semi-bold)
       (set-face-attribute 'mode-line-emphasis nil :family nl/gui-variable-font-name :weight 'bold)
       (set-face-attribute 'mode-line-highlight nil :family nl/gui-variable-font-name :slant 'italic)
       ))
@@ -259,16 +280,27 @@ See https://tony-zorman.com/posts/emacs-potpourri.html
     ;; WSL: WSL1 has "-Microsoft", WSL2 has "-microsoft-standard"
     (setq nl/gui-fixed-font-size-normal 12
           ))
+  (nl/set-fonts nil)
+  )
+#+end_src
 
-  ;; see https://www.gonsie.com/blorg/modeline.html
+** Mode Line
+
+Customized mode line.
+
+See https://www.gonsie.com/blorg/modeline.html for additional details.
+
+#+begin_src emacs-lisp
+(use-package emacs
+  :preface
   (setq-default mode-line-format
                 (list
                  ;; the buffer name; the file name as a tool tip
                  '(:eval (propertize " %b "
                                      'face
                                      (let ((face (buffer-modified-p)))
-                                       (if face 'mode-line-buffer-id
-                                         'mode-line-highlight))
+                                       (if face 'mode-line-highlight
+                                         'mode-line-buffer-id))
                                      'help-echo (buffer-file-name)))
 
                  ;; line and column
@@ -293,48 +325,22 @@ See https://tony-zorman.com/posts/emacs-potpourri.html
                  '(:eval (propertize
                           " " 'display
                           `((space :align-to (- (+ right right-fringe right-margin)
-                                                ,(+ 3 (string-width (if (listp mode-name) (car mode-name) mode-name))))))))
-
-                                        ;(propertize org-mode-line-string 'face '(:foreground "#5DD8FF"))
+                                                ,(+ 50 (string-width (if (listp mode-name) (car mode-name) mode-name))))))))
 
                  ;; the current major mode
                  (propertize " %m " 'face 'font-lock-string-face)
-                 ;;minor-mode-alist
+                 minor-mode-alist
                  ))
-  (nl/set-fonts nil)
   )
 #+end_src
 
-* Frame configuration
+* Before save hook
+Remove trailing whitespace.
 
 #+begin_src emacs-lisp
-(defun nl/after-make-frame (frame)
-  ;; disable the toolbar when in daemon mode
-  ;;
-  ;; https://emacs.stackexchange.com/questions/39359/tool-bar-in-emacsclient
-  (unless frame
-    (setq frame (selected-frame)))
-  (when frame
-    (with-selected-frame frame
-      (when (display-graphic-p)
-        (tool-bar-mode -1)
-        (nl/set-fonts frame)
-        ))))
-
-(add-hook 'after-make-frame-functions 'nl/after-make-frame t)
-
 (use-package emacs
   :hook
-  ;; Make completion buffers disappear after 15 seconds.
-  (completion-setup . (lambda ()
-                        (run-at-time 15 nil
-                                     (lambda ()
-                                       (delete-windows-on "*Completions*")))))
-
-  ;; Remove trailing whitespace
   (before-save . delete-trailing-whitespace)
-  :bind
-  ("C-z" . nil)     ;; I never want to suspend the frame
   )
 #+end_src
 
@@ -355,87 +361,95 @@ See: https://kristofferbalintona.me/posts/202206071000/
 * My functions
 
 #+begin_src emacs-lisp
-(defun nl/kill-this-buffer ()
-  "Kill the current buffer."
-  (interactive)
-  (kill-buffer (current-buffer)))
+(use-package emacs
+  :preface
+  (defun nl/kill-this-buffer ()
+    "Kill the current buffer."
+    (interactive)
+    (kill-buffer (current-buffer)))
 
-(defun nl/consult-compile ()
-  "Use Consult to choose a compile command."
-  (interactive)
-  (let ((selected-command
-         (completing-read "Select a compile command: " compile-history)))
-    ;; move this command to the front of the history
-    (setq compile-history (remove selected-command compile-history))
-    (add-to-list 'compile-history selected-command)
-    (compile selected-command)))
+  (defun nl/consult-compile ()
+    "Use Consult to choose a compile command."
+    (interactive)
+    (let ((selected-command
+           (completing-read "Select a compile command: " compile-history)))
+      ;; move this command to the front of the history
+      (setq compile-history (remove selected-command compile-history))
+      (add-to-list 'compile-history selected-command)
+      (compile selected-command)))
 
-(defun nl/consult-async-shell-command ()
-  (interactive)
-  (let ((selected-command
-         (completing-read "Select a shell command: " shell-command-history)))
-    (async-shell-command selected-command)))
+  (defun nl/consult-async-shell-command ()
+    (interactive)
+    (let ((selected-command
+           (completing-read "Select a shell command: " shell-command-history)))
+      (async-shell-command selected-command)))
 
-;; (defun nl/counsel-git-files ()
-;;   (interactive)
-;;   (let ((counsel-fzf-cmd "git ls-files | fzf -f \"%s\""))
-;;     (counsel-fzf)))
+  ;; (defun nl/counsel-git-files ()
+  ;;   (interactive)
+  ;;   (let ((counsel-fzf-cmd "git ls-files | fzf -f \"%s\""))
+  ;;     (counsel-fzf)))
 
-(defun nl/beginning-of-line-or-indentation ()
-  "move to beginning of line, or indentation"
-  (interactive)
-  (if (bolp)
-      (back-to-indentation)
-    (beginning-of-line)))
-
+  (defun nl/beginning-of-line-or-indentation ()
+    "move to beginning of line, or indentation"
+    (interactive)
+    (if (bolp)
+        (back-to-indentation)
+      (beginning-of-line)))
+  :bind
+  ("<home>" . nl/beginning-of-line-or-indentation)
+  ("<f5>" . nl/consult-compile)
+  ("<C-f5>" . compile)
+  )
 #+end_src
 
 ** Windows
 
 #+begin_src emacs-lisp
-(setq split-height-threshold 160
-      split-width-threshold nil)
+(use-package emacs
+  :preface
+  (setq split-height-threshold 160
+        split-width-threshold nil)
 
-(defun nl/frame-grow-horizontally ()
-  "Set the size and position of the Emacs window."
-  (interactive)
-  (windmove-right)
-  (delete-window))
+  (defun nl/frame-grow-horizontally ()
+    "Set the size and position of the Emacs window."
+    (interactive)
+    (windmove-right)
+    (delete-window))
 
-;; (let ((win (selected-window)))
-;;   (set-frame-size frame (* 2 (frame-width)) (frame-height)))
-;; (split-window-right))
+  ;; (let ((win (selected-window)))
+  ;;   (set-frame-size frame (* 2 (frame-width)) (frame-height)))
+  ;; (split-window-right))
 
-(defun nl/frame-shrink-horizontally ()
-  "Set the size and position of the Emacs window."
-  (interactive)
-  (when (> (length (window-list)) 1)
-    (delete-other-windows))
-  (split-window-right)
-  ;; show the compilation buffer if there is one
-  (let ((win (selected-window))
-        (compile-buf (get-compilation-buffer)))
-    (when compile-buf
-      (switch-to-buffer-other-window compile-buf)
-      (select-window win))))
+  (defun nl/frame-shrink-horizontally ()
+    "Set the size and position of the Emacs window."
+    (interactive)
+    (when (> (length (window-list)) 1)
+      (delete-other-windows))
+    (split-window-right)
+    ;; show the compilation buffer if there is one
+    (let ((win (selected-window))
+          (compile-buf (get-compilation-buffer)))
+      (when compile-buf
+        (switch-to-buffer-other-window compile-buf)
+        (select-window win))))
 
-(defun nl/frame-resize ()
-  "Resizes the frame based on its current width."
-  (interactive)
-  (if (<= (window-total-width) 150)
-      (nl/frame-grow-horizontally)
-    (nl/frame-shrink-horizontally)))
+  (defun nl/frame-resize ()
+    "Resizes the frame based on its current width."
+    (interactive)
+    (if (<= (window-total-width) 150)
+        (nl/frame-grow-horizontally)
+      (nl/frame-shrink-horizontally)))
 
-(defun nl/split-window-same-file ()
-  "Splits the frame into two windows, with the buffer on the rightmost window in left and right windows."
-  (interactive)
-  (windmove-right)
-  (delete-window)
-  (split-window-right)
-  (windmove-right))
-
-(global-set-key [f9] 'nl/frame-resize)
-(global-set-key [S-f9] 'nl/split-window-same-file)
+  (defun nl/split-window-same-file ()
+    "Splits the frame into two windows, with the buffer on the rightmost window in left and right windows."
+    (interactive)
+    (windmove-right)
+    (delete-window)
+    (split-window-right)
+    (windmove-right))
+  :bind
+  ("<f9>" . nl/frame-resize)
+  ("<S-f9>" . nl/split-window-same-file))
 #+end_src
 
 ** Side windows
@@ -444,10 +458,6 @@ See: https://kristofferbalintona.me/posts/202206071000/
 (defvar nl/side-window-parameters
   '(window-parameters . ((no-other-window . nil)
                          (no-delete-other-windows . t))))
-
-;; (defun nl/display-buffer-debug(buf-name action)
-;;   (message "%s" buf-name)
-;;   (numberp (string-match "\\(?:\\*\\(?:[Hh]elp\\|grep\\|Warnings\\|Completions\\|xref\\)\\)\\*\\)\\|\\(?:\\(?:HELM.*\\|helm.*\\)\\)" buf-name)))
 
 ;; (setq display-buffer-alist '())
 
@@ -481,36 +491,6 @@ See: https://kristofferbalintona.me/posts/202206071000/
 
 #+end_src
 
-* Key bindings
-
-#+begin_src emacs-lisp
-(global-set-key (kbd "M-%")           'query-replace-regexp)
-;;(global-set-key "\C-x\C-e"          'compile)
-(global-set-key (kbd "C-S-s")         'isearch-forward)
-(global-set-key (kbd "C-x C-n")       'next-error)
-(global-set-key (kbd "C-x k")         'nl/kill-this-buffer)
-(global-set-key (kbd "M-f")           'forward-to-word)
-(global-set-key (kbd "M-B")           'backward-to-word)
-
-(global-set-key (kbd "<f1>")          'indent-for-tab-command)
-(global-set-key (kbd "S-<f1>")        'indent-region)
-(global-set-key (kbd "C-<f1>")        'find-file-at-point)
-(global-set-key (kbd "<f2>")          '(lambda () (interactive) (save-some-buffers t)))
-(global-set-key (kbd "S-<f2>")        '(lambda () (interactive) (revert-buffer t t)))
-;;(global-set-key (kbd "S-<f3>")        'helm-projectile-rg)
-;;(global-set-key (kbd "M-S-<f3>")      'counsel-rg)
-(global-set-key [f5]                  'nl/consult-compile)
-(global-set-key (kbd "C-<f5>")        'compile)
-(global-set-key (kbd "S-<f5>")        'toggle-truncate-lines)
-(global-set-key (kbd "<f8>")          'window-toggle-side-windows)
-(global-set-key (kbd "S-<f11>")       'eval-region)
-(global-set-key (kbd "C-S-<f11>")     'align-regexp)
-;;(global-set-key (kbd "C-c o")         'nl/counsel-git-files)
-
-(global-set-key (kbd "<home>")     'nl/beginning-of-line-or-indentation)
-
-#+end_src
-
 * Theme
 ** Doom Themes
 
@@ -530,16 +510,46 @@ See https://github.com/doomemacs/themes/tree/screenshots#screenshots
 
   ;;treemacs
   (setq doom-themes-treemacs-theme "doom-colors")
-  (doom-themes-treemacs-config)
+  ;;(doom-themes-treemacs-config)
 
   ;; Corrects (and improves) org-mode's native fontification.
   (doom-themes-org-config)
   :custom-face
   (corfu-current ((t (:background "dark olive green"))))
+  ;; (doom-themes-treemacs-file-face ((t (:inherit fixed-pitch))))
+  ;; (doom-themes-treemacs-root-face ((t (:inherit fixed-pitch))))
+  ;; (treemacs-directory-collapsed-face ((t (:inherit fixed-pitch))))
+  ;; (treemacs-directory-face ((t (:inherit fixed-pitch))))
+  ;; (treemacs-file-face ((t (:inherit fixed-pitch))))
+  ;; (treemacs-fringe-indicator-face ((t (:inherit fixed-pitch))))
+  ;; (treemacs-git-added-face ((t (:inherit fixed-pitch))))
+  ;; (treemacs-git-commit-diff-face ((t (:inherit fixed-pitch))))
+  ;; (treemacs-git-conflict-face ((t (:inherit fixed-pitch))))
+  ;; (treemacs-git-ignored-face ((t (:inherit fixed-pitch))))
+  ;; (treemacs-git-modified-face ((t (:inherit fixed-pitch))))
+  ;; (treemacs-git-renamed-face ((t (:inherit fixed-pitch))))
+  ;; (treemacs-git-unmodified-face ((t (:inherit fixed-pitch))))
+  ;; (treemacs-git-untracked-face ((t (:inherit fixed-pitch))))
+  ;; (treemacs-header-button-face ((t (:inherit fixed-pitch))))
+  ;; (treemacs-help-column-face ((t (:inherit fixed-pitch))))
+  ;; (treemacs-help-title-face ((t (:inherit fixed-pitch))))
+  ;; (treemacs-hl-line-face ((t (:inherit fixed-pitch))))
+  ;; (treemacs-marked-file-face ((t (:inherit fixed-pitch))))
+  ;; (treemacs-on-failure-pulse-face ((t (:inherit fixed-pitch))))
+  ;; (treemacs-on-success-pulse-face ((t (:inherit fixed-pitch))))
+  ;; (treemacs-peek-mode-indicator-face ((t (:inherit fixed-pitch))))
+  ;; (treemacs-root-face ((t (:inherit fixed-pitch))))
+  ;; (treemacs-root-remote-disconnected-face ((t (:inherit fixed-pitch))))
+  ;; (treemacs-root-remote-face ((t (:inherit fixed-pitch))))
+  ;; (treemacs-root-remote-unreadable-face ((t (:inherit fixed-pitch))))
+  ;; (treemacs-root-unreadable-face ((t (:inherit fixed-pitch))))
+  ;; (treemacs-tags-face ((t (:inherit fixed-pitch))))
+  ;; (treemacs-term-node-face ((t (:inherit fixed-pitch))))
+  ;; (treemacs-window-background-face ((t (:inherit fixed-pitch))))
   )
 #+end_src
 
-Allow changing themes on the fly with this.
+Allow changing themes on the fly with the following.
 
 #+begin_src emacs-lisp
 (use-package emacs
@@ -601,20 +611,24 @@ Allow changing themes on the fly with this.
 #+end_src
 
 * Packages bundled with Emacs
+** =adaptive-wrap=
+
+A minor mode which sets the wrap-prefix property on the fly so that single-long-line paragraphs get word-wrapped in a way similar to what you'd get with M-q using adaptive-fill-mode, but without actually changing the buffer's text.
+
+#+begin_src emacs-lisp
+(use-package adaptive-wrap
+  :commands (adaptive-wrap-prefix-mode))
+#+end_src
+
 ** =compile=
 
-Do not ask me to save files before compiling, or kill a previous compilation. Also scroll to the end
-of the compilation buffer when it is opened.
+Do not ask me to save files before compiling, or kill a previous compilation. Also scroll to the end of the compilation buffer when it is opened.
 
 Enable ANSI colors for compilation buffers.
 
 #+begin_src emacs-lisp
 (use-package compile
-  :bind (
-         ;;("M-O"   . nl/show-compilation)
-         ;;("C-c c" . compile)
-         )
-  :init
+  :preface
   (defun get-compilation-buffer ()
     (catch 'found
       (dolist (buf (buffer-list))
@@ -635,25 +649,13 @@ Enable ANSI colors for compilation buffers.
 
   (defun nl/compile-hook ()
     (hl-line-mode)
-    (setq-local compilation-scroll-output t
-                compilation-scroll-output t
-                scroll-conservatively most-positive-fixnum
+    (setq-local scroll-conservatively most-positive-fixnum
                 scroll-margin 0)
-    (nl/colorize-compilation-buffer))
-
-  ;; required for TypeScript compile
-  ;; (defun colorize-compilation-buffer ()
-  ;;   (let ((inhibit-read-only t))
-  ;;     (ansi-color-apply-on-region (point-min) (point-max))))
-  ;; (add-hook 'compilation-filter-hook 'colorize-compilation-buffer)
-
-  (defun display-ansi-colors ()
-    (interactive)
-    (let ((inhibit-read-only t))
-      (ansi-color-apply-on-region (point-min) (point-max)))
+    ;;(nl/colorize-compilation-buffer)
     )
   :hook ((compilation-mode . nl/compile-hook)
-         (compilation-filter . nl/colorize-compilation-buffer))
+         (compilation-filter . nl/colorize-compilation-buffer)
+         )
   :custom
   (compilation-scroll-output 'first-error)
   :config
@@ -667,6 +669,8 @@ Enable ANSI colors for compilation buffers.
 
 *** [[https://codeberg.org/ideasman42/emacs-fancy-compilation][emacs-fancy-compilation]]
 
+not required anymore.
+
 A minimalist package that enhances compilation-mode.
 
 #+begin_src emacs-lisp :tangle no
@@ -677,14 +681,24 @@ A minimalist package that enhances compilation-mode.
   (fancy-compilation-mode))
 #+end_src
 
+** =css-mode=
+
+#+begin_src emacs-lisp
+(use-package css-mode
+  :preface
+  (defun nl/css-mode-hook ()
+    (lsp-deferred)
+    (display-line-numbers-mode))
+  :hook (css-mode . nl/css-mode-hook)
+  )
+#+end_src
+
 ** =dired=
 
-Make dired show directories first. Dired buffers should auto revert
-and not give any use feedback (source: [[http://whattheemacsd.com/sane-defaults.el-01.html][Magnars Sveen]]).
+Make =dired= show directories first.
 
 #+begin_src emacs-lisp
 (use-package dired
-  :ensure nil
   :custom
   (dired-recursive-copies 'always)
   ;; Auto refresh Dired, but be quiet about it
@@ -698,12 +712,7 @@ and not give any use feedback (source: [[http://whattheemacsd.com/sane-defaults.
   ;; Reuse same dired buffer, to prevent numerous buffers while navigating in dired
   (put 'dired-find-alternate-file 'disabled nil)
   :hook ((dired-mode . dired-hide-details-mode)
-         (dired-mode . hl-line-mode)
-         (dired-mode . (lambda ()
-                         (local-set-key (kbd "<mouse-2>") #'dired-find-alternate-file)
-                         ;;(local-set-key (kbd "RET") #'dired-find-alternate-file)
-                         (local-set-key (kbd "^")
-                                        (lambda () (interactive) (find-alternate-file "..")))))))
+         (dired-mode . hl-line-mode)))
 #+end_src
 
 ** =emacsclient=
@@ -723,8 +732,7 @@ and not give any use feedback (source: [[http://whattheemacsd.com/sane-defaults.
 
 ** =recentf=
 
-Recentf is a minor mode that builds a list of recently opened files.
-This list is is automatically saved across Emacs sessions.
+Recentf is a minor mode that builds a list of recently opened files. This list is is automatically saved across Emacs sessions.
 
 Prefer saving the history of opened files somewhere other than the default.
 
@@ -763,8 +771,15 @@ Remember position in a file.
   ;;(setq-default save-place t)
   (save-place-mode t))
 #+end_src
+** =SQL=
 
-** tree sitter
+#+begin_src emacs-lisp
+(use-package sql
+  :hook ((sql-mode . lsp))
+  )
+#+end_src
+
+** =tree sitter=
 
 Had to install TSX tag =v0.20.2= since the latest in the repository cause a parsing failure
 
@@ -826,29 +841,20 @@ Bulk install all tree sitter language:
 
 ** =winner-mode=
 
-Window management. ~C-c left (winner-undo)~ undoes the last window
-configuration change. Redo the changes using ~C-c right (winner-redo)~.
-Also move from window to window using Meta and the direction keys.
+Window management. ~C-c left (winner-undo)~ undoes the last window configuration change. Redo the changes using ~C-c right (winner-redo)~. Also move from window to window using Meta and the direction keys.
 
 #+begin_src emacs-lisp
 (use-package winner
-  :demand t
   :config
   (winner-mode))
 #+end_src
 
 * Elpa packages
-** adaptive-wrap
-
-A minor mode which sets the wrap-prefix property on the fly so that single-long-line paragraphs get word-wrapped in a way similar to what you'd get with M-q using adaptive-fill-mode, but without actually changing the buffer's text.
-
-#+begin_src emacs-lisp
-(use-package adaptive-wrap)
-#+end_src
-
 ** [[https://github.com/wyuenho/all-the-icons-dired][all-the-icons-dired]]
 
-#+begin_src emacs-lisp
+Using =nerd-icons-dired= instead.
+
+#+begin_src emacs-lisp :tangle no
 (use-package all-the-icons
   :if window-system)
 
@@ -881,6 +887,14 @@ A quick way to jump around text in buffers.
   (("C-c SPC" . avy-goto-char)
    ("C-:" . avy-goto-char-timer)))
 #+end_src
+
+** [[https://github.com/kickingvegas/casual-dired][casual-dired]]
+
+#+begin_src emacs-lisp
+(use-package casual-dired
+  :bind (:map dired-mode-map ("C-o" . #'casual-dired-tmenu)))
+#+end_src
+
 ** [[https://github.com/jordonbiondo/column-enforce-mode][column-enforce-mode]]
 
 #+begin_src emacs-lisp
@@ -892,6 +906,8 @@ A quick way to jump around text in buffers.
 #+end_src
 
 ** [[https://github.com/company-mode/company-mode][company-mode]]
+
+Switched to Corfu.
 
 Complete anything.
 
@@ -932,13 +948,6 @@ Complete anything.
 | f SPC | Narrow to recent files |
 | m SPC | Narrow to bookmarks    |
 | p SPC | Narrow to project      |
-
-*** [[https://github.com/kickingvegas/casual-dired][casual-dired]]
-
-#+begin_src emacs-lisp
-(use-package casual-dired
-  :bind (:map dired-mode-map ("C-o" . #'casual-dired-tmenu)))
-#+end_src
 
 *** [[https://github.com/minad/consult][consult]]
 
@@ -1269,18 +1278,6 @@ Complete anything.
   ;; setting is useful beyond Corfu.
   (setq read-extended-command-predicate #'command-completion-default-include-p))
 #+end_src
-
-** css-mode
-
-#+begin_src emacs-lisp
-(use-package css-mode
-  :preface
-  (defun nl/css-mode-hook ()
-    (lsp-deferred)
-    (display-line-numbers-mode))
-  :hook (css-mode . nl/css-mode-hook)
-  )
-#+end_src
 ** [[https://codeberg.org/akib/emacs-eat][emacs-eat]]
 
 #+begin_src emacs-lisp
@@ -1427,7 +1424,9 @@ Stopped using this package since it does not work well on Emacs 30.
 
 ** [[https://github.com/spotify/dockerfile-mode][dockerfile-mode]]
 
-#+begin_src emacs-lisp
+No longer using this. CLI is good enough.
+
+#+begin_src emacs-lisp :tangle no
 (use-package dockerfile-mode
   :mode ("Dockerfile\\'" . dockerfile-mode))
 #+end_src
@@ -1457,15 +1456,9 @@ command line. Use an easy keybinding to access magit.
 
 **** Full-screen magit
 
-#+BEGIN_QUOTE
 The following code makes magit-status run alone in the frame, and then restores the old window configuration when you quit out of magit.
 
-No more juggling windows after commiting. It's magit bliss.
-#+END_QUOTE
-[[http://whattheemacsd.com/setup-magit.el-01.html][Source: Magnar Sveen]]
-
 #+begin_src emacs-lisp
-;; full screen magit-status
 (defadvice magit-status (around magit-fullscreen activate)
   ;;(window-configuration-to-register ?magit-fullscreen)
   (window-configuration-to-register ?z)
@@ -1646,12 +1639,19 @@ See https://tsdh.org/posts/2022-08-01-difftastic-diffing-with-magit.html
 
 (define-key magit-status-mode-map (kbd "#") #'th/magit-aux-commands)
 #+end_src
+*** [[https://github.com/dandavison/magit-delta][magit-delta]]
+
+#+begin_src emacs-lisp :tangle no
+(use-package magit-delta
+  :hook (magit-mode . magit-delta-mode))
+#+end_src
 
 ** [[https://github.com/magnars/expand-region.el][expand-region]]
 
+Expand region increases the selected region by semantic units. Just keep pressing the key until it selects what you want.
+
 #+begin_src emacs-lisp
 (use-package expand-region
-  ;; :load-path (lambda () (expand-file-name "~/src/github/elisp/expand-region.el"))
   :bind
   (("C-=" . er/expand-region)
    ("M-S-<up>" . er/expand-region)
@@ -1662,6 +1662,8 @@ See https://tsdh.org/posts/2022-08-01-difftastic-diffing-with-magit.html
 #+end_src
 
 ** [[https://github.com/flycheck/flycheck][flycheck]]
+
+Modern on-the-fly syntax checking extension for GNU Emacs.
 
 #+begin_src emacs-lisp
 (use-package flycheck
@@ -1700,8 +1702,7 @@ So that hungry deletion can be used in all modes.
 
 ** [[https://github.com/abo-abo/hydra][hydra]]
 
-This package can be used to tie related commands into a family of
-short bindings with a common prefix - a Hydra.
+This package can be used to tie related commands into a family of short bindings with a common prefix - a Hydra.
 
 #+begin_src emacs-lisp
 (use-package hydra
@@ -1901,6 +1902,8 @@ http://danconnor.com/post/5028ac91e8891a000000111f/align_and_columnize_key_value
 
 ** [[https://gitlab.com/emacs-stuff/indent-tools/][indent-tools]]
 
+Indent, move around and act on code based on indentation.
+
 #+begin_src emacs-lisp
 (use-package indent-tools
   :bind (("C-c >" . indent-tools-hydra/body)))
@@ -1936,6 +1939,17 @@ http://danconnor.com/post/5028ac91e8891a000000111f/align_and_columnize_key_value
     (projectile-update-project-type 'maven :test-suffix "Test"))
 #+end_src
 
+*** lsp-java
+
+#+begin_src emacs-lisp
+(use-package lsp-java
+  :hook (java-ts-mode . lsp)
+  :custom
+  (lsp-java-compile-null-analysis-mode "automatic")
+  (lsp-java-format-enabled nil)
+  ;;(lsp-java-save-actions-organize-imports t)
+  )
+#+end_src
 ** [[https://github.com/minad/jinx][jinx]]
 
 Jinx is a fast just-in-time spell-checker for Emacs.
@@ -2028,9 +2042,6 @@ Add filler lorem ipsum text to Emacs.
 
 (use-package lsp-ui
   ;; :load-path "~/src/github/elisp/lsp-ui"
-  ;; :init
-  ;; (defun nl-lsp-ui-doc-hook (frame _w)
-  ;;   (set-face-attribute 'default frame :family "Hack" :height 180))
   :hook
   (lsp-mode . lsp-ui-mode)
   ;;(lsp-ui-doc-frame-hook . nl-lsp-ui-doc-hook)
@@ -2068,18 +2079,6 @@ Add filler lorem ipsum text to Emacs.
   )
 #+end_src
 
-** lsp-java
-
-#+begin_src emacs-lisp
-(use-package lsp-java
-  :hook (java-ts-mode . lsp)
-  :custom
-  (lsp-java-compile-null-analysis-mode "automatic")
-  (lsp-java-format-enabled nil)
-  ;;(lsp-java-save-actions-organize-imports t)
-  )
-#+end_src
-
 ** [[https://github.com/immerrr/lua-mode][lua-mode]]
 
 #+begin_src emacs-lisp
@@ -2091,13 +2090,6 @@ Add filler lorem ipsum text to Emacs.
   :hook (lua-mode . nl/lua-mode-hook))
 #+end_src
 
-** [[https://github.com/dandavison/magit-delta][magit-delta]]
-
-#+begin_src emacs-lisp :tangle no
-(use-package magit-delta
-  :hook (magit-mode . magit-delta-mode))
-#+end_src
-
 ** [[https://github.com/defunkt/markdown-mode][markdown-mode]]
 
 #+begin_src emacs-lisp
@@ -2105,7 +2097,7 @@ Add filler lorem ipsum text to Emacs.
   :commands (markdown-mode gfm-mode)
   :mode (("README\\.md\\'" . gfm-mode)
          ("\\.markdown\\'" . markdown-mode)
-         ("\\.md\\'"       . markdown-mode))
+         ("\\.md\\'"       . gfm-mode))
   :hook
   (markdown-mode . (lambda ()
                      (auto-fill-mode -1)
@@ -2152,15 +2144,17 @@ Add filler lorem ipsum text to Emacs.
 
 ** [[https://github.com/emacsfodder/move-text][move-text]]
 
+MoveText allows you to move the current line using ~M-up~ / ~M-down~ (or any other bindings you choose) if a region is marked, it will move the region instead.
+
 #+begin_src emacs-lisp
 (use-package move-text
   :bind (("C-S-<up>" . move-text-up)
          ("C-S-<down>" . move-text-down)))
 #+end_src
+
 ** [[https://github.com/magnars/multiple-cursors.el][multiple-cursors]]
 
-Sometimes you end up with cursors outside of your view. You can scroll
-the screen to center on each cursor with ~C-v~ and ~M-v~.
+Sometimes you end up with cursors outside of your view. You can scroll the screen to center on each cursor with ~C-v~ and ~M-v~.
 
 #+begin_src emacs-lisp
 (use-package multiple-cursors
@@ -2190,23 +2184,20 @@ the screen to center on each cursor with ~C-v~ and ~M-v~.
 *
 ** [[https://github.com/rainstormstudio/nerd-icons.el][nerd-icons]]
 
-No longer need nerd-icons-dired when using Dirvish.
-
 #+begin_src emacs-lisp
 (use-package nerd-icons
   :custom
   (nerd-icons-font-family "FiraCode Nerd Font")
   )
 
-;;(use-package nerd-icons-dired
-;;  :load-path "~/src/github/elisp/nerd-icons-dired"
-;;  :hook
-;;  (dired-mode . nerd-icons-dired-mode))
+(use-package nerd-icons-dired
+ :load-path "~/src/github/elisp/nerd-icons-dired"
+ :hook
+ (dired-mode . nerd-icons-dired-mode))
 #+end_src
 ** [[https://github.com/nex3/perspective-el][perspective.el]]
 
-The Perspective package provides multiple named workspaces (or "perspectives") in Emacs, similar to multiple
-desktops in window managers like Awesome and XMonad, and Spaces on the Mac.
+The Perspective package provides multiple named workspaces (or "perspectives") in Emacs, similar to multiple desktops in window managers like Awesome and XMonad, and Spaces on the Mac.
 
 #+begin_src emacs-lisp
 (use-package perspective
@@ -2226,9 +2217,6 @@ desktops in window managers like Awesome and XMonad, and Spaces on the Mac.
 
 ** PHP
 *** [[https://github.com/ejmr/php-mode][php-mode]]
-
-Flycheck configuration taken from [[https://truongtx.me/2014/07/22/setup-php-development-environment-in-emacs][here]], but had to change the way the ~nl/php-checker~
-checker is loaded.
 
 #+begin_src emacs-lisp
 (use-package php-mode
@@ -2363,19 +2351,6 @@ checker is loaded.
      (show-trailing-whitespace . nil)
      (fill-column . 120)
      (require-final-newline . t)))
-
-  ;; (flycheck-define-checker nl/php-checker
-  ;;   "A PHP syntax checker using the PHP command line interpreter.
-  ;;    See URL http://php.net/manual/en/features.commandline.php."
-  ;;   :command ("php" "-l" "-d" "error_reporting=E_ALL" "-d" "display_errors=1"
-  ;;             "-d" "log_errors=0" source)
-  ;;   :error-patterns
-  ;;   ((error line-start (or "Parse" "Fatal" "syntax") " error" (any ":" ",") " "
-  ;;           (message) " in " (file-name) " on line " line line-end))
-  ;;   :modes (php-mode web-mode))
-
-  ;; (eval-after-load 'flycheck
-  ;;   '(add-to-list 'flycheck-checkers 'nl/php-checker))
   )
 #+end_src
 
@@ -2414,8 +2389,7 @@ checker is loaded.
 
 *** [[https://github.com/OVYA/php-cs-fixer][php-cs-fixer]]
 
-Allows the Emacs editor to fix most issues in PHP code when you want to follow the coding standards
-PSR-1 and PSR-2.
+Allows the Emacs editor to fix most issues in PHP code when you want to follow the coding standards PSR-1 and PSR-2.
 
 #+begin_src emacs-lisp
 (use-package php-cs-fixer
@@ -2425,10 +2399,7 @@ PSR-1 and PSR-2.
 
 ** [[https://github.com/bbatsov/projectile][projectile]]
 
-#+BEGIN_QUOTE
 Project navigation and management library for Emacs.
-#+END_QUOTE
-
 
 #+begin_src emacs-lisp
 (use-package projectile
@@ -2456,6 +2427,8 @@ Project navigation and management library for Emacs.
 
 ** [[https://github.com/tumashu/posframe][posframe]]
 
+Posframe can pop up a frame at point, this posframe is a child-frame connected to its root window’s buffer.
+
 #+begin_src emacs-lisp
 (use-package posframe
   :pin melpa
@@ -2464,6 +2437,8 @@ Project navigation and management library for Emacs.
 #+end_src
 
 ** [[https://github.com/jscheid/prettier.el][prettier]]
+
+Reformat your code by running Prettier with minimal overhead, by request or transparently on file save.
 
 #+begin_src emacs-lisp
 (use-package prettier
@@ -2512,6 +2487,8 @@ Pulse highlight line on demand or after running select functions
 #+end_src
 
 ** [[https://github.com/purcell/emacs-reformatter][reformatter]]
+
+Easily define an idiomatic command to reformat the current buffer using a command-line program, together with an optional minor mode which can apply this command automatically on save.
 
 #+begin_src emacs-lisp
 (use-package reformatter
@@ -2569,6 +2546,8 @@ See https://robert.kra.hn/posts/rust-emacs-setup/
 
 ** [[https://github.com/Kungsgeten/selected.el][selected]]
 
+Provides the =selected-minor-mode= for Emacs. When =selected-minor-mode= is active, the keybindings in =selected-keymap= will be enabled when the region is active.
+
 #+begin_src emacs-lisp
 (use-package selected
   :diminish selected-minor-mode
@@ -2586,17 +2565,11 @@ See https://robert.kra.hn/posts/rust-emacs-setup/
 
 ** [[https://github.com/ljos/sparql-mode/tree/15960092e8ce8ebe6a6afd82202ccf47cb306e76][sparql-mode]]
 
+A major mode for emacs that provides syntax highlighting for [[https://www.w3.org/TR/sparql11-query/][SPARQL]].
+
 #+begin_src emacs-lisp
 (use-package sparql-mode
   :mode (("\\.rq$" . sparql-mode)))
-#+end_src
-
-** SQL
-
-#+begin_src emacs-lisp
-(use-package sql
-  :hook ((sql-mode . lsp))
-  )
 #+end_src
 
 ** [[https://github.com/akicho8/string-inflection][string-inflection]]
@@ -2631,14 +2604,9 @@ the beginning of the buffer.
          ("\\.jsx\\'" . tsx-ts-mode))
   :bind (:map typescript-ts-mode-map
               ("M-j" . c-indent-new-comment-line))
-  :hook
-  ;;(typescript-mode . column-enforce-mode)
-  ;;(typescript-mode . rainbow-delimiters-mode)
-  (typescript-ts-mode . nl/typescript-mode)
-  (tsx-ts-mode . nl/typescript-mode)
-  (tsx-ts-mode . nl/typescript-mode)
   :preface
-  (use-package nl-react :demand :load-path "~/.emacs.d/lisp"))
+  (use-package nl-typescript :demand :load-path "~/.emacs.d/lisp")
+  (use-package nl-react :demand :load-path "~/.emacs.d/lisp")
   (defun nl/typescript-mode ()
     (lsp-deferred)
     (display-line-numbers-mode)
@@ -2653,9 +2621,12 @@ the beginning of the buffer.
     ;; (push '("=>" . ?↦) prettify-symbols-alist)
     ;; (prettify-symbols-mode)
     (setq column-enforce-column 120)
-    (nl/yas-reload-all)
+    (nl/yas-reload-all))
+  :hook
+  (typescript-ts-mode . nl/typescript-mode)
+  (tsx-ts-mode . nl/typescript-mode)
   :config
-  (setq company-tooltip-align-annotations t ;; aligns annotation to the right hand side
+  (setq ;;company-tooltip-align-annotations t ;; aligns annotation to the right hand side
         ;;prettify-symbols-unprettify-at-point 'right-edge
         flycheck-check-syntax-automatically '(save mode-enabled))
   (setq-default typescript-indent-level 4)
@@ -2681,11 +2652,11 @@ highlighted. The following keybindings are defined:
 
 =C-x C-q=: Exit wgrep mode.
 
-To save all buffers that wgrep has changed, run
+To save all buffers that wgrep has changed, run =M-x wgrep-save-all-buffers=.
 
 #+begin_src emacs-lisp
 (use-package wgrep
-  :demand)
+  :demand t)
 #+end_src
 
 ** [[https://github.com/fxbois/web-mode][web-mode]]
@@ -2749,7 +2720,6 @@ Large collection of snippets: [[https://github.com/AndreaCrotti/yasnippet-snippe
 *** [[https://github.com/AndreaCrotti/yasnippet-snippets][yasnippet-snippets]]
 
 See above.
-
 
 ** Org mode
 
@@ -2871,8 +2841,7 @@ See above.
 
 * Computer-specific settings
 
-Load some computer-specific settings, such as the name and and email address. The way the settings
-are loaded is based off of [[https://github.com/magnars/.emacs.d][Magnar Sveen's]] config.
+Load some computer-specific settings, such as the name and and email address.
 
 #+begin_src emacs-lisp
 (defvar nl/user-settings-dir nil

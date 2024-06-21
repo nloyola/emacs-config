@@ -5,9 +5,9 @@
 ;; Settings and functions to support software development.
 
 ;;; Code:
-(require 'web-mode)
 
 (eval-when-compile
+  (require 'web-mode)
   (require 'seq)
   (require 'projectile)
   (require 'typescript-ts-mode)
@@ -62,26 +62,6 @@
   "Run the jest test suite with code coverage."
   (interactive)
   (nl/command-in-typescript-proj-root (format "npm run test:cov")))
-
-;; (defun nl/counsel-ag-ts ()
-;;   "Perform counsel-ag on the project's TypeScript files excluding spec files."
-;;   (interactive)
-;;   (counsel-ag "" (projectile-project-root) "-G '((?!spec)).ts$'"))
-
-;; (defun nl/counsel-ag-ts-spec ()
-;;   "Perform counsel-ag on the project's TypeScript spec files."
-;;   (interactive)
-;;   (counsel-ag "" (projectile-project-root) "-G spec.ts$"))
-
-;; (defun nl/counsel-ag-html ()
-;;   "Perform counsel-ag on the project's HTML files."
-;;   (interactive)
-;;   (counsel-ag "" (projectile-project-root) "-G .html$"))
-
-;; (defun nl/counsel-ag-css ()
-;;   "Perform counsel-ag on the project's CSS files."
-;;   (interactive)
-;;   (counsel-ag "" (projectile-project-root) "-G .s\\?css$"))
 
 (defun ts-spec-filename-p (filename)
   "Return TRUE if FILENAME is a match for a TypseScript spec."
