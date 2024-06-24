@@ -234,104 +234,96 @@ See https://tony-zorman.com/posts/emacs-potpourri.html
 (defvar nl/gui-variable-font-name "Alegreya")
 ;;(defvar nl/gui-variable-font-name "Go")
 
-(defconst nl/gui-fixed-font-size-normal 11)
+(defconst nl/gui-font-size-normal 12)
 
 (use-package emacs
   :preface
-  (defun nl/set-fonts (frame)
-    "Set the desired fonts for a frame. FRAME can be nil."
-    (let ((fixed-font-name (format "%s %s" nl/gui-fixed-font-name nl/gui-fixed-font-size-normal))
-          (variable-font-name (format "%s %s" nl/gui-variable-font-name nl/gui-fixed-font-size-normal)))
-      (set-face-attribute 'default nil :family nl/gui-fixed-font-name :height 120)
-      ;;(set-frame-font fixed-font-name)
-      ;;(set-fontset-font "fontset-default" nil (font-spec :size 20 :name "Fira Code Retina"))
-
-      (set-face-attribute 'fixed-pitch nil :family nl/gui-fixed-font-name :inherit 'default)
-      (set-face-attribute 'variable-pitch nil :family nl/gui-variable-font-name :height 1.5)
-      (set-face-attribute 'font-lock-comment-face nil :family nl/gui-fixed-font-name :weight 'semi-bold :slant 'italic :inherit 'default)
-      (set-face-attribute 'italic nil :family nl/gui-fixed-font-name :weight 'normal :slant 'italic)
-      (set-face-attribute 'bold nil :family nl/gui-fixed-font-name :weight 'bold :weight 'normal)
-      (set-face-attribute 'bold-italic nil :family nl/gui-fixed-font-name :weight 'bold :slant 'italic)
-
-      (set-face-attribute 'mode-line nil
-                          :family nl/gui-variable-font-name
-                          :background "#353644"
-                          :foreground "white"
-                          :box '(:line-width 4 :color "#353644")
-                          :height 1.4
-                          :overline nil
-                          :underline nil)
-
-      (set-face-attribute 'mode-line-inactive nil
-                          :family nl/gui-variable-font-name
-                          :background "#565063"
-                          :foreground "white"
-                          :box '(:line-width 4 :color "#565063")
-                          :height 1.4
-                          :overline nil
-                          :underline nil)
-
-      (set-face-attribute 'mode-line-buffer-id nil :family nl/gui-variable-font-name :foreground "goldenrod" :weight 'semi-bold)
-      (set-face-attribute 'mode-line-emphasis nil :family nl/gui-variable-font-name :weight 'bold)
-      (set-face-attribute 'mode-line-highlight nil :family nl/gui-variable-font-name :slant 'italic)
-      ))
+  (set-face-attribute 'default nil :family nl/gui-fixed-font-name :height (* 10 nl/gui-font-size-normal))
+  (set-face-attribute 'fixed-pitch nil :family nl/gui-fixed-font-name :inherit 'default)
+  (set-face-attribute 'variable-pitch nil :family nl/gui-variable-font-name :height 1.5)
+  (set-face-attribute 'font-lock-comment-face nil :family nl/gui-fixed-font-name :weight 'semi-bold :slant 'italic :inherit 'default)
+  (set-face-attribute 'italic nil :family nl/gui-fixed-font-name :weight 'normal :slant 'italic)
+  (set-face-attribute 'bold nil :family nl/gui-fixed-font-name :weight 'bold :weight 'normal)
+  (set-face-attribute 'bold-italic nil :family nl/gui-fixed-font-name :weight 'bold :slant 'italic)
   :config
   (when (string-match "-[Mm]icrosoft" operating-system-release)
     ;; WSL: WSL1 has "-Microsoft", WSL2 has "-microsoft-standard"
-    (setq nl/gui-fixed-font-size-normal 12
-          ))
-  (nl/set-fonts nil)
+    (setq nl/gui-font-size-normal 12))
   )
 #+end_src
 
 ** Mode Line
 
-Customized mode line.
+Customize the mode line. This code has to run after init since setting a theme customize the mode line also.
 
 See https://www.gonsie.com/blorg/modeline.html for additional details.
 
 #+begin_src emacs-lisp
 (use-package emacs
   :preface
-  (setq-default mode-line-format
-                (list
-                 ;; the buffer name; the file name as a tool tip
-                 '(:eval (propertize " %b "
-                                     'face
-                                     (let ((face (buffer-modified-p)))
-                                       (if face 'mode-line-highlight
-                                         'mode-line-buffer-id))
-                                     'help-echo (buffer-file-name)))
+  (defun nl/mode-line-theme ()
+    (set-face-attribute 'mode-line nil
+                        :background "#565063"
+                        :foreground "white"
+                        :box '(:line-width 4 :color "#565063")
+                        :height 0.8
+                        :overline nil
+                        :underline nil
+                        :inherit 'variable-pitch)
 
-                 ;; line and column
-                 " [" ;; '%02' to set to 2 chars at least; prevents flickering
-                 (propertize "%02l" 'face 'font-lock-keyword-face) ","
-                 (propertize "%02c" 'face 'font-lock-keyword-face)
-                 "] "
+    (set-face-attribute 'mode-line-inactive nil
+                        :background "#353644"
+                        :foreground "white"
+                        :box '(:line-width 4 :color "#353644")
+                        :height 0.8
+                        :overline nil
+                        :inherit 'variable-pitch)
 
-                 ;; relative position, size of file
-                 " ("
-                 (propertize "%p" 'face 'font-lock-constant-face) ;; % above top
-                 "/"
-                 (propertize "%I" 'face 'font-lock-constant-face) ;; size
-                 ") "
+    (set-face-attribute 'mode-line-buffer-id nil :foreground "goldenrod" :height 0.6 :weight 'semi-bold :inherit 'variable-pitch)
+    (set-face-attribute 'mode-line-emphasis nil :weight 'bold :inherit 'fixed-pitch)
+    (set-face-attribute 'mode-line-highlight nil :slant 'italic :inherit 'fixed-pitch)
+    )
+  :init
+  (setq-default
+   mode-line-format
+   (list
+    ;; the buffer name; the file name as a tool tip
+    '(:eval (propertize " %b "
+                        'face
+                        (let ((face (buffer-modified-p)))
+                          (if face 'mode-line-highlight
+                            'mode-line-buffer-id))
+                        'help-echo (buffer-file-name)))
 
-                 ;; ansi-term's line or char mode
-                 ":"
-                 'mode-line-process
-                 ":"
+    ;; line and column
+    " ["
+    (propertize "%l" 'face '(:foreground "light sky blue")) ","
+    (propertize "%c" 'face '(:foreground "light sky blue"))
+    "] "
 
-                 ;; spaces to align right
-                 '(:eval (propertize
-                          " " 'display
-                          `((space :align-to (- (+ right right-fringe right-margin)
-                                                ,(+ 50 (string-width (if (listp mode-name) (car mode-name) mode-name))))))))
+    ;; relative position, size of file
+    " ("
+    (propertize "%p" 'face '(:foreground "salmon")) ;; % above top
+    "/"
+    (propertize "%I" 'face '(:foreground "salmon")) ;; size
+    ") "
 
-                 ;; the current major mode
-                 (propertize " %m " 'face 'font-lock-string-face)
-                 minor-mode-alist
-                 ))
-  )
+    ;; ansi-term's line or char mode
+    ":"
+    'mode-line-process
+    ":"
+
+    ;; spaces to align right
+    '(:eval (propertize
+             " " 'display
+             `((space :align-to (- (+ right right-fringe right-margin)
+                                   ,(+ 50 (string-width (if (listp mode-name) (car mode-name) mode-name))))))))
+
+    ;; the current major mode
+    (propertize " %m " 'face '(:foreground "light sky blue"))
+    minor-mode-alist
+    ))
+  :hook (after-init .  nl/mode-line-theme))
 #+end_src
 
 * Before save hook
@@ -724,7 +716,6 @@ Make =dired= show directories first.
   (defun nl/after-init-hook ()
     (server-start t)
     (edit-server-start t)
-    (nl/set-fonts nil)
     )
   :init
   (add-hook 'after-init-hook 'nl/after-init-hook))
@@ -845,7 +836,7 @@ Window management. ~C-c left (winner-undo)~ undoes the last window configuration
 
 #+begin_src emacs-lisp
 (use-package winner
-  :config
+  :init
   (winner-mode))
 #+end_src
 
@@ -2051,18 +2042,21 @@ Add filler lorem ipsum text to Emacs.
               ([remap xref-find-references] . lsp-ui-peek-find-references)
               ([f10] . lsp-ui-sideline-toggle-symbols-info))
   :custom-face
-  (lsp-ui-peek-peek ((nil :background "gray30")))
-  (lsp-ui-peek-highlight ((nil :foreground "gray60" :background "gray20")))
-  (header-line ((t (:inherit mode-line :background "gray20"))))
+  (lsp-ui-peek-peek ((t :background "gray30")))
+  (lsp-ui-peek-highlight ((t :foreground "gray60" :background "gray20")))
+  (header-line ((t (:inherit mode-line))))
+  (lsp-ui-doc-background ((t :background "gray30")))
+  (lsp-ui-doc-url ((t :background "gray30")))
   :custom
+  (lsp-ui-doc-text-scale-level 2)
   (lsp-ui-sideline-enable t)
   (lsp-ui-sideline-show-hover nil)
   (lsp-ui-peek-enable nil)
   (flycheck-add-next-checker 'lsp-ui 'typescript-tslint)
   :config
-  (add-hook 'lsp-ui-doc-frame-hook
-            (lambda (frame _w)
-              (set-face-attribute 'default frame :family nl/gui-variable-font-name :height 120)))
+  ;; (add-hook 'lsp-ui-doc-frame-hook
+  ;;           (lambda (frame _w)
+  ;;             (set-face-attribute 'default nil :family nl/gui-variable-font-name :height 180)))
   (setq lsp-ui-flycheck-list-position 'bottom
         lsp-ui-doc-enable t
         ;;lsp-ui-doc-show-with-cursor t
