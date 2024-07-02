@@ -71,12 +71,16 @@
 (unless (assoc-default "gnu" package-archives)
   (add-to-list 'package-archives '("gnu" . "http://elpa.gnu.org/packages/") t))
 
+(unless (assoc-default "nongnu" package-archives)
+  (add-to-list 'package-archives '("nongnu" . "http://elpa.nongnu.org/packages/") t))
+
 (setq package-archive-priorities
       '(;;("melpa-stable" . 10)
         ;; ("marmalade" . 7)
-        ("gnu"       . 5)
-        ("org"       . 7)
-        ("melpa"     . 10)))
+        ("gnu"       . 99)
+        ("nongnu"    . 80)
+        ("org"       . 70)
+        ("melpa"     . 0)))
 
 (package-initialize)
 
@@ -85,7 +89,7 @@
 ;; (setenv "http_proxy" "")
 
 ;;; Bootstrap use-package
-(setq-default use-package-compute-statistics t    ; to check if config is ok
+(setq-default use-package-compute-statistics nil  ; to check if config is ok
               use-package-always-ensure t         ; Auto-download package if not exists
               use-package-always-defer t          ; Always defer load package to speed up startup time
               use-package-expand-minimally nil    ; make the expanded code as minimal as possible
@@ -103,6 +107,10 @@
 ;; (eval-when-compile
 ;;   (require 'use-package))
 
+(unless (package-installed-p 'htmlize)
+  (package-refresh-contents)
+  (package-install 'htmlize))
+
 (unless (package-installed-p 'diminish)
   (package-refresh-contents)
   (package-install 'diminish))
@@ -116,6 +124,20 @@
   :load-path "~/.emacs.d/lisp"
   :commands pl-parse
   )
+
+(use-package key-chord
+  :demand t
+  :commands key-chord-define-global
+  :config
+  (key-chord-mode 1))
+
+(unless (package-installed-p 'use-package-chords)
+  (package-refresh-contents)
+  (package-install 'use-package-chords))
+
+(use-package use-package-chords
+  :demand t
+  :config (key-chord-mode 1))
 
 ;; see http://emacs.stackexchange.com/questions/539/how-do-i-measure-performance-of-elisp-code
 (defmacro with-timer (&rest forms)

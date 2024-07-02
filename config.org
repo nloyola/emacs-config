@@ -77,7 +77,7 @@ See https://tony-zorman.com/posts/emacs-potpourri.html
   (setq-default fill-column 100)
 
   ;; Replace =yes or no= prompt with =y or n= prompt.
-  (fset 'yes-or-no-p 'y-or-n-p)
+  (defalias 'yes-or-no-p 'y-or-n-p)
 
   ;; Use UTF-8 everywhere.
   (setq locale-coding-system 'utf-8)
@@ -221,6 +221,26 @@ See https://tony-zorman.com/posts/emacs-potpourri.html
   )
 #+end_src
 
+** =zap-up-to-char=
+
+#+begin_src emacs-lisp
+(use-package emacs
+  :preface
+  (autoload 'zap-up-to-char "misc"
+  "kill up to, but not including ARG'th occurence of CHAR.
+   \(fn arg char)"
+  'interactive)
+  :bind
+  ("M-z" . zap-up-to-char))
+#+end_src
+
+** mouse avoidance
+Don't let mouse icon obscure cursor
+
+#+begin_src emacs-lisp
+(mouse-avoidance-mode 'animate)
+#+end_src
+
 * Fonts
 ** Main font
 
@@ -265,7 +285,7 @@ See https://www.gonsie.com/blorg/modeline.html for additional details.
     (set-face-attribute 'mode-line nil
                         :background "#565063"
                         :foreground "white"
-                        :box '(:line-width 4 :color "#565063")
+                        :box '(:line-width 2 :color "#565063")
                         :height 0.8
                         :overline nil
                         :underline nil
@@ -274,7 +294,7 @@ See https://www.gonsie.com/blorg/modeline.html for additional details.
     (set-face-attribute 'mode-line-inactive nil
                         :background "#353644"
                         :foreground "white"
-                        :box '(:line-width 4 :color "#353644")
+                        :box '(:line-width 2 :color "#353644")
                         :height 0.8
                         :overline nil
                         :inherit 'variable-pitch)
@@ -392,6 +412,31 @@ See: https://kristofferbalintona.me/posts/202206071000/
   ("<f5>" . nl/consult-compile)
   ("<C-f5>" . compile)
   )
+
+;; https://www.emacs.dyerdwelling.family/emacs/20240804075952-emacs--finding-files-using-completing-read/
+(defun my/find-file ()
+  "Find file from current directory in many different ways."
+  (interactive)
+  (let* ((find-options '(("find -type f -printf \"$PWD/%p\\0\"" . :string)
+                          ("fdfind --absolute-path --type f -0" . :string)
+                          ("rg --follow --files --null" . :string)
+                          ("find-name-dired" . :command)))
+          (selection (completing-read "Select : " find-options))
+          (metadata '((category . file)))
+          (file-list)
+          (file))
+    (pcase (alist-get selection find-options nil nil #'string=)
+      (:command
+        (call-interactively (intern selection)))
+      (:string
+        (setq file-list (split-string (shell-command-to-string selection) "\0" t))
+        (setq file (completing-read (format "Find file in %s: " (abbreviate-file-name default-directory))
+                     (lambda (str pred action)
+                       (if (eq action 'metadata)
+                         `(metadata . ,metadata)
+                         (complete-with-action action file-list str pred)))
+                     nil t nil 'file-name-history)))
+      (when file (find-file (expand-file-name file))))))
 #+end_src
 
 ** Windows
@@ -454,7 +499,7 @@ See: https://kristofferbalintona.me/posts/202206071000/
 ;; (setq display-buffer-alist '())
 
 (add-to-list 'display-buffer-alist
-             '("\\(?:\\*\\(?:[Hh]elp\\|shell\\|eat\\)\\*\\)"
+             '("\\(?:\\*\\(?:[Hh]elp\\|shell\\)\\*\\)"
                display-buffer-in-side-window
                (window-width . 0.3)
                (side . right)
@@ -463,8 +508,7 @@ See: https://kristofferbalintona.me/posts/202206071000/
                ,nl/side-window-parameters))
 
 (add-to-list 'display-buffer-alist
-             ;; '("\\(?:\\*\\(?:grep\\|Find\\|Warnings\\|xref\\|eat\\)\\*\\)"
-             '("\\(?:\\*\\(?:grep\\|Find\\|Warnings\\|xref\\)\\*\\)"
+             '("\\(?:\\*\\(?:grep\\|Find\\|Warnings\\|xref\\|eat\\)\\*\\)"
                display-buffer-in-side-window
                (window-height . 0.18)
                (side . bottom)
@@ -473,7 +517,7 @@ See: https://kristofferbalintona.me/posts/202206071000/
                ,nl/side-window-parameters))
 
 (add-to-list 'display-buffer-alist
-             '("\\*\\(?:Backtrace\\|Warnings\\|Completions\\|Compile-Log\\|cargo-run\\|\\Flycheck.*\\)\\*"
+             '("\\*\\(?:compilation\\|Backtrace\\|Warnings\\|Completions\\|Compile-Log\\|cargo-run\\|\\Flycheck.*\\)\\*"
                display-buffer-in-side-window
                (window-height . 0.2)
                (side . bottom)
@@ -484,18 +528,52 @@ See: https://kristofferbalintona.me/posts/202206071000/
 #+end_src
 
 * Theme
+
+** [[https://protesilaos.com/emacs/ef-themes#h:dd9e06f2-eef0-4afe-8a12-b7af5d597108][ef-themes]]
+
+#+begin_src emacs-lisp
+(use-package ef-themes
+  :init
+  (setq ef-themes-to-toggle '(ef-bio ef-deuteranopia-dark))
+  (setq ef-themes-headings ; read the manual's entry or the doc string
+      '((0 variable-pitch light 1.9)
+        (1 variable-pitch light 1.8)
+        (2 variable-pitch regular 1.7)
+        (3 variable-pitch regular 1.6)
+        (4 variable-pitch regular 1.5)
+        (5 variable-pitch 1.4) ; absence of weight means `bold'
+        (6 variable-pitch 1.3)
+        (7 variable-pitch 1.2)
+        (t variable-pitch 1.1)))
+  (setq ef-themes-mixed-fonts t
+      ef-themes-variable-pitch-ui t)
+  (load-theme 'ef-winter :no-confirm)
+  :custom-face
+  (ansi-color-red ((t (:background "#440F04"))))
+  (ansi-color-bright-red ((t (:background "#A02409"))))
+  )
+#+end_src
+
+** Base-16
+
+#+begin_src emacs-lisp :tangle no
+(use-package base16-theme
+  :init
+  (load-theme 'base16-default-dark t))
+#+end_src
+
 ** Doom Themes
 
 See https://github.com/doomemacs/themes/tree/screenshots#screenshots
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 (use-package doom-themes
   :init
   (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
         doom-themes-enable-italic t) ; if nil, italics is universally disabled
 
   ;;(load-theme 'doom-oceanic-next t)
-  (load-theme 'doom-palenight t)
+  (load-theme 'doom-wilmersdorf t)
 
   ;; Enable flashing mode-line on errors
   (doom-themes-visual-bell-config)
@@ -508,36 +586,6 @@ See https://github.com/doomemacs/themes/tree/screenshots#screenshots
   (doom-themes-org-config)
   :custom-face
   (corfu-current ((t (:background "dark olive green"))))
-  ;; (doom-themes-treemacs-file-face ((t (:inherit fixed-pitch))))
-  ;; (doom-themes-treemacs-root-face ((t (:inherit fixed-pitch))))
-  ;; (treemacs-directory-collapsed-face ((t (:inherit fixed-pitch))))
-  ;; (treemacs-directory-face ((t (:inherit fixed-pitch))))
-  ;; (treemacs-file-face ((t (:inherit fixed-pitch))))
-  ;; (treemacs-fringe-indicator-face ((t (:inherit fixed-pitch))))
-  ;; (treemacs-git-added-face ((t (:inherit fixed-pitch))))
-  ;; (treemacs-git-commit-diff-face ((t (:inherit fixed-pitch))))
-  ;; (treemacs-git-conflict-face ((t (:inherit fixed-pitch))))
-  ;; (treemacs-git-ignored-face ((t (:inherit fixed-pitch))))
-  ;; (treemacs-git-modified-face ((t (:inherit fixed-pitch))))
-  ;; (treemacs-git-renamed-face ((t (:inherit fixed-pitch))))
-  ;; (treemacs-git-unmodified-face ((t (:inherit fixed-pitch))))
-  ;; (treemacs-git-untracked-face ((t (:inherit fixed-pitch))))
-  ;; (treemacs-header-button-face ((t (:inherit fixed-pitch))))
-  ;; (treemacs-help-column-face ((t (:inherit fixed-pitch))))
-  ;; (treemacs-help-title-face ((t (:inherit fixed-pitch))))
-  ;; (treemacs-hl-line-face ((t (:inherit fixed-pitch))))
-  ;; (treemacs-marked-file-face ((t (:inherit fixed-pitch))))
-  ;; (treemacs-on-failure-pulse-face ((t (:inherit fixed-pitch))))
-  ;; (treemacs-on-success-pulse-face ((t (:inherit fixed-pitch))))
-  ;; (treemacs-peek-mode-indicator-face ((t (:inherit fixed-pitch))))
-  ;; (treemacs-root-face ((t (:inherit fixed-pitch))))
-  ;; (treemacs-root-remote-disconnected-face ((t (:inherit fixed-pitch))))
-  ;; (treemacs-root-remote-face ((t (:inherit fixed-pitch))))
-  ;; (treemacs-root-remote-unreadable-face ((t (:inherit fixed-pitch))))
-  ;; (treemacs-root-unreadable-face ((t (:inherit fixed-pitch))))
-  ;; (treemacs-tags-face ((t (:inherit fixed-pitch))))
-  ;; (treemacs-term-node-face ((t (:inherit fixed-pitch))))
-  ;; (treemacs-window-background-face ((t (:inherit fixed-pitch))))
   )
 #+end_src
 
@@ -570,31 +618,6 @@ Allow changing themes on the fly with the following.
   )
 #+end_src
 
-** [[https://protesilaos.com/emacs/ef-themes#h:dd9e06f2-eef0-4afe-8a12-b7af5d597108][ef-themes]]
-
-#+begin_src emacs-lisp :tangle no
-(use-package ef-themes
-  :init
-  (setq ef-themes-to-toggle '(ef-bio ef-deuteranopia-dark))
-  (setq ef-themes-headings ; read the manual's entry or the doc string
-      '((0 variable-pitch light 1.9)
-        (1 variable-pitch light 1.8)
-        (2 variable-pitch regular 1.7)
-        (3 variable-pitch regular 1.6)
-        (4 variable-pitch regular 1.5)
-        (5 variable-pitch 1.4) ; absence of weight means `bold'
-        (6 variable-pitch 1.3)
-        (7 variable-pitch 1.2)
-        (t variable-pitch 1.1)))
-  (setq ef-themes-mixed-fonts t
-      ef-themes-variable-pitch-ui t)
-  (load-theme 'ef-winter :no-confirm)
-  :custom-face
-  (ansi-color-red ((t (:background "#440F04"))))
-  (ansi-color-bright-red ((t (:background "#A02409"))))
-  )
-#+end_src
-
 ** Catppuccin
 
 #+begin_src emacs-lisp :tangle no
@@ -618,9 +641,47 @@ Do not ask me to save files before compiling, or kill a previous compilation. Al
 
 Enable ANSI colors for compilation buffers.
 
+=eat-compilation-start= taken from [[https://codeberg.org/akib/emacs-eat/issues/33][here]], but had to modify it to invoke =compilation-mode-hook=.
+
 #+begin_src emacs-lisp
 (use-package compile
   :preface
+  (defun eat-compilation-start (command &optional mode name-function highlight-regexp continue)
+    (let ((name-of-mode "compilation")
+          (dir default-directory)
+          outbuf)
+      (if (or (not mode) (eq mode t))
+          (setq mode #'compilation-minor-mode)
+        (setq name-of-mode (replace-regexp-in-string "-mode\\'" "" (symbol-name mode))))
+      (with-current-buffer
+          (setq outbuf
+                (get-buffer-create
+                 (compilation-buffer-name name-of-mode mode name-function)))
+        (setq default-directory dir)
+        (setq buffer-read-only nil)
+        (erase-buffer)
+        (compilation-insert-annotation
+         "-*- mode: " name-of-mode
+         "; default-directory: "
+         (prin1-to-string (abbreviate-file-name default-directory))
+         " -*-\n")
+        (compilation-insert-annotation
+         (format "%s started at %s\n\n"
+                 mode-name
+	         (substring (current-time-string) 0 19))
+         command "\n")
+        (eat-mode)
+        (eat-exec outbuf "*compile*" shell-file-name nil (list "-lc" command))
+        (run-hook-with-args 'compilation-start-hook (get-buffer-process outbuf))
+        (eat-emacs-mode)
+        (funcall mode)
+        (run-mode-hooks 'compilation-mode-hook)
+        (setq next-error-last-buffer outbuf)
+        (display-buffer outbuf '(nil (allow-no-window . t)))
+        (when-let (w (get-buffer-window outbuf))
+           (set-window-start w (point-min)))
+        )))
+
   (defun get-compilation-buffer ()
     (catch 'found
       (dolist (buf (buffer-list))
@@ -642,21 +703,19 @@ Enable ANSI colors for compilation buffers.
   (defun nl/compile-hook ()
     (hl-line-mode)
     (setq-local scroll-conservatively most-positive-fixnum
-                scroll-margin 0)
-    ;;(nl/colorize-compilation-buffer)
-    )
+                scroll-margin 0))
+
   :hook ((compilation-mode . nl/compile-hook)
-         (compilation-filter . nl/colorize-compilation-buffer)
-         )
+         (compilation-filter . nl/colorize-compilation-buffer))
   :custom
+  (compilation-ask-about-save nil)
+  (compilation-always-kill t)
+  (compilation-max-output-line-length nil)
   (compilation-scroll-output 'first-error)
-  :config
-  (setq compilation-ask-about-save nil
-        compilation-always-kill t
-        compilation-max-output-line-length nil)
-
-
+  ;;:config
+  ;;(advice-add #'compilation-start :override #'eat-compilation-start)
   )
+
 #+end_src
 
 *** [[https://codeberg.org/ideasman42/emacs-fancy-compilation][emacs-fancy-compilation]]
@@ -675,7 +734,7 @@ A minimalist package that enhances compilation-mode.
 
 ** =css-mode=
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 (use-package css-mode
   :preface
   (defun nl/css-mode-hook ()
@@ -685,12 +744,22 @@ A minimalist package that enhances compilation-mode.
   )
 #+end_src
 
+#+begin_src emacs-lisp
+(use-package scss-mode
+  :preface
+  (defun nl/scss-mode-hook ()
+    (lsp-deferred)
+    (display-line-numbers-mode))
+  :hook (css-mode . nl/scss-mode-hook)
+  )
+#+end_src
+
 ** =dired=
 
 Make =dired= show directories first.
 
 #+begin_src emacs-lisp
-(use-package dired
+(use-package emacs
   :custom
   (dired-recursive-copies 'always)
   ;; Auto refresh Dired, but be quiet about it
@@ -712,13 +781,24 @@ Make =dired= show directories first.
 #+begin_src emacs-lisp
 (use-package edit-server
   :if (display-graphic-p)
+  :commands edit-server-start
   :preface
   (defun nl/after-init-hook ()
     (server-start t)
     (edit-server-start t)
     )
   :init
-  (add-hook 'after-init-hook 'nl/after-init-hook))
+  (if after-init-time
+      (edit-server-start)
+    (add-hook 'after-init-hook 'nl/after-init-hook)))
+#+end_src
+
+
+** =hl-line=
+
+#+begin_src emacs-lisp
+(use-package hl-line
+  :commands hl-line-mode)
 #+end_src
 
 ** =recentf=
@@ -766,7 +846,14 @@ Remember position in a file.
 
 #+begin_src emacs-lisp
 (use-package sql
-  :hook ((sql-mode . lsp))
+  :preface
+  (defun nl/sql-mode-hook ()
+    "My SQL Mode configuration"
+    (lsp-deferred)
+    (display-line-numbers-mode)
+    (flycheck-mode t)
+    )
+  :hook ((sql-mode . nl/sql-mode-hook))
   )
 #+end_src
 
@@ -1272,7 +1359,11 @@ Complete anything.
 ** [[https://codeberg.org/akib/emacs-eat][emacs-eat]]
 
 #+begin_src emacs-lisp
-(use-package eat)
+(use-package eat
+  :custom-face
+  (eat-term-color-0 ((t :foreground "deep sky blue")))
+  (eat-term-color-8 ((t :foreground "grey57")))
+  :commands eat-mode)
 #+end_src
 
 ** [[https://github.com/akermu/emacs-libvterm][emacs-libvterm]]
@@ -1430,6 +1521,7 @@ command line. Use an easy keybinding to access magit.
 
 #+begin_src emacs-lisp
 (use-package magit
+  :pin melpa
   :bind (("C-x g" . magit-status))
   ;;:hook (magit-mode . magit-todos-mode)
   :config
@@ -1698,14 +1790,10 @@ This package can be used to tie related commands into a family of short bindings
 #+begin_src emacs-lisp
 (use-package hydra
   :pin melpa
+  :after key-chord
   :init
   (use-package cl-lib)
   (use-package lv)
-  (use-package key-chord
-    :init
-    ;;(setq key-chord-one-key-delay 0.16)
-    :config
-    (key-chord-mode 1))
   :custom
   (hydra-hint-display-type 'posframe)
   :config
@@ -1855,8 +1943,7 @@ This package can be used to tie related commands into a family of short bindings
 
 *** Aligning things
 
-Align by colons (handy for JavaScript), align by commas, and align by
-equal signs.
+Align by colons (handy for JavaScript), align by commas, and align by equal signs.
 
 Borrowed from:
 
@@ -1956,6 +2043,9 @@ Jinx is a fast just-in-time spell-checker for Emacs.
                '(jinx grid (vertico-grid-annotate . 20)))
   )
 #+end_src
+** [[https://github.com/emacsorphanage/key-chord][key-chord]]
+
+See =init.el=.
 
 ** [[https://github.com/jschaf/emacs-lorem-ipsum][lorem-ipsum]]
 
@@ -2044,7 +2134,7 @@ Add filler lorem ipsum text to Emacs.
   :custom-face
   (lsp-ui-peek-peek ((t :background "gray30")))
   (lsp-ui-peek-highlight ((t :foreground "gray60" :background "gray20")))
-  (header-line ((t (:inherit mode-line))))
+  ;;(header-line ((t (:background "gray20"))))
   (lsp-ui-doc-background ((t :background "gray30")))
   (lsp-ui-doc-url ((t :background "gray30")))
   :custom
@@ -2070,6 +2160,14 @@ Add filler lorem ipsum text to Emacs.
         lsp-ui-sideline-diagnostic-max-line-length 80
         lsp-ui-sideline-diagnostic-max-lines 20
         lsp-eldoc-enable-hover nil)
+  (set-face-attribute 'header-line nil
+                      :background "gray20"
+                      :foreground "white"
+                      :box '(:line-width 1 :color "#353644")
+                      :height 0.7
+                      :overline nil
+                      :height 120
+                      :inherit 'variable-pitch)
   )
 #+end_src
 
@@ -2138,12 +2236,14 @@ Add filler lorem ipsum text to Emacs.
 
 ** [[https://github.com/emacsfodder/move-text][move-text]]
 
-MoveText allows you to move the current line using ~M-up~ / ~M-down~ (or any other bindings you choose) if a region is marked, it will move the region instead.
+MoveText allows you to move the current line using ~M-S-up~ / ~M-S-down~ (or any other bindings you choose) if a region is marked, it will move the region instead.
+
+Modified the bindings to coincide with the ones used in =org-mode=.
 
 #+begin_src emacs-lisp
 (use-package move-text
-  :bind (("C-S-<up>" . move-text-up)
-         ("C-S-<down>" . move-text-down)))
+  :bind (("M-S-<up>" . move-text-up)
+         ("M-S-<down>" . move-text-down)))
 #+end_src
 
 ** [[https://github.com/magnars/multiple-cursors.el][multiple-cursors]]
@@ -2193,7 +2293,7 @@ Sometimes you end up with cursors outside of your view. You can scroll the scree
 
 The Perspective package provides multiple named workspaces (or "perspectives") in Emacs, similar to multiple desktops in window managers like Awesome and XMonad, and Spaces on the Mac.
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 (use-package perspective
   :after consult
   :bind (("C-x b" . persp-switch-to-buffer*)
@@ -2230,7 +2330,7 @@ The Perspective package provides multiple named workspaces (or "perspectives") i
                              " list-files "
                              (if php-cs-fixer-config-option
                                  (concat " --config " (shell-quote-argument php-cs-fixer-config-option))))))
-        ;; use php-cs-fixer on files in the project
+        ;; only use php-cs-fixer on files in the project
         (when (string-match-p (regexp-quote file-name) (shell-command-to-string command))
           (php-cs-fixer-fix)
           ))))
@@ -2238,22 +2338,28 @@ The Perspective package provides multiple named workspaces (or "perspectives") i
   (defun nl/php-mode-hook ()
     "My PHP mode configuration."
     (display-line-numbers-mode)
-    (let ((nl-is-nordita-project (string-match-p "nordita" buffer-file-name)))
-      (when nl-is-nordita-project (nl-nordita-project-settings))
-      (when (not nl-is-nordita-project) (nl-php-project-settings))
-      (php-set-style "nl/php") ;; this style is based on the symfony2 style)
-      (require 'flycheck-phpstan)
-      (setq php-mode-lineup-cascaded-calls t)
-      (flycheck-mode t)
-      (subword-mode +1)))
+    (require 'flycheck-phpstan)
+    (setq php-mode-lineup-cascaded-calls t)
+    (flycheck-mode t)
+    (subword-mode +1)
+    (when buffer-file-name
+      (let ((nl-is-nordita-project (string-match-p "nordita" buffer-file-name)))
+        (when nl-is-nordita-project
+          (nl-nordita-project-settings))
+        (unless nl-is-nordita-project
+          (nl-php-project-settings))
+        )))
 
   (defun nl-php-project-settings ()
+    ;; this style is based on the symfony2 style
+    (php-set-style "nl/php")
     (lsp-deferred))
 
   (defun nl-nordita-project-settings ()
     "Nordita's PHP mode configuration."
     (add-hook 'before-save-hook 'nl/php-before-save-hook)
     (lsp)
+    (php-set-style "nl/php-nordita")
     (setq php-project-root 'auto
           php-mode-coding-style 'nl/php-nordita
           phpstan-config-file '(root . "phpstan.neon")
@@ -2391,6 +2497,7 @@ Allows the Emacs editor to fix most issues in PHP code when you want to follow t
   :commands (php-cs-fixer-fix))
 #+end_src
 
+
 ** [[https://github.com/bbatsov/projectile][projectile]]
 
 Project navigation and management library for Emacs.
@@ -2399,7 +2506,7 @@ Project navigation and management library for Emacs.
 (use-package projectile
   :diminish projectile-mode
   :bind-keymap ("C-c p" . projectile-command-map)
-  :bind (:map projectile-command-map ("f" . consult-projectile))
+  ;;:bind (:map projectile-command-map ("f" . consult-projectile))
   :init (projectile-mode +1)
   :config
   ;; tramp-fix: https://github.com/syl20bnr/spacemacs/issues/11381
@@ -2412,7 +2519,11 @@ Project navigation and management library for Emacs.
         projectile-completion-system 'default
         projectile-enable-caching nil
         projectile-create-missing-test-files t
-        projectile-mode-line "Projectile")
+        projectile-mode-line "Projectile"
+        projectile-generic-command
+        (if (executable-find "fdfind")
+            "fdfind . -0 --type f --color=never"
+          "find . -type f -print0 | cut -c3-"))
 
   (def-projectile-commander-method ?d
     "Open project root in dired."
@@ -2434,6 +2545,8 @@ Posframe can pop up a frame at point, this posframe is a child-frame connected t
 
 Reformat your code by running Prettier with minimal overhead, by request or transparently on file save.
 
+Had to disable prettier for *css-mode* because syntax highlighting when exporting to HTML in org-mode did not work.
+
 #+begin_src emacs-lisp
 (use-package prettier
   :diminish
@@ -2441,7 +2554,7 @@ Reformat your code by running Prettier with minimal overhead, by request or tran
          (typescript-ts-mode . prettier-mode)
          ;;(js-mode . prettier-mode)
          (json-mode . prettier-mode)
-         (css-mode . prettier-mode)
+         ;;(css-mode . prettier-mode)
          (scss-mode . prettier-mode)
          (yaml-mode . prettier-mode)))
 #+end_src
@@ -2682,10 +2795,31 @@ To save all buffers that wgrep has changed, run =M-x wgrep-save-all-buffers=.
 (use-package yaml-mode
   :mode "\\.yml\\'"
   :preface
+  (defun nl/nordita-build-page-from-yaml ()
+    "Builds the ProcessWire page for the visited YAML file."
+    (interactive)
+    (unless (buffer-file-name) (user-error "not a file buffer"))
+    (unless (string-match-p "\.yaml$" (buffer-file-name)) (user-error "not a YAML file"))
+    (unless (string-match-p "nordita" (buffer-file-name)) (user-error "file is not in a Nordita project"))
+    (let* ((default-directory (project-root (project-current)))
+           (file-name (nth 1 (split-string buffer-file-name (project-root (project-current)))))
+           (base-name (replace-regexp-in-string "\.yaml$" "" (file-name-nondirectory file-name))))
+      (unless file-name (user-error "File not in project"))
+      (compile
+       (format "./docker-wrapper.sh cli pw-page %s build --no-ansi -d -f -i ../default_pages/main_site" base-name))))
+
+  (defhydra hydra-nl-yaml (:color red :hint nil)
+    "Project commands"
+    ("a" hydra-nl-align/body "align" :color blue :column "General")
+    ("y" nl/nordita-build-page-from-yaml "Build ProcessWire page from YAML file" :color blue :column "Nordita"))
+
   (defun nl/yaml-mode-hook ()
     (set-fill-column 110)
     (display-line-numbers-mode))
-  :hook (yaml-mode . nl/yaml-mode-hook)
+  :hook
+  (yaml-mode . nl/yaml-mode-hook)
+  (yaml-ts-mode . nl/yaml-mode-hook)
+  :chords (("jc" . hydra-nl-yaml/body))
   :config
   (setq-default fill-column 110))
 #+end_src
@@ -2706,7 +2840,7 @@ Large collection of snippets: [[https://github.com/AndreaCrotti/yasnippet-snippe
   (use-package yasnippet-snippets)
   (setq yas-snippet-dirs
       '("~/.emacs.d/snippets"                 ;; personal snippets
-        "~/.emacs.d/elpa/yasnippet-snippets-20240507.943/snippets"
+        "~/.emacs.d/elpa/yasnippet-snippets-20240603.757/snippets"
         ))
   (yas-reload-all))
 #+end_src
@@ -2743,7 +2877,6 @@ See above.
   (org-block ((t (:inherit fixed-pitch))))
   (org-code ((t (:inherit (shadow fixed-pitch) :height 0.9))))
   (org-verbatim ((t (:inherit (shadow fixed-pitch) :height 1.0))))
-  (org-indent ((t (:inherit (org-hide fixed-pitch)))))
   (org-link ((t (:underline t))))
   (org-document-info ((t (:inherit fixed-pitch))))
   (org-document-info-keyword ((t (:inherit fixed-pitch))))
@@ -2751,13 +2884,13 @@ See above.
   (org-meta-line ((t (:inherit fixed-pitch))))
   (org-property-value ((t (:inherit fixed-pitch))) t)
   (org-special-keyword ((t (:inherit (font-lock-comment-face fixed-pitch)))))
-  (org-table ((t (:inherit fixed-pitch :height 0.9))))
+  (org-table ((t (:inherit fixed-pitch :height 0.8))))
   (org-tag ((t (:inherit (shadow fixed-pitch) :weight bold :height 0.8))))
-  (org-level-1 ((t (:inherit outline-1 :height 2.0))))
-  (org-level-2 ((t (:inherit outline-2 :height 1.8))))
-  (org-level-3 ((t (:inherit outline-3 :height 1.6))))
-  (org-level-4 ((t (:inherit outline-4 :height 1.4))))
-  (org-level-5 ((t (:inherit outline-5 :height 1.2))))
+  ;; (org-level-1 ((t (:inherit outline-1 :height 2.0))))
+  ;; (org-level-2 ((t (:inherit outline-2 :height 1.8))))
+  ;; (org-level-3 ((t (:inherit outline-3 :height 1.6))))
+  ;; (org-level-4 ((t (:inherit outline-4 :height 1.4))))
+  ;; (org-level-5 ((t (:inherit outline-5 :height 1.2))))
   :config
   (setq org-confirm-babel-evaluate 'nl/org-confirm-babel-evaluate
         org-ellipsis " ⤵"
@@ -2831,7 +2964,6 @@ See above.
   :config
   (org-roam-setup))
 #+end_src
-[[id:6d48a9f3-31ef-4f74-a880-d2c26062c043][Programming Languages]]
 
 * Computer-specific settings
 

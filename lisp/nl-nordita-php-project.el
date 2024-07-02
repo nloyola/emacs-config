@@ -48,18 +48,6 @@
   (interactive)
   (nl/php-command-in-proj-root "make php-sniff"))
 
-(defun nl/nordita-build-page-from-yaml ()
-  "Builds the ProcessWire page for the visited YAML file."
-  (interactive)
-  (unless (buffer-file-name) (user-error "not a file buffer"))
-  (unless (string-match-p "\.yaml$" (buffer-file-name)) (user-error "not a YAML file"))
-  (let* ((default-directory (project-root (project-current)))
-         (file-name (nth 1 (split-string buffer-file-name (project-root (project-current)))))
-         (base-name (replace-regexp-in-string "\.yaml$" "" (file-name-nondirectory file-name))))
-    (unless file-name (user-error "File not in project"))
-    (compile
-     (format "./docker-wrapper.sh cli pw-page %s build --no-ansi -d -f -i ../default_pages/main_site" base-name))))
-
 (defun nl/nordita-symbol-scss-grep ()
   "Find text in the project's SCSS subfolder."
   (interactive)
