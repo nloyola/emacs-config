@@ -738,8 +738,7 @@ A minimalist package that enhances compilation-mode.
 (use-package css-mode
   :preface
   (defun nl/css-mode-hook ()
-    (lsp-deferred)
-    (display-line-numbers-mode))
+    (lsp-deferred))
   :hook (css-mode . nl/css-mode-hook)
   )
 #+end_src
@@ -758,8 +757,7 @@ A minimalist package that enhances compilation-mode.
   :preface
   (require 'flymake-proc)
   (defun nl/scss-mode-hook ()
-    (lsp-deferred)
-    (display-line-numbers-mode))
+    (lsp-deferred))
   :hook (scss-mode . nl/scss-mode-hook)
   :config
   (setq flymake-allowed-file-name-masks nil)
@@ -862,7 +860,6 @@ Remember position in a file.
   (defun nl/sql-mode-hook ()
     "My SQL Mode configuration"
     (lsp-deferred)
-    (display-line-numbers-mode)
     (flycheck-mode t)
     )
   :hook ((sql-mode . nl/sql-mode-hook))
@@ -893,11 +890,12 @@ Had to install TSX tag =v0.20.2= since the latest in the repository cause a pars
      (json "https://github.com/tree-sitter/tree-sitter-json")
      (make "https://github.com/alemuller/tree-sitter-make")
      (markdown "https://github.com/ikatyang/tree-sitter-markdown")
-     (php "https://github.com/tree-sitter/tree-sitter-php")
+     ;; (php "https://github.com/tree-sitter/tree-sitter-php")
+     (php "https://github.com/tree-sitter/tree-sitter-php" "v0.23.10" "php/src")
      (python "https://github.com/tree-sitter/tree-sitter-python")
      (toml "https://github.com/tree-sitter/tree-sitter-toml")
      ;; (tsx "https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src")
-     (tsx "https://github.com/tree-sitter/tree-sitter-typescript" "v0.20.2" "tsx/src")
+     (tsx "https://github.com/tree-sitter/tree-sitter-typescript" "v0.23.2" "tsx/src")
      (typescript "https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src")
      (yaml "https://github.com/ikatyang/tree-sitter-yaml")))
   (setq major-mode-remap-alist
@@ -2013,7 +2011,6 @@ Indent, move around and act on code based on indentation.
   (defun nl/java-mode-hook ()
     "My Java mode configuration."
     (lsp-deferred)
-    (display-line-numbers-mode)
     (flycheck-mode t)
     (subword-mode +1)
     (setq indent-tabs-mode nil
@@ -2058,7 +2055,6 @@ Jinx is a fast just-in-time spell-checker for Emacs.
 ** [[https://github.com/emacsorphanage/key-chord][key-chord]]
 
 See =init.el=.
-
 ** [[https://github.com/jschaf/emacs-lorem-ipsum][lorem-ipsum]]
 
 Add filler lorem ipsum text to Emacs.
@@ -2187,11 +2183,7 @@ Add filler lorem ipsum text to Emacs.
 
 #+begin_src emacs-lisp
 (use-package lua-mode
-  :mode (("\\.lua\\'" . lua-mode))
-  :preface
-  (defun nl/lua-mode-hook ()
-    (display-line-numbers-mode))
-  :hook (lua-mode . nl/lua-mode-hook))
+  :mode (("\\.lua\\'" . lua-mode)))
 #+end_src
 
 ** [[https://github.com/defunkt/markdown-mode][markdown-mode]]
@@ -2320,13 +2312,22 @@ The Perspective package provides multiple named workspaces (or "perspectives") i
   (consult-customize consult--source-buffer :hidden t :default nil)
   (add-to-list 'consult-buffer-sources persp-consult-source))
 #+end_src
+** [[https://github.com/jamescherti/outline-indent.el][outline-indent]]
+
+Provides a minor mode that enables code folding and outlining based on indentation levels for various indentation-based text files, such as YAML, Python, and any other indented text files.
+
+#+begin_src emacs-lisp
+(use-package outline-indent
+  :custom
+  (outline-indent-ellipsis " ▼ "))
+#+end_src
 
 ** PHP
 *** [[https://github.com/ejmr/php-mode][php-mode]]
 
 #+begin_src emacs-lisp
 (use-package php-mode
-  :mode "\\.php\\''"
+  :mode "\\.php\\'"
   :hook
   (php-mode . nl/php-mode-hook)
   (php-ts-mode . nl/php-mode-hook)
@@ -2352,7 +2353,6 @@ The Perspective package provides multiple named workspaces (or "perspectives") i
 
   (defun nl/php-mode-hook ()
     "My PHP mode configuration."
-    (display-line-numbers-mode)
     (require 'flycheck-phpstan)
     (setq php-mode-lineup-cascaded-calls t)
     (flycheck-mode t)
@@ -2511,7 +2511,18 @@ Allows the Emacs editor to fix most issues in PHP code when you want to follow t
   :after php-mode
   :commands (php-cs-fixer-fix))
 #+end_src
+** prog-mode
 
+#+begin_src emacs-lisp
+(use-package prog-mode
+  :ensure nil
+  :preface
+  (defun nl/prog-mode-hook ()
+    (display-line-numbers-mode)
+    (flyspell-prog-mode))
+  :hook
+  (prog-mode . nl/prog-mode-hook))
+#+end_src
 
 ** [[https://github.com/bbatsov/projectile][projectile]]
 
@@ -2594,18 +2605,17 @@ Pulse highlight line on demand or after running select functions
 #+end_src
 
 ** Python
-*** lsp-pyright
+*** [[https://github.com/scop/emacs-ruff-format][ruff-format]]
 
 #+begin_src emacs-lisp
-(use-package lsp-pyright
+(use-package ruff-format
   :preface
-  (defun nl/pyright-hook ()
-    (require 'lsp-pyright)
-    (display-line-numbers-mode)
+  (defun nl/python-hook ()
+    (require 'ruff-format)
     (lsp-deferred)
-    (python-black-on-save-mode))
+    (ruff-format-on-save-mode))
   :hook
-  (python-ts-mode . nl/pyright-hook))
+  (python-ts-mode . nl/python-hook))
 #+end_src
 
 *** [[https://github.com/jorgenschaefer/pyvenv][pyvenv.el]]
@@ -2614,9 +2624,26 @@ Pulse highlight line on demand or after running select functions
 (use-package pyvenv)
 #+end_src
 
+*** lsp-pyright
+
+Using ruff now.
+
+#+begin_src emacs-lisp :tangle no
+(use-package lsp-pyright
+  :preface
+  (defun nl/pyright-hook ()
+    (require 'lsp-pyright)
+    (lsp-deferred)
+    (python-black-on-save-mode))
+  :hook
+  (python-ts-mode . nl/pyright-hook))
+#+end_src
+
 *** [[https://github.com/wbolster/emacs-python-black][emacs-python-black]]
 
-#+begin_src emacs-lisp
+Using ruff now
+
+#+begin_src emacs-lisp :tangle no
 (use-package python-black)
 #+end_src
 
@@ -2648,14 +2675,12 @@ See https://robert.kra.hn/posts/rust-emacs-setup/
   (setq-local buffer-save-without-query t
               ;;compilation-ask-about-save nil
               )
-  (display-line-numbers-mode)
   (add-hook 'before-save-hook 'lsp-format-buffer nil t))
 
 (defun nl/toml-mode-hook ()
   (setq-local buffer-save-without-query t
               ;;compilation-ask-about-save nil
-              )
-  (display-line-numbers-mode))
+              ))
 
 (use-package rustic
   :hook ((rustic-mode . nl/rustic-mode-hook)
@@ -2744,7 +2769,6 @@ the beginning of the buffer.
   (use-package nl-react :demand :load-path "~/.emacs.d/lisp")
   (defun nl/typescript-mode ()
     (lsp-deferred)
-    (display-line-numbers-mode)
     (flycheck-mode +1)
     (column-enforce-mode)
     ;;(eldoc-mode +1)
@@ -2806,14 +2830,17 @@ To save all buffers that wgrep has changed, run =M-x wgrep-save-all-buffers=.
     (lsp-deferred)
     (prettier-mode)
     (setq web-mode-auto-quote-style 1)
-    (local-set-key (kbd "M-q") #'fill-paragraph) ;; did not work with :bind
-    (display-line-numbers-mode))
+    (local-set-key (kbd "M-q") #'fill-paragraph)) ;; did not work with :bind)
   :hook ((web-mode . nl/web-mode-hook))
   :custom
   (web-mode-auto-quote-style 1)
+  (web-mode-code-indent-offset 2)
   (web-mode-markup-indent-offset 2)
   (web-mode-css-indent-offset 2)
-  (web-mode-code-indent-offset 2)
+  (web-mode-code-indent-offset 4)
+  (web-mode-block-padding 4)
+  :config
+  (add-to-list 'auto-mode-alist '("\\.tpl\\.php\\'" . php-ts-mode))
   )
 #+end_src
 
@@ -2821,7 +2848,7 @@ To save all buffers that wgrep has changed, run =M-x wgrep-save-all-buffers=.
 
 #+begin_src emacs-lisp
 (use-package yaml-mode
-  :mode "\\.yml\\'"
+  :mode "\\.\\(yml\\|yaml\\)\\'"
   :preface
   (defun nl/nordita-build-page-from-yaml ()
     "Builds the ProcessWire page for the visited YAML file."
@@ -2842,14 +2869,13 @@ To save all buffers that wgrep has changed, run =M-x wgrep-save-all-buffers=.
     ("y" nl/nordita-build-page-from-yaml "Build ProcessWire page from YAML file" :color blue :column "Nordita"))
 
   (defun nl/yaml-mode-hook ()
-    (set-fill-column 110)
-    (display-line-numbers-mode))
+    (set-fill-column 120)
+    (display-line-numbers-mode)
+    (outline-indent-minor-mode))
   :hook
   (yaml-mode . nl/yaml-mode-hook)
   (yaml-ts-mode . nl/yaml-mode-hook)
-  :chords (("jc" . hydra-nl-yaml/body))
-  :config
-  (setq-default fill-column 110))
+  :chords (("jc" . hydra-nl-yaml/body)))
 #+end_src
 
 ** [[https://github.com/capitaomorte/yasnippet][yasnippet]]
@@ -2862,13 +2888,10 @@ Large collection of snippets: [[https://github.com/AndreaCrotti/yasnippet-snippe
 (use-package yasnippet
   :diminish yas-minor-mode
   :hook (prog-mode . yas-minor-mode)
-  ;;:init
-  ;;(yas-global-mode 1)
   :config
-  (use-package yasnippet-snippets)
   (setq yas-snippet-dirs
       '("~/.emacs.d/snippets"                 ;; personal snippets
-        "~/.emacs.d/elpa/yasnippet-snippets-20240911.801/snippets"
+        "~/.emacs.d/elpa/yasnippet-snippets-1.0/snippets"
         ))
   (yas-reload-all))
 #+end_src
