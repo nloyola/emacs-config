@@ -976,10 +976,10 @@ A quick way to jump around text in buffers.
    ("C-:" . avy-goto-char-timer)))
 #+end_src
 
-** [[https://github.com/kickingvegas/casual-dired][casual-dired]]
+** [[https://github.com/kickingvegas/casual][casual]]
 
-#+begin_src emacs-lisp
-(use-package casual-dired
+#+begin_src emacs-lisp :tangle no
+(use-package casual
   :bind (:map dired-mode-map ("C-o" . #'casual-dired-tmenu)))
 #+end_src
 
@@ -1366,6 +1366,14 @@ Complete anything.
   ;; setting is useful beyond Corfu.
   (setq read-extended-command-predicate #'command-completion-default-include-p))
 #+end_src
+
+** [[https://elpa.gnu.org/packages/csv-mode.html][csv-mode]]
+
+#+begin_src emacs-lisp
+(use-package csv-mode
+  :mode "\\.csv\\'")
+#+end_src
+
 ** [[https://codeberg.org/akib/emacs-eat][emacs-eat]]
 
 #+begin_src emacs-lisp
@@ -2335,28 +2343,13 @@ Provides a minor mode that enables code folding and outlining based on indentati
   (use-package flycheck-phpstan)
   (use-package nl-nordita-php-project :demand :load-path "~/.emacs.d/lisp")
 
-  (defun nl/php-before-save-hook ()
-    (require 'php-cs-fixer)
-    (when (string-match-p (regexp-quote ".php") buffer-file-name)
-      (let ((default-directory (projectile-project-root))
-            (file-name (replace-regexp-in-string (projectile-project-root) "" buffer-file-name))
-            (command (concat php-cs-fixer-command
-                             " list-files "
-                             (if php-cs-fixer-config-option
-                                 (concat " --config " (shell-quote-argument php-cs-fixer-config-option))))))
-        ;; only use php-cs-fixer on files in the project
-        ;; (message "file-name: %s" file-name)
-        ;; (message "command: %s" command)
-        (when (string-match-p (regexp-quote file-name) (shell-command-to-string command))
-          (php-cs-fixer-fix)
-          ))))
-
   (defun nl/php-mode-hook ()
     "My PHP mode configuration."
     (require 'flycheck-phpstan)
     (setq php-mode-lineup-cascaded-calls t)
     (flycheck-mode t)
     (subword-mode +1)
+    (prettier-mode)
     (when buffer-file-name
       (let ((nl-is-nordita-project (string-match-p "nordita" buffer-file-name)))
         (when nl-is-nordita-project
@@ -2372,7 +2365,7 @@ Provides a minor mode that enables code folding and outlining based on indentati
 
   (defun nl-nordita-project-settings ()
     "Nordita's PHP mode configuration."
-    (add-hook 'before-save-hook 'nl/php-before-save-hook)
+    ;;(add-hook 'before-save-hook 'nl/php-before-save-hook)
     (lsp)
     ;;(php-set-style "nl/php-nordita")
     (setq php-project-root 'auto
@@ -2511,6 +2504,7 @@ Allows the Emacs editor to fix most issues in PHP code when you want to follow t
   :after php-mode
   :commands (php-cs-fixer-fix))
 #+end_src
+
 ** prog-mode
 
 #+begin_src emacs-lisp
@@ -2615,7 +2609,9 @@ Pulse highlight line on demand or after running select functions
     (lsp-deferred)
     (ruff-format-on-save-mode))
   :hook
-  (python-ts-mode . nl/python-hook))
+  (python-ts-mode . nl/python-hook)
+  :config
+  (setq ruff-format-command "ruff"))
 #+end_src
 
 *** [[https://github.com/jorgenschaefer/pyvenv][pyvenv.el]]
@@ -2860,8 +2856,12 @@ To save all buffers that wgrep has changed, run =M-x wgrep-save-all-buffers=.
            (file-name (nth 1 (split-string buffer-file-name (project-root (project-current)))))
            (base-name (replace-regexp-in-string "\.yaml$" "" (file-name-nondirectory file-name))))
       (unless file-name (user-error "File not in project"))
+      ;; (compile
+      ;;  (format "./docker-wrapper.sh cli pw-page %s build --no-ansi -d -f -i ../default_pages/main_site" base-name))
       (compile
-       (format "./docker-wrapper.sh cli pw-page %s build --no-ansi -d -f -i ../default_pages/main_site" base-name))))
+       (format "cd public && php cli.php pw-page %s build --no-ansi -d -f -i ../default_pages/main_site" base-name))
+
+      ))
 
   (defhydra hydra-nl-yaml (:color red :hint nil)
     "Project commands"
