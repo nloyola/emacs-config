@@ -2856,11 +2856,10 @@ To save all buffers that wgrep has changed, run =M-x wgrep-save-all-buffers=.
            (file-name (nth 1 (split-string buffer-file-name (project-root (project-current)))))
            (base-name (replace-regexp-in-string "\.yaml$" "" (file-name-nondirectory file-name))))
       (unless file-name (user-error "File not in project"))
-      ;; (compile
-      ;;  (format "./docker-wrapper.sh cli pw-page %s build --no-ansi -d -f -i ../default_pages/main_site" base-name))
       (compile
-       (format "cd public && php cli.php pw-page %s build --no-ansi -d -f -i ../default_pages/main_site" base-name))
-
+       (format "./docker-wrapper.sh cli pw-page %s build --no-ansi -d -f -i ../default_pages/main_site" base-name))
+      ;; (compile
+      ;;  (format "cd public && php cli.php pw-page %s build --no-ansi -d -f -i ../default_pages/main_site" base-name))
       ))
 
   (defhydra hydra-nl-yaml (:color red :hint nil)
@@ -2871,11 +2870,11 @@ To save all buffers that wgrep has changed, run =M-x wgrep-save-all-buffers=.
   (defun nl/yaml-mode-hook ()
     (set-fill-column 120)
     (display-line-numbers-mode)
-    (outline-indent-minor-mode))
+    (outline-indent-minor-mode)
+    (key-chord-define-local "jc" 'hydra-nl-yaml/body))
   :hook
   (yaml-mode . nl/yaml-mode-hook)
-  (yaml-ts-mode . nl/yaml-mode-hook)
-  :chords (("jc" . hydra-nl-yaml/body)))
+  (yaml-ts-mode . nl/yaml-mode-hook)))
 #+end_src
 
 ** [[https://github.com/capitaomorte/yasnippet][yasnippet]]

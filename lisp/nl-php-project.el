@@ -8,6 +8,7 @@
 
 (require 's)
 (require 'php-mode)
+(require 'php-ts-mode)
 (eval-and-compile
   (require 'projectile))
 

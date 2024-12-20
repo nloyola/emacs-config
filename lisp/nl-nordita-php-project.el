@@ -77,13 +77,13 @@
   ("c" nl/php-code-sniffer "Run PHP CodeSniffer" :column "Build")
   ("y" nl/nordita-build-page-from-yaml "Build ProcessWire page from YAML file" :color blue))
 
-(key-chord-define php-mode-map "jc" 'hydra-nl-nordita-project/body)
+(key-chord-define php-ts-mode-map "jc" 'hydra-nl-nordita-project/body)
 
-(define-key php-mode-map (kbd "C-c , d") 'nl/phpunit-run-this-method-with-debug-logging)
-(define-key php-mode-map (kbd "C-c , m") 'nl/phpunit-only-this-method)
-(define-key php-mode-map (kbd "C-c , f") 'nl/phpunit-test-this-file)
-(define-key php-mode-map (kbd "C-c , p") 'nl/phpunit-project)
-(define-key php-mode-map (kbd "C-c , s") 'nl/phpunit-selenium-only-this-method)
+(define-key php-ts-mode-map (kbd "C-c , d") 'nl/phpunit-run-this-method-with-debug-logging)
+(define-key php-ts-mode-map (kbd "C-c , m") 'nl/phpunit-only-this-method)
+(define-key php-ts-mode-map (kbd "C-c , f") 'nl/phpunit-test-this-file)
+(define-key php-ts-mode-map (kbd "C-c , p") 'nl/phpunit-project)
+(define-key php-ts-mode-map (kbd "C-c , s") 'nl/phpunit-selenium-only-this-method)
 
 (defun nl/projectile-test-suffix-function (project-type)
   "Return the suffix for test files for PROJECT-TYPE."

@@ -93,9 +93,9 @@
   ("a" hydra-nl-align/body "align" :color blue)
   ("i" nl/indent-whole-buffer "indent buffer" :color blue))
 
-(key-chord-define typescript-ts-mode-map "jc" '(lambda () (interactive) (hydra-nl/typescript-project/body)))
-(key-chord-define tsx-ts-mode-map "jc" '(lambda () (interactive) (hydra-nl/typescript-project/body)))
-(key-chord-define web-mode-map "jc" '(lambda () (interactive) (hydra-nl/typescript-project/body)))
+(key-chord-define typescript-ts-mode-map "jc" 'hydra-nl/typescript-project/body)
+(key-chord-define tsx-ts-mode-map "jc" 'hydra-nl/typescript-project/body)
+(key-chord-define web-mode-map "jc" 'hydra-nl/typescript-project/body)
 
 (define-key typescript-ts-mode-map (kbd "C-c C-t c") 'nl/typescript-compile-this-file)
 
