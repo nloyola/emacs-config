@@ -242,34 +242,144 @@ Don't let mouse icon obscure cursor
 #+end_src
 
 * Fonts
-** Main font
+** Main fonts
+
+Help from here:  https://howardabrams.com/hamacs/ha-display.html#org54a2529
 
 #+begin_src emacs-lisp
-(defvar nl/gui-fixed-font-name "JetBrainsMono Nerd Font")
-;; (defvar nl/gui-fixed-font-name "FiraCode Nerd Font")
-;; (defvar nl/gui-fixed-font-name "CaskaydiaCove Nerd Font Mono")
-;; (defvar nl/gui-fixed-font-name "IBM Plex Mono Medium")
-;; (defvar nl/gui-variable-font-name "DejaVu Sans")
+(defvar nl/gui-fixed-font-name
+  (when window-system
+    (or
+     (seq-first
+      (seq-filter (lambda (font) (when (x-list-fonts font) font))
+                  '("CaskaydiaCove Nerd Font"  ; finally found it
+                    "JetBrainsMono Nerd Font"
+                    ;; funky font with litagures and a dotted 0
+                    "Cascadia Code PL"
+                    ;; clean font, but no litagures!?
+                    "Hack Nerd Font"
+                    "FiraCode Nerd Font"       ; has litagures
+                    "Cousine Nerd Font"
+                    "Iosevka Nerd Font"
+                    "FantasqueSansMono Nerd Font"
+                    "Monoid Nerd Font"
+                    "Hasklig"
+                    "Source Code Pro"
+                    ;;
+                    "IBM Plex Mono Medium"
+                    "DejaVu Sans")))
+     "monospaced"))
+  "My fixed width font based on what I have installed.")
 
-(defvar nl/gui-variable-font-name "Alegreya")
-;;(defvar nl/gui-variable-font-name "Go")
+(defvar nl/gui-variable-font-name
+  (when window-system
+    (or
+     (seq-first
+      (seq-filter (lambda (font) (when (x-list-fonts font) font))
+                  '("SN Pro"   ; https://supernotes.app/open-source/sn-pro
+                    "Atkinson Hyperlegible"
+                    "Literata" ; Clean, readable with litagures
+                    ;; Next best can be downloaded here:
+                    ;; https://fontesk.com/xcharter-typeface/
+                    "XCharter"
+                    "Charter"
+                    ;;  Interesting idea: "Iosevka Comfy Motion Duo"
+                    "Serif"
+                    ;;
+                    "Alegreya")))
+     (warn "Cannot find a Serif Font.  Install Source Sans Pro."))))
 
-(defconst nl/gui-font-size-normal 12)
+(defvar ha-variable-header-font
+  (when window-system
+    (or
+     (seq-first
+      (seq-filter (lambda (font) (when (x-list-fonts font) font))
+                  '("SN Pro" "Overpass" "DejaVu Sans"
+                    "Verdana" "Overpass"
+                    "Source Sans Pro"
+                    "Lucida Grande"
+                    "Sans Serif")))
+     (warn "Cannot find a Sans Serif Font.  Install Source Sans Pro."))))
 
-(use-package emacs
-  :preface
-  (set-face-attribute 'default nil :family nl/gui-fixed-font-name :height (* 10 nl/gui-font-size-normal))
-  (set-face-attribute 'fixed-pitch nil :family nl/gui-fixed-font-name :inherit 'default)
-  (set-face-attribute 'variable-pitch nil :family nl/gui-variable-font-name :height 1.5)
-  (set-face-attribute 'font-lock-comment-face nil :family nl/gui-fixed-font-name :weight 'semi-bold :slant 'italic :inherit 'default)
-  (set-face-attribute 'italic nil :family nl/gui-fixed-font-name :weight 'normal :slant 'italic)
-  (set-face-attribute 'bold nil :family nl/gui-fixed-font-name :weight 'bold :weight 'normal)
-  (set-face-attribute 'bold-italic nil :family nl/gui-fixed-font-name :weight 'bold :slant 'italic)
+(defun nl/set-favorite-font-size (size)
+  "Set the default font size as well as equalize the fixed and variable fonts."
+  (let ((fav-font (format "%s-%d" nl/gui-fixed-font-name size)))
+    (set-face-attribute 'default nil :font fav-font)
+    (set-face-attribute 'fixed-pitch nil :family nl/gui-fixed-font-name :inherit 'default :height 1.0)
+    (set-face-attribute 'variable-pitch nil :family nl/gui-variable-font-name :inherit 'default :height 1.2)))
+
+(defun nl/mac-monitor-fontsize ()
+  "Quickly set reset my font size when I connect my laptop to a monitor on a Mac."
+  (interactive)
+  (nl/set-favorite-font-size 13))
+
+(defun nl/linux-monitor-fontsize ()
+  "Quickly set reset my font size when I connect my laptop to a monitor on Linux."
+  (interactive)
+  (nl/set-favorite-font-size 12))
+
+(defun nl/mac-laptop-fontsize ()
+  "Quickly set reset my font size when I disconnect my laptop to a monitor from a Mac."
+  (interactive)
+  (nl/set-favorite-font-size 32))
+
+(defun nl/linux-laptop-fontsize ()
+  "Quickly set reset my font size when I disconnect my laptop to a monitor from Linux."
+  (interactive)
+  (nl/set-favorite-font-size 10))
+
+(defun nl/imac-fontsize ()
+  "Quickly set reset my font size when I am on my iMac."
+  (interactive)
+  (ha-set-favorite-font-size 16))
+
+(defun font-monitor-size-default ()
+  "Set the default size according to my preference."
+  (interactive)
+  (cond
+   ((eq system-type 'gnu/linux)         (nl/linux-monitor-fontsize))
+   ((s-starts-with? "imac" system-name) (nl/imac-fontsize))
+   (t                                   (nl/mac-monitor-fontsize))))
+
+(defun font-laptop-size-default ()
+  "Set the default size according to my preference."
+  (interactive)
+  (if (eq system-type 'gnu/linux)
+      (nl/linux-laptop-fontsize)
+    (nl/mac-laptop-fontsize)))
+
+(font-monitor-size-default)
+
+;; (defconst nl/gui-font-size-normal 12)
+
+;; (use-package emacs
+;;   :preface
+;;   (set-face-attribute 'default nil :family nl/gui-fixed-font-name :height (* 10 nl/gui-font-size-normal))
+;;   (set-face-attribute 'fixed-pitch nil :family nl/gui-fixed-font-name :inherit 'default)
+;;   (set-face-attribute 'variable-pitch nil :family nl/gui-variable-font-name :height 1.5)
+;;   (set-face-attribute 'font-lock-comment-face nil :family nl/gui-fixed-font-name :weight 'semi-bold :slant 'italic :inherit 'default)
+;;   (set-face-attribute 'italic nil :family nl/gui-fixed-font-name :weight 'normal :slant 'italic)
+;;   (set-face-attribute 'bold nil :family nl/gui-fixed-font-name :weight 'bold :weight 'normal)
+;;   (set-face-attribute 'bold-italic nil :family nl/gui-fixed-font-name :weight 'bold :slant 'italic)
+;;   :config
+;;   (when (string-match "-[Mm]icrosoft" operating-system-release)
+;;     ;; WSL: WSL1 has "-Microsoft", WSL2 has "-microsoft-standard"
+;;     (setq nl/gui-font-size-normal 12))
+;;   )
+#+end_src
+
+** [[https://gitlab.com/jabranham/mixed-pitch][Mixed Pitch]]
+
+Mixed pitch is a minor mode that enables mixing fixed-pitch (also known as fixed-width or monospace)
+and variable-pitch (AKA “proportional”) fonts. It tries to be smart about which fonts get which
+face.
+
+#+begin_src emacs-lisp :tangle no
+(use-package mixed-pitch
   :config
-  (when (string-match "-[Mm]icrosoft" operating-system-release)
-    ;; WSL: WSL1 has "-Microsoft", WSL2 has "-microsoft-standard"
-    (setq nl/gui-font-size-normal 12))
-  )
+  (add-to-list 'mixed-pitch-fixed-pitch-faces 'org-property-value)
+  (add-to-list 'mixed-pitch-fixed-pitch-faces 'font-lock-comment-face)
+  :hook (text-mode . mixed-pitch-mode))
 #+end_src
 
 ** Mode Line
@@ -802,7 +912,6 @@ Make =dired= show directories first.
       (edit-server-start)
     (add-hook 'after-init-hook 'nl/after-init-hook)))
 #+end_src
-
 
 ** =hl-line=
 
