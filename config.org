@@ -1091,6 +1091,8 @@ A quick way to jump around text in buffers.
   ;; (:map bookmark-bmenu-mode-map ("C-o" . #'casual-bookmarks-tmenu))
   :config
   (require 'dired))
+
+(use-package casual-suite)
 #+end_src
 
 ** [[https://github.com/jordonbiondo/column-enforce-mode][column-enforce-mode]]
