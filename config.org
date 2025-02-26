@@ -644,8 +644,8 @@ See https://github.com/doomemacs/themes/tree/screenshots#screenshots
   (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
         doom-themes-enable-italic t) ; if nil, italics is universally disabled
 
-  ;;(load-theme 'doom-oceanic-next t)
-  (load-theme 'base16-brewer t)
+  (load-theme 'doom-palenight t)
+  ;;(load-theme 'base16-brewer t)
 
   ;; Enable flashing mode-line on errors
   (doom-themes-visual-bell-config)
@@ -657,7 +657,9 @@ See https://github.com/doomemacs/themes/tree/screenshots#screenshots
   ;; Corrects (and improves) org-mode's native fontification.
   (doom-themes-org-config)
   :custom-face
-  (corfu-current ((t (:background "dark olive green"))))
+  ;;(corfu-current ((t (:background "tan"))))
+  (ansi-color-red ((t (:background "#440000"))))
+  (ansi-color-blue ((t (:background "#000055"))))
   )
 #+end_src
 
@@ -998,10 +1000,11 @@ Had to install TSX tag =v0.20.2= since the latest in the repository cause a pars
      (php "https://github.com/tree-sitter/tree-sitter-php" "v0.23.10" "php/src")
      (python "https://github.com/tree-sitter/tree-sitter-python")
      (toml "https://github.com/tree-sitter/tree-sitter-toml")
-     ;; (tsx "https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src")
-     (tsx "https://github.com/tree-sitter/tree-sitter-typescript" "v0.23.2" "tsx/src")
+     (tsx "https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src")
+     ;;(tsx "https://github.com/tree-sitter/tree-sitter-typescript" "v0.23.2" "tsx/src")
      (typescript "https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src")
-     (yaml "https://github.com/ikatyang/tree-sitter-yaml")))
+     (yaml "https://github.com/ikatyang/tree-sitter-yaml")
+     (vue "https://github.com/ikatyang/tree-sitter-vue")))
   (setq major-mode-remap-alist
         '((bash-mode . bash-ts-mode)
           (js2-mode . js-ts-mode)
@@ -2637,7 +2640,7 @@ Allows the Emacs editor to fix most issues in PHP code when you want to follow t
 #+begin_src emacs-lisp
 (use-package php-cs-fixer
   :after php-mode
-    :load-path "~/src/github/elisp/php-cs-fixer"
+  ;; :load-path "~/src/github/elisp/php-cs-fixer"
   :commands (php-cs-fixer-fix php-cs-fixer-before-save))
 #+end_src
 
@@ -2710,6 +2713,7 @@ Had to disable prettier for *css-mode* because syntax highlighting when exportin
          (typescript-ts-mode . prettier-mode)
          ;;(js-mode . prettier-mode)
          (json-mode . prettier-mode)
+         (vue-mode . prettier-mode)
          ;;(css-mode . prettier-mode)
          (css-mode . prettier-mode)
          (yaml-mode . prettier-mode)))
@@ -2934,6 +2938,23 @@ the beginning of the buffer.
         flycheck-check-syntax-automatically '(save mode-enabled))
   (setq-default typescript-indent-level 4)
   )
+#+end_src
+
+** VueJS
+
+#+begin_src emacs-lisp
+(use-package vue-mode
+  :mode "\\.vue\\'"
+  :hook
+  (vue-mode . nl/vue-mode-hook)
+  (vue-ts-mode . nl/vue-mode-hook)
+  :preface
+   (defun nl/vue-mode-hook ()
+     (subword-mode)
+     (lsp-deferred)
+     (display-line-numbers-mode))
+  :config
+  (setq mmm-submode-decoration-level 0))
 #+end_src
 
 ** [[https://github.com/mhayashi1120/Emacs-wgrep][wgrep]]
