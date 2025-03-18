@@ -2905,39 +2905,71 @@ the beginning of the buffer.
 ** typescript
 
 #+begin_src emacs-lisp
+(defun nl/tsx-comment-dwim (arg)
+  "Toggle JSX comment {/* */} at the beginning of each line in tsx-mode."
+  (interactive "P")
+  (let ((beg (if (use-region-p) (region-beginning) (line-beginning-position)))
+        (end (if (use-region-p) (region-end) (line-end-position))))
+    (save-excursion
+      (goto-char beg)
+      (if (looking-at "[ \t]*{/\\*")  ;; Detect already commented JSX lines
+          ;; Uncomment each line
+          (while (<= (point) end)
+            (beginning-of-line)
+            (when (looking-at "[ \t]*{/\\* ?")
+              (delete-region (match-beginning 0) (+ (match-beginning 0) 4)))
+            (end-of-line)
+            (search-backward " */}" (line-beginning-position) t)
+            (delete-region (point) (+ (point) 4))
+            (forward-line 1))
+        ;; Comment each line
+        (while (<= (point) end)
+          (beginning-of-line)
+          (insert "{/* ")
+          (end-of-line)
+          (insert " */}")
+          (forward-line 1))))))
+
 (use-package typescript-ts-mode
   :mode (("\\.ts\\'" . typescript-ts-mode)
          ("\\.js\\'" . typescript-ts-mode)
          ("\\.tsx\\'" . tsx-ts-mode)
          ("\\.jsx\\'" . tsx-ts-mode))
-  :bind (:map typescript-ts-mode-map
-              ("M-j" . c-indent-new-comment-line))
+  :bind
+  (:map typescript-ts-mode-map
+        ("M-j" . c-indent-new-comment-line))
+  (:map tsx-ts-mode-map
+        ("M-;" . nl/tsx-comment-dwim))
+  :hook
+  (typescript-ts-mode . nl/typescript-mode)
+  (tsx-ts-mode . nl/typescript-mode)
   :preface
-  (use-package nl-typescript :demand :load-path "~/.emacs.d/lisp")
-  (use-package nl-react :demand :load-path "~/.emacs.d/lisp")
+  (use-package nl-typescript :load-path "~/.emacs.d/lisp")
+  (use-package nl-react :load-path "~/.emacs.d/lisp")
   (defun nl/typescript-mode ()
+    "Setup TypeScript/TSX mode."
     (lsp-deferred)
+    (setq column-enforce-column 120)
     (flycheck-mode +1)
-    (column-enforce-mode)
+    (column-enforce-mode +1)
+    (subword-mode +1)
     ;;(eldoc-mode +1)
     ;;(company-mode +1)
-    (subword-mode +1)
     ;; (push '(">=" . ?≥) prettify-symbols-alist)
     ;; (push '("<=" . ?≤) prettify-symbols-alist)
     ;; (push '("->" . ?→) prettify-symbols-alist)
     ;; (push '("=>" . ?↦) prettify-symbols-alist)
     ;; (prettify-symbols-mode)
-    (setq column-enforce-column 120)
-    (nl/yas-reload-all))
-  :hook
-  (typescript-ts-mode . nl/typescript-mode)
-  (tsx-ts-mode . nl/typescript-mode)
+    (when (fboundp 'nl/yas-reload-all)
+      (nl/yas-reload-all)))
   :config
-  (setq ;;company-tooltip-align-annotations t ;; aligns annotation to the right hand side
+  (setq lsp-clients-typescript-server "typescript-language-server")
+  (setq lsp-disabled-clients '(vue-semantic-server lsp-volar))
+  (setq flycheck-check-syntax-automatically '(save mode-enabled)
+        ;;company-tooltip-align-annotations t ;; aligns annotation to the right hand side
         ;;prettify-symbols-unprettify-at-point 'right-edge
-        flycheck-check-syntax-automatically '(save mode-enabled))
-  (setq-default typescript-indent-level 4)
-  )
+        )
+  (setq-default typescript-indent-level 4))
 #+end_src
 
 ** VueJS
@@ -2947,13 +2979,11 @@ the beginning of the buffer.
   :mode "\\.vue\\'"
   :hook
   (vue-mode . nl/vue-mode-hook)
-  (vue-ts-mode . nl/vue-mode-hook)
-  :preface
+  :config
    (defun nl/vue-mode-hook ()
      (subword-mode)
      (lsp-deferred)
      (display-line-numbers-mode))
-  :config
   (setq mmm-submode-decoration-level 0))
 #+end_src
 
