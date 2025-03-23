@@ -38,6 +38,19 @@
     ;;(message "command: %s" command)
     (nl/php-command-in-proj-root command)))
 
+(defun nl/phpunit-run-this-method-with-x-debug ()
+  "Run PHPUnit with COMMAND in Norweb docker container."
+  (interactive)
+  (let ((command (format "LOG_LEVEL=DEBUG XDEBUG_CONFIG=\"start_with_request=1\" %s"
+                         (nl/phpunit-create-command
+                          (string-join (list
+                                        "--filter "
+                                        (nl/phpunit-test-find-method-name)
+                                        " "
+                                        (nl/phpunit-file-name)))))))
+    ;;(message "command: %s" command)
+    (nl/php-command-in-proj-root command)))
+
 (defun nl/phpunit-coverage-report-in-chrome ()
   "Open the code coverage report in a Google Chrome tab."
   (interactive)
@@ -64,6 +77,7 @@
 (defhydra hydra-nl/php-test (:color blue)
   "Test"
   ("d" nl/phpunit-run-this-method-with-debug-logging "only this method (with debug logging)" :column "PHP")
+  ("x" nl/phpunit-run-this-method-with-x-debug "only this method (with x_debug)" :column "PHP")
   ("p" nl/phpunit-project "All tests")
   ("f" nl/phpunit-test-this-file "only this file")
   ("m" nl/phpunit-only-this-method "only this method")
@@ -78,6 +92,7 @@
   ("y" nl/nordita-build-page-from-yaml "Build ProcessWire page from YAML file" :color blue))
 
 (define-key php-ts-mode-map (kbd "C-c , d") 'nl/phpunit-run-this-method-with-debug-logging)
+(define-key php-ts-mode-map (kbd "C-c , x") 'nl/phpunit-run-this-method-with-x-debug)
 (define-key php-ts-mode-map (kbd "C-c , m") 'nl/phpunit-only-this-method)
 (define-key php-ts-mode-map (kbd "C-c , f") 'nl/phpunit-test-this-file)
 (define-key php-ts-mode-map (kbd "C-c , p") 'nl/phpunit-project)
