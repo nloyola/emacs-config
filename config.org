@@ -2182,6 +2182,29 @@ Indent, move around and act on code based on indentation.
   ;;(lsp-java-save-actions-organize-imports t)
   )
 #+end_src
+** JavaScript
+
+#+begin_src emacs-lisp
+(use-package js2-mode
+  :mode (("\\.js\\'" . js-ts-mode))
+  :bind
+  (:map js-ts-mode-map
+        ("M-j" . c-indent-new-comment-line))
+  :hook
+  (js-ts-mode . nl/javascript-mode)
+  :preface
+  (defun nl/javascript-mode ()
+    "Setup JavaScript mode."
+    (lsp-deferred)
+    (setq column-enforce-column 120)
+    (flycheck-mode +1)
+    (column-enforce-mode +1)
+    (subword-mode +1)
+    (when (fboundp 'nl/yas-reload-all)
+      (nl/yas-reload-all)))
+  )
+#+end_src
+
 ** [[https://github.com/minad/jinx][jinx]]
 
 Jinx is a fast just-in-time spell-checker for Emacs.
@@ -2711,7 +2734,7 @@ Had to disable prettier for *css-mode* because syntax highlighting when exportin
   :diminish
   :hook ((tsx-ts-mode . prettier-mode)
          (typescript-ts-mode . prettier-mode)
-         ;;(js-mode . prettier-mode)
+         (js-ts-mode . prettier-mode)
          (json-mode . prettier-mode)
          (vue-mode . prettier-mode)
          ;;(css-mode . prettier-mode)
@@ -2932,7 +2955,6 @@ the beginning of the buffer.
 
 (use-package typescript-ts-mode
   :mode (("\\.ts\\'" . typescript-ts-mode)
-         ("\\.js\\'" . typescript-ts-mode)
          ("\\.tsx\\'" . tsx-ts-mode)
          ("\\.jsx\\'" . tsx-ts-mode))
   :bind
@@ -3236,6 +3258,5 @@ Load some computer-specific settings, such as the name and and email address.
 
   ;; Load settings specific for the current user
   (when (file-exists-p nl/user-settings-dir)
-    (message ">>>>>>>>>>>>> here")
     (mapc 'load (directory-files nl/user-settings-dir nil "^[^#].*el$"))))
 #+end_src
