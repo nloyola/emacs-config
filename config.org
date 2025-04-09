@@ -2086,7 +2086,13 @@ This package can be used to tie related commands into a family of short bindings
      ("k" windmove-up "↑ window")
      ("l" windmove-right "→ window")
      ("r" toggle-window-split "rotate windows") ; Located in utility functions
-     ("q" nil "quit menu" :color blue :column nil))))
+     ("q" nil "quit menu" :color blue :column nil)))
+
+
+  (defhydra hydra-nl-common (:color red :hint nil)
+    "Common"
+    ("w" (nl/create-frame-in-workspace "emacs-ws19" "19") "WS19"))
+  )
 #+end_src
 
 *** Aligning things
@@ -2295,7 +2301,8 @@ Add filler lorem ipsum text to Emacs.
    '(("pyls.plugins.pyls_mypy.enabled" t t)
      ("pyls.plugins.pyls_mypy.live_mode" nil t)
      ("pyls.plugins.pyls_black.enabled" t t)
-     ("pyls.plugins.pyls_isort.enabled" t t))))
+     ("pyls.plugins.pyls_isort.enabled" t t)))
+  (setq lsp-clients-typescript-server "typescript-language-server"))
 
 (use-package lsp-ui
   ;; :load-path "~/src/github/elisp/lsp-ui"
@@ -2323,7 +2330,8 @@ Add filler lorem ipsum text to Emacs.
   ;; (add-hook 'lsp-ui-doc-frame-hook
   ;;           (lambda (frame _w)
   ;;             (set-face-attribute 'default nil :family nl/gui-variable-font-name :height 180)))
-  (setq lsp-ui-flycheck-list-position 'bottom
+  (setq lsp-prefer-flymake nil
+        lsp-ui-flycheck-list-position 'bottom
         lsp-ui-doc-enable t
         ;;lsp-ui-doc-show-with-cursor t
         ;;lsp-ui-doc-show-with-mouse t
@@ -2461,6 +2469,14 @@ Sometimes you end up with cursors outside of your view. You can scroll the scree
  :hook
  (dired-mode . nerd-icons-dired-mode))
 #+end_src
+
+** [[https://github.com/ajc/nginx-mode][nginx-mode]]
+
+#+begin_src emacs-lisp
+(use-package nginx-mode
+ :commands nginx-mode)
+#+end_src
+
 ** [[https://github.com/nex3/perspective-el][perspective.el]]
 
 The Perspective package provides multiple named workspaces (or "perspectives") in Emacs, similar to multiple desktops in window managers like Awesome and XMonad, and Spaces on the Mac.
@@ -2997,17 +3013,27 @@ the beginning of the buffer.
 ** VueJS
 
 #+begin_src emacs-lisp
+(defun nl/vue-mode-hook ()
+  (subword-mode)
+  (lsp-deferred)
+  (display-line-numbers-mode)
+  (yas-minor-mode 1))
+
 (use-package vue-mode
   :mode "\\.vue\\'"
   :hook
   (vue-mode . nl/vue-mode-hook)
   :config
-   (defun nl/vue-mode-hook ()
-     (subword-mode)
-     (lsp-deferred)
-     (display-line-numbers-mode)
-     (yas-minor-mode 1))
   (setq mmm-submode-decoration-level 0))
+
+;; Register the Volar language server manually
+(with-eval-after-load 'lsp-mode
+  (add-to-list 'lsp-language-id-configuration '(vue-mode . "vue"))
+  (lsp-register-client
+   (make-lsp-client
+    :new-connection (lsp-stdio-connection '("vue-language-server" "--stdio"))
+    :activation-fn (lsp-activate-on "vue")
+    :server-id 'volar)))
 #+end_src
 
 ** [[https://github.com/mhayashi1120/Emacs-wgrep][wgrep]]

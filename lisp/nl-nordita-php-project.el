@@ -89,7 +89,8 @@
   ("a" hydra-nl-align/body "align" :color blue :column "General")
   ("t" hydra-nl/php-test/body "test" :color blue :column "PHP")
   ("c" nl/php-code-sniffer "Run PHP CodeSniffer" :column "Build")
-  ("y" nl/nordita-build-page-from-yaml "Build ProcessWire page from YAML file" :color blue))
+  ("y" nl/nordita-build-page-from-yaml "Build ProcessWire page from YAML file" :color blue)
+  ("g" hydra-nl-common/body "common" :color blue :column "Common"))
 
 (define-key php-ts-mode-map (kbd "C-c , d") 'nl/phpunit-run-this-method-with-debug-logging)
 (define-key php-ts-mode-map (kbd "C-c , x") 'nl/phpunit-run-this-method-with-x-debug)
@@ -161,9 +162,9 @@
     ("y" "build PW YAML file" nl/nordita-build-page-from-yaml :transient nil)]]
   )
 
-;;(key-chord-define php-ts-mode-map "jc" 'hydra-nl-nordita-project/body)
+(key-chord-define php-ts-mode-map "jc" 'hydra-nl-nordita-project/body)
 
-(key-chord-define php-ts-mode-map "jc" 'casual-nl-norweb-project-tmenu)
+;;(key-chord-define php-ts-mode-map "jc" 'casual-nl-norweb-project-tmenu)
 
 
 (provide 'nl-nordita-php-project)
