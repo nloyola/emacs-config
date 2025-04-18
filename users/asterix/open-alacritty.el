@@ -1,3 +1,6 @@
+;;; -*- lexical-binding: t; -*-
+;;;
+
 (defun nl/open-alacritty-here ()
   "Open a new Alacritty terminal window in the current buffer's directory."
   (interactive)

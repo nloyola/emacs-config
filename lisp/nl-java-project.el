@@ -1,3 +1,5 @@
+;;; -*- lexical-binding: t; -*-
+
 ;;; nl-java-project --- package to help with development of the java projects
 
 ;;; Commentary:

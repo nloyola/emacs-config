@@ -742,6 +742,15 @@ A minor mode which sets the wrap-prefix property on the fly so that single-long-
   :commands (adaptive-wrap-prefix-mode))
 #+end_src
 
+** auth-source
+
+#+begin_src emacs-lisp
+(use-package auth-source
+  :ensure nil ;; it's built into Emacs, no need to install
+  :config
+  (setq auth-sources '("~/.authinfo.gpg")))
+#+end_src
+
 ** =compile=
 
 Do not ask me to save files before compiling, or kill a previous compilation. Also scroll to the end of the compilation buffer when it is opened.
@@ -1661,6 +1670,49 @@ No longer using this. CLI is good enough.
   :mode ("Dockerfile\\'" . dockerfile-mode))
 #+end_src
 
+** [[https://github.com/magnars/expand-region.el][expand-region]]
+
+Expand region increases the selected region by semantic units. Just keep pressing the key until it selects what you want.
+
+#+begin_src emacs-lisp
+(use-package expand-region
+  :bind
+  (("C-=" . er/expand-region)
+   ("M-S-<up>" . er/expand-region)
+   ("M-S-<down>" . er/contract-region))
+  :config
+  (setq expand-region-smart-cursor t
+        er/enable-subword-mode? nil))
+#+end_src
+
+** [[https://github.com/flycheck/flycheck][flycheck]]
+
+Modern on-the-fly syntax checking extension for GNU Emacs.
+
+#+begin_src emacs-lisp
+(use-package flycheck
+  :commands global-flycheck-mode
+  :diminish flycheck-mode
+  :commands flycheck-define-checker
+  :init
+  (global-flycheck-mode)
+  :config
+  (setq flycheck-standard-error-navigation nil)
+
+  (setq-default flycheck-disabled-checkers
+                (append flycheck-disabled-checkers
+                        '(javascript-jshint)))
+
+  (setq flycheck-checkers (append flycheck-checkers
+                                  '(javascript-eslint))
+        flycheck-python-flake8-executable "flake8")
+  ;; use eslint with web-mode for jsx files
+  (flycheck-add-mode 'javascript-eslint 'tsx-ts-mode)
+  (flycheck-add-mode 'javascript-eslint 'web-mode)
+  (flycheck-add-mode 'javascript-eslint 'js2-mode)
+  (flycheck-add-mode 'javascript-eslint 'js-mode))
+#+end_src
+
 ** Git
 *** [[https://github.com/magit/magit][magit]]
 
@@ -1877,47 +1929,24 @@ See https://tsdh.org/posts/2022-08-01-difftastic-diffing-with-magit.html
   :hook (magit-mode . magit-delta-mode))
 #+end_src
 
-** [[https://github.com/magnars/expand-region.el][expand-region]]
-
-Expand region increases the selected region by semantic units. Just keep pressing the key until it selects what you want.
+** [[https://github.com/karthink/gptel][gptel]]
 
 #+begin_src emacs-lisp
-(use-package expand-region
-  :bind
-  (("C-=" . er/expand-region)
-   ("M-S-<up>" . er/expand-region)
-   ("M-S-<down>" . er/contract-region))
+(use-package gptel
   :config
-  (setq expand-region-smart-cursor t
-        er/enable-subword-mode? nil))
-#+end_src
+  (setq gptel-api-key #'gptel-api-key-from-auth-source)
 
-** [[https://github.com/flycheck/flycheck][flycheck]]
+  ;; Optional: set default model
+  (setq gptel-model 'gpt-4o)
 
-Modern on-the-fly syntax checking extension for GNU Emacs.
+  ;; Optional: customize the system prompt
+  (setq gptel-default-mode 'org-mode) ;; or 'text-mode, etc.
+  (setq gptel-system-message "You are a helpful assistant.")
 
-#+begin_src emacs-lisp
-(use-package flycheck
-  :commands global-flycheck-mode
-  :diminish flycheck-mode
-  :commands flycheck-define-checker
-  :init
-  (global-flycheck-mode)
-  :config
-  (setq flycheck-standard-error-navigation nil)
-
-  (setq-default flycheck-disabled-checkers
-                (append flycheck-disabled-checkers
-                        '(javascript-jshint)))
-
-  (setq flycheck-checkers (append flycheck-checkers
-                                  '(javascript-eslint))
-        flycheck-python-flake8-executable "flake8")
-  ;; use eslint with web-mode for jsx files
-  (flycheck-add-mode 'javascript-eslint 'tsx-ts-mode)
-  (flycheck-add-mode 'javascript-eslint 'web-mode)
-  (flycheck-add-mode 'javascript-eslint 'js2-mode)
-  (flycheck-add-mode 'javascript-eslint 'js-mode))
+  ;; Optional: enable keybindings
+  (global-set-key (kbd "C-c q") #'gptel-send)
+  (global-set-key (kbd "C-c Q") #'gptel)
+)
 #+end_src
 
 ** [[https://github.com/nflath/hungry-delete][hungry-delete]]

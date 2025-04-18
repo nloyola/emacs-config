@@ -1,3 +1,5 @@
+;;; -*- lexical-binding: t; -*-
+
 ;;; con-project --- package to help with development of the con project
 
 ;;; Commentary:

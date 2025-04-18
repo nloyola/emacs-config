@@ -1,3 +1,5 @@
+;;; -*- lexical-binding: t; -*-
+
 ;;; pl --- Combinator parsing library for Emacs, similar to Haskell's Parsec
 
 ;; Copyright (C) 2015 John Wiegley
