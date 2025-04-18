@@ -3234,7 +3234,8 @@ See above.
         org-enforce-todo-checkbox-dependencies t
         ;; org-link-frame-setup '((file . find-file))
         org-export-backends '(ascii html icalendar latex md)
-        org-log-into-drawer t)
+        org-log-into-drawer t
+        org-file-apps '(("\\.png\\'" . browse-url) (auto-mode . emacs)))
 
   (setq org-capture-templates
         '(("t" "Todo" entry (file+headline "~/Sync/orgfiles/todo.org" "Tasks")
