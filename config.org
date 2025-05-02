@@ -188,8 +188,6 @@ See https://tony-zorman.com/posts/emacs-potpourri.html
   (setq fit-window-to-buffer-horizontally t)
   (setq window-resize-pixelwise t)
 
-  (setq-default indent-tabs-mode nil)
-
   (setq bookmark-default-file "~/.emacs.d/etc/bookmarks")
 
   (windmove-default-keybindings 'meta)
@@ -306,8 +304,8 @@ Help from here:  https://howardabrams.com/hamacs/ha-display.html#org54a2529
   "Set the default font size as well as equalize the fixed and variable fonts."
   (let ((fav-font (format "%s-%d" nl/gui-fixed-font-name size)))
     (set-face-attribute 'default nil :font fav-font)
-    (set-face-attribute 'fixed-pitch nil :family nl/gui-fixed-font-name :inherit 'default :height 1.0)
-    (set-face-attribute 'variable-pitch nil :family nl/gui-variable-font-name :inherit 'default :height 1.3)))
+    (set-face-attribute 'fixed-pitch nil :family nl/gui-fixed-font-name :inherit 'default :height 120)
+    (set-face-attribute 'variable-pitch nil :family nl/gui-variable-font-name :inherit 'default :height 150)))
 
 (defun nl/mac-monitor-fontsize ()
   "Quickly set reset my font size when I connect my laptop to a monitor on a Mac."
@@ -350,7 +348,7 @@ Help from here:  https://howardabrams.com/hamacs/ha-display.html#org54a2529
 ;;   :preface
 ;;   (set-face-attribute 'default nil :family nl/gui-fixed-font-name :height (* 10 nl/gui-font-size-normal))
 ;;   (set-face-attribute 'fixed-pitch nil :family nl/gui-fixed-font-name :inherit 'default)
-;;   (set-face-attribute 'variable-pitch nil :family nl/gui-variable-font-name :height 1.5)
+;;   (set-face-attribute 'variable-pitch nil :family nl/gui-variable-font-name :height 150)
 ;;   (set-face-attribute 'font-lock-comment-face nil :family nl/gui-fixed-font-name :weight 'bold :slant 'italic :inherit 'default)
 ;;   (set-face-attribute 'italic nil :family nl/gui-fixed-font-name :weight 'normal :slant 'italic)
 ;;   (set-face-attribute 'bold nil :family nl/gui-fixed-font-name :weight 'bold :weight 'normal)
@@ -390,7 +388,7 @@ See https://www.gonsie.com/blorg/modeline.html for additional details.
                         :background "#565063"
                         :foreground "white"
                         :box '(:line-width 2 :color "#3d3947")
-                        :height 0.8
+                        :height 110
                         :overline nil
                         :underline nil
                         :inherit 'variable-pitch)
@@ -399,11 +397,11 @@ See https://www.gonsie.com/blorg/modeline.html for additional details.
                         :background "#353644"
                         :foreground "white"
                         :box '(:line-width 2 :color "#353644")
-                        :height 0.8
+                        :height 110
                         :overline nil
                         :inherit 'variable-pitch)
 
-    (set-face-attribute 'mode-line-buffer-id nil :foreground "goldenrod" :height 0.8 :inherit 'variable-pitch)
+    (set-face-attribute 'mode-line-buffer-id nil :foreground "goldenrod" :height 120 :inherit 'variable-pitch)
     (set-face-attribute 'mode-line-emphasis nil :inherit 'fixed-pitch)
     (set-face-attribute 'mode-line-highlight nil :slant 'italic :inherit 'fixed-pitch)
     )
@@ -644,7 +642,7 @@ See https://github.com/doomemacs/themes/tree/screenshots#screenshots
   (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
         doom-themes-enable-italic t) ; if nil, italics is universally disabled
 
-  (load-theme 'doom-vibrant t)
+  (load-theme 'doom-challenger-deep t)
   ;;(load-theme 'base16-brewer t)
 
   ;; Enable flashing mode-line on errors
@@ -656,11 +654,9 @@ See https://github.com/doomemacs/themes/tree/screenshots#screenshots
 
   ;; Corrects (and improves) org-mode's native fontification.
   (doom-themes-org-config)
-  :custom-face
-  ;;(corfu-current ((t (:background "tan"))))
-  (ansi-color-red ((t (:background "#440000"))))
-  (ansi-color-blue ((t (:background "#000055"))))
   )
+
+
 #+end_src
 
 Allow changing themes on the fly with the following.
@@ -811,18 +807,12 @@ Enable ANSI colors for compilation buffers.
           (switch-to-buffer-other-window compile-buf)
         (call-interactively 'compile))))
 
-  (defun nl/colorize-compilation-buffer ()
-    (let ((inhibit-read-only t))
-      (ansi-color-apply-on-region (point-min) (point-max)))
-    )
-
   (defun nl/compile-hook ()
     (hl-line-mode)
     (setq-local scroll-conservatively most-positive-fixnum
                 scroll-margin 0))
 
-  :hook ((compilation-mode . nl/compile-hook)
-         (compilation-filter . nl/colorize-compilation-buffer))
+  :hook ((compilation-mode . nl/compile-hook))
   :custom
   (compilation-ask-about-save nil)
   (compilation-always-kill t)
@@ -846,6 +836,23 @@ A minimalist package that enhances compilation-mode.
 
 (with-eval-after-load 'compile
   (fancy-compilation-mode))
+#+end_src
+*** =ansi-color=
+
+#+begin_src emacs-lisp
+(use-package ansi-color
+  :ensure nil
+  :hook ((shell-mode . ansi-color-for-comint-mode-on)
+         (compilation-filter . my/apply-ansi-color-to-compilation-buffer))
+  :config
+  ;; Function to apply ANSI colors in *compilation* buffer
+  (defun my/apply-ansi-color-to-compilation-buffer ()
+    (let ((inhibit-read-only t))
+      (ansi-color-apply-on-region compilation-filter-start (point))))
+
+  (set-face-attribute 'ansi-color-red nil :background "#440000")
+  (set-face-attribute 'ansi-color-blue nil :background "#000055")
+  )
 #+end_src
 
 ** =css-mode=
@@ -1523,6 +1530,14 @@ Complete anything.
   :commands eat-mode)
 #+end_src
 
+** [[https://github.com/editorconfig/editorconfig-emacs][editorconfig-emacs]]
+
+#+begin_src emacs-lisp
+(use-package editorconfig
+  :config
+  (editorconfig-mode 1))
+#+end_src
+
 ** [[https://github.com/akermu/emacs-libvterm][emacs-libvterm]]
 
 No longer using this. Using [[https://codeberg.org/akib/emacs-eat][emacs-eat]] instead.
@@ -1661,15 +1676,6 @@ Stopped using this package since it does not work well on Emacs 30.
    ("M-j" . dirvish-fd-jump)))
 #+end_src
 
-** [[https://github.com/spotify/dockerfile-mode][dockerfile-mode]]
-
-No longer using this. CLI is good enough.
-
-#+begin_src emacs-lisp :tangle no
-(use-package dockerfile-mode
-  :mode ("Dockerfile\\'" . dockerfile-mode))
-#+end_src
-
 ** [[https://github.com/magnars/expand-region.el][expand-region]]
 
 Expand region increases the selected region by semantic units. Just keep pressing the key until it selects what you want.
@@ -1728,7 +1734,8 @@ command line. Use an easy keybinding to access magit.
   (define-key magit-status-mode-map (kbd "q") 'magit-quit-session)
   (setq-default vc-handled-backends '(Git))
   (setq magit-push-always-verify nil
-
+        git-commit-summary-window nil
+        git-commit-show-diff nil
         ;; only use A and B in Ediff
         magit-ediff-dwim-show-on-hunks t)
   (magit-add-section-hook 'magit-status-sections-hook
@@ -2377,9 +2384,8 @@ Add filler lorem ipsum text to Emacs.
                       :background "gray20"
                       :foreground "white"
                       :box '(:line-width 1 :color "#353644")
-                      :height 0.7
+                      :height 100
                       :overline nil
-                      :height 120
                       :inherit 'variable-pitch)
   )
 #+end_src
@@ -2409,24 +2415,30 @@ Add filler lorem ipsum text to Emacs.
   (markdown-mode . visual-line-mode)
   :config
   (setq markdown-command "pandoc")
-  (set-face-attribute 'markdown-code-face
-                      nil
-                      :family nl/gui-fixed-font-name
-                      :background "#303030"
-                      :weight 'normal
-                      :height 0.8)
-  (set-face-attribute 'markdown-inline-code-face nil :family nl/gui-fixed-font-name)
-  (set-face-attribute 'markdown-bold-face nil :family nl/gui-variable-font-name)
-  (set-face-attribute 'markdown-italic-face nil :family nl/gui-variable-font-name)
-  (set-face-attribute 'markdown-list-face nil :family nl/gui-variable-font-name :height 1.3)
-  (set-face-attribute 'markdown-header-face-1 nil :family nl/gui-variable-font-name :height 1.9)
-  (set-face-attribute 'markdown-header-face-2 nil :family nl/gui-variable-font-name :height 1.7)
-  (set-face-attribute 'markdown-header-face-3 nil :family nl/gui-variable-font-name :height 1.5)
-  (set-face-attribute 'markdown-header-face-4 nil :family nl/gui-variable-font-name :height 1.4)
-  (set-face-attribute 'markdown-header-face-5 nil :family nl/gui-variable-font-name :height 1.3)
-  (set-face-attribute 'markdown-header-face-6 nil :family nl/gui-variable-font-name :height 1.2)
-  (set-face-attribute 'markdown-header-face nil :family nl/gui-variable-font-name :height 1.1)
-  (set-face-attribute 'markdown-header-delimiter-face nil :family nl/gui-variable-font-name :height 0.8))
+  (custom-set-faces
+   `(markdown-code-face ((t (:family ,nl/gui-fixed-font-name
+                                     :foreground "#91b831"
+                                     :background "#303030"
+                                     :weight normal
+                                     :height 120))))
+   `(markdown-pre-face ((t (:family ,nl/gui-fixed-font-name
+                                     :foreground "#91b831"
+                                     :background "#303030"
+                                     :weight normal
+                                     :height 120))))
+   `(markdown-inline-code-face ((t (:family ,nl/gui-fixed-font-name))))
+   `(markdown-bold-face ((t (:family ,nl/gui-variable-font-name))))
+   `(markdown-italic-face ((t (:family ,nl/gui-variable-font-name))))
+   `(markdown-list-face ((t (:family ,nl/gui-variable-font-name :height 130))))
+   `(markdown-header-face-1 ((t (:family ,nl/gui-variable-font-name :height 190 :foreground "#91b831"))))
+   `(markdown-header-face-2 ((t (:family ,nl/gui-variable-font-name :height 170 :foreground "#91b831"))))
+   `(markdown-header-face-3 ((t (:family ,nl/gui-variable-font-name :height 150 :foreground "#91b831"))))
+   `(markdown-header-face-4 ((t (:family ,nl/gui-variable-font-name :height 140 :foreground "#91b831"))))
+   `(markdown-header-face-5 ((t (:family ,nl/gui-variable-font-name :height 130 :foreground "#91b831"))))
+   `(markdown-header-face-6 ((t (:family ,nl/gui-variable-font-name :height 120 :foreground "#91b831"))))
+   `(markdown-header-face ((t (:family ,nl/gui-variable-font-name :height 110 :foreground "#91b831"))))
+   `(markdown-header-delimiter-face ((t (:family ,nl/gui-variable-font-name :height 80))))
+   ))
 #+end_src
 
 ** [[https://github.com/ancane/markdown-preview-mode][markdown-preview-mode]]
@@ -3039,7 +3051,7 @@ the beginning of the buffer.
   (setq-default typescript-indent-level 4))
 #+end_src
 
-** VueJS
+** [[https://github.com/AdamNiederer/vue-mode][VueJS]]
 
 #+begin_src emacs-lisp
 (defun nl/vue-mode-hook ()
@@ -3179,89 +3191,122 @@ See above.
 ** Org mode
 
 #+begin_src emacs-lisp
-(use-package org
-  :pin org
-  :bind
-  ("C-c c" . org-capture)
+  (use-package org
+    :pin org
+    :bind
+    ("C-c c" . org-capture)
+    :hook
+    (org-mode . variable-pitch-mode)
+    (org-mode . visual-line-mode)
+    ;;(org-mode . nl/org-mode-setup)
+    :preface
+    (defun nl/org-confirm-babel-evaluate (lang body)
+      "Do not confirm evaluation for these languages."
+      (not (or (string= lang "bash")
+               (string= lang "C")
+               (string= lang "emacs-lisp")
+               (string= lang "java")
+               (string= lang "python")
+               (string= lang "sh")
+               (string= lang "sql")
+               (string= lang "sqlite")
+               )))
+    :config
+    ;; (custom-set-faces
+    ;; '(org-table ((t (:inherit fixed-pitch :foreground "#91b831" :height 120))))
+    ;; '(org-block ((t (:inherit fixed-pitch))))
+    ;; '(org-code ((t (:inherit fixed-pitch :height 110))))
+    ;; '(org-verbatim ((t (:inherit (shadow fixed-pitch) :height 120))))
+    ;; '(org-link ((t (:underline t))))
+    ;; '(org-document-info ((t (:inherit fixed-pitch))))
+    ;; '(org-document-info-keyword ((t (:inherit fixed-pitch))))
+    ;; '(org-meta-line ((t (:inherit (font-lock-comment-face fixed-pitch)))))
+    ;; '(org-meta-line ((t (:inherit fixed-pitch))))
+    ;; '(org-property-value ((t (:inherit fixed-pitch))))
+    ;; '(org-special-keyword ((t (:inherit (font-lock-comment-face fixed-pitch)))))
+    ;; '(org-tag ((t (:inherit (shadow fixed-pitch) :weight bold :height 100))))
+    ;; ;; '(org-level-1 ((t (:inherit outline-1 :height 200))))
+    ;; ;; '(org-level-2 ((t (:inherit outline-2 :height 180))))
+    ;; ;; '(org-level-3 ((t (:inherit outline-3 :height 160))))
+    ;; ;; '(org-level-4 ((t (:inherit outline-4 :height 140))))
+    ;; ;; '(org-level-5 ((t (:inherit outline-5 :height 120))))
+    ;; )
+    (setq org-confirm-babel-evaluate 'nl/org-confirm-babel-evaluate
+          ;;org-ellipsis " ⤵"
+          ;;org-hide-emphasis-markers t
+          org-catch-invisible-edits 'error
+          ;;org-startup-indented t
+          org-cycle-include-plain-lists 'integrate
+          org-return-follows-link t
+          org-M-RET-may-split-line nil
+          org-src-fontify-natively t
+          org-src-preserve-indentation t
+          org-edit-src-content-indentation 0
+          org-enforce-todo-dependencies t
+          org-enforce-todo-checkbox-dependencies t
+          ;; org-link-frame-setup '((file . find-file))
+          org-export-backends '(ascii html icalendar latex md)
+          org-log-into-drawer t
+          org-file-apps '(("\\.png\\'" . browse-url) (auto-mode . emacs)))
+
+    (setq org-capture-templates
+          '(("t" "Todo" entry (file+headline "~/Sync/orgfiles/todo.org" "Tasks")
+             "* TODO %?\n  %i\n  %a")
+            ("l" "Link" entry (file+headline "~/Sync/orgfiles/links.org" "Links")
+             "* %? %^L %^g \n%T" :prepend t)
+            ("n" "Note" entry (file "~/Sync/orgfiles/notes.org")
+             "* NOTE %?\n%U" :empty-lines 1)
+            ("N" "Note with Clipboard" entry (file "~/Sync/orgfiles/notes.org")
+             "* NOTE %?\n%U\n   %c" :empty-lines 1)
+            ("j" "Journal" entry (file+datetree "~/Sync/orgfiles/journal.org")
+             "* %?\nEntered on %U\n  %i\n  %a")))
+
+    (org-babel-do-load-languages
+     'org-babel-load-languages
+     '((C . t)
+       (emacs-lisp . t)
+       (latex . t)
+       (java . t)
+       (js . t)
+       (python . t)
+       (ruby . t)
+       (shell . t)
+       (sql . t)
+       (sqlite . t)
+       ))
+    )
+#+end_src
+
+**** org-modern
+
+#+begin_src emacs-lisp
+(use-package org-modern
   :hook
-  (org-mode . variable-pitch-mode)
-  (org-mode . visual-line-mode)
-  ;;(org-mode . nl/org-mode-setup)
-  :preface
-  (defun nl/org-confirm-babel-evaluate (lang body)
-    "Do not confirm evaluation for these languages."
-    (not (or (string= lang "bash")
-             (string= lang "C")
-             (string= lang "emacs-lisp")
-             (string= lang "java")
-             (string= lang "python")
-             (string= lang "sh")
-             (string= lang "sql")
-             (string= lang "sqlite")
-             )))
-  :custom-face
-  ;;(org-table ((t :foreground "#91b831")))
-  (org-block ((t (:inherit fixed-pitch))))
-  (org-code ((t (:inherit (shadow fixed-pitch) :height 0.9))))
-  (org-verbatim ((t (:inherit (shadow fixed-pitch) :height 1.0))))
-  (org-link ((t (:underline t))))
-  (org-document-info ((t (:inherit fixed-pitch))))
-  (org-document-info-keyword ((t (:inherit fixed-pitch))))
-  ;;(org-meta-line ((t (:inherit (font-lock-comment-face fixed-pitch)))))
-  (org-meta-line ((t (:inherit fixed-pitch))))
-  (org-property-value ((t (:inherit fixed-pitch))) t)
-  (org-special-keyword ((t (:inherit (font-lock-comment-face fixed-pitch)))))
-  (org-table ((t (:inherit fixed-pitch :height 0.8))))
-  (org-tag ((t (:inherit (shadow fixed-pitch) :weight bold :height 0.8))))
-  ;; (org-level-1 ((t (:inherit outline-1 :height 2.0))))
-  ;; (org-level-2 ((t (:inherit outline-2 :height 1.8))))
-  ;; (org-level-3 ((t (:inherit outline-3 :height 1.6))))
-  ;; (org-level-4 ((t (:inherit outline-4 :height 1.4))))
-  ;; (org-level-5 ((t (:inherit outline-5 :height 1.2))))
+  (org-mode . org-modern-mode)
+  (org-agenda-finalize . org-modern-agenda)
+  :custom
+  (org-modern-star '("◉" "○" "✸" "✿")) ;; Custom bullets for headlines
+  (org-modern-list '((43 . "➤") (45 . "•") (42 . "◦"))) ;; Custom list markers
+  (org-modern-table nil) ;; Disable table styling if not needed
+  (org-modern-hide-stars t) ;; hide stars in headlines
+  (org-modern-block-fringe t) ;; Add fringe to blocks
+  (org-modern-todo-faces
+   '(("TODO" . (:foreground "red" :weight bold))
+     ("DONE" . (:foreground "green" :weight bold))))
+  (org-modern-priority
+   '((?A . "⚡")
+     (?B . "⬆")
+     (?C . "⬇")))
+  (org-modern-keyword
+   '((t . (:foreground "gray" :weight bold))))
+  (org-modern-horizontal-rule "────────────────────────────────────────")
   :config
-  (setq org-confirm-babel-evaluate 'nl/org-confirm-babel-evaluate
-        org-ellipsis " ⤵"
-        org-hide-emphasis-markers t
-        org-catch-invisible-edits 'error
-        org-startup-indented t
-        org-cycle-include-plain-lists 'integrate
-        org-return-follows-link t
-        org-M-RET-may-split-line nil
-        org-src-fontify-natively t
-        org-src-preserve-indentation t
-        org-edit-src-content-indentation 0
-        org-enforce-todo-dependencies t
-        org-enforce-todo-checkbox-dependencies t
-        ;; org-link-frame-setup '((file . find-file))
-        org-export-backends '(ascii html icalendar latex md)
-        org-log-into-drawer t
-        org-file-apps '(("\\.png\\'" . browse-url) (auto-mode . emacs)))
+  ;; Adjust line spacing only in org-mode buffers
+  (defun nl/org-modern-line-spacing ()
+    "Set line spacing specifically for org-mode buffers."
+    (setq-local line-spacing 0.2)) ;; Adjust this value as needed
 
-  (setq org-capture-templates
-        '(("t" "Todo" entry (file+headline "~/Sync/orgfiles/todo.org" "Tasks")
-           "* TODO %?\n  %i\n  %a")
-          ("l" "Link" entry (file+headline "~/Sync/orgfiles/links.org" "Links")
-           "* %? %^L %^g \n%T" :prepend t)
-          ("n" "Note" entry (file "~/Sync/orgfiles/notes.org")
-           "* NOTE %?\n%U" :empty-lines 1)
-          ("N" "Note with Clipboard" entry (file "~/Sync/orgfiles/notes.org")
-           "* NOTE %?\n%U\n   %c" :empty-lines 1)
-          ("j" "Journal" entry (file+datetree "~/Sync/orgfiles/journal.org")
-           "* %?\nEntered on %U\n  %i\n  %a")))
-
-  (org-babel-do-load-languages
-   'org-babel-load-languages
-   '((C . t)
-     (emacs-lisp . t)
-     (latex . t)
-     (java . t)
-     (js . t)
-     (python . t)
-     (ruby . t)
-     (shell . t)
-     (sql . t)
-     (sqlite . t)
-     ))
+  (add-hook 'org-mode-hook #'nl/org-modern-line-spacing)
   )
 #+end_src
 
