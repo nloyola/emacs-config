@@ -129,40 +129,40 @@
                (make-directory test-dir :create-parents))
              (concat test-dir test-file)))))
 
-(require 'casual-suite)
+;;(require 'casual-suite)
 
-(transient-define-prefix casual-nl-align-tmenu ()
-  "Transient menu for aligning things."
-  [["Align things"
-    (":" "colon" align-colons :transient nil)
-    ("," "comma" align-commas :transient nil)
-    ("=" "equals" (lambda () (interactive) (align-equals)) :transient nil)
-    ("$" "dollar sign" (lambda () (interactive) (align-dollar-sign)) :transient nil)
-    ("p" "parameters" align-parameters :transient nil)
-   ]]
-  )
+;; (transient-define-prefix casual-nl-align-tmenu ()
+;;   "Transient menu for aligning things."
+;;   [["Align things"
+;;     (":" "colon" align-colons :transient nil)
+;;     ("," "comma" align-commas :transient nil)
+;;     ("=" "equals" (lambda () (interactive) (align-equals)) :transient nil)
+;;     ("$" "dollar sign" (lambda () (interactive) (align-dollar-sign)) :transient nil)
+;;     ("p" "parameters" align-parameters :transient nil)
+;;    ]]
+;;   )
 
-(transient-define-prefix casual-nl-norweb-project-tmenu ()
-  "Transient menu for Norweb 2021 Project."
-  [["Align"
-    ("a" "Align things" casual-nl-align-tmenu :transient nil)]]
-  [["PHP Code Sniffer"
-    ("c" "Run CodeSniffer" nl/php-code-sniffer :transient nil)
-    ("s" "Run PHPStan" (lambda () (interactive)(nl/php-command-in-proj-root "composer phpstan")) :transient nil)
-    ]]
-  [["PHP Test"
-    ("d" "only this method (with debug logging)" nl/phpunit-run-this-method-with-debug-logging :transient nil)
-    ("p" "All tests" nl/phpunit-project :transient nil)
-    ("f" "only this file" nl/phpunit-test-this-file :transient nil)
-    ("m" "only this method" nl/phpunit-only-this-method :transient nil)
-    ("r" "Open coverage report in Chrome" nl/phpunit-coverage-report-in-chrome :transient nil)
-    ("t" "toggle exclude end-to-end" nl/phpunit-end-to-end-toggle :transient nil)
-    ]]
-  [["Build"
-    ("o" "Open Other" dired-find-file-other-window :transient nil)]]
-  [["YAML"
-    ("y" "build PW YAML file" nl/nordita-build-page-from-yaml :transient nil)]]
-  )
+;; (transient-define-prefix casual-nl-norweb-project-tmenu ()
+;;   "Transient menu for Norweb 2021 Project."
+;;   [["Align"
+;;     ("a" "Align things" casual-nl-align-tmenu :transient nil)]]
+;;   [["PHP Code Sniffer"
+;;     ("c" "Run CodeSniffer" nl/php-code-sniffer :transient nil)
+;;     ("s" "Run PHPStan" (lambda () (interactive)(nl/php-command-in-proj-root "composer phpstan")) :transient nil)
+;;     ]]
+;;   [["PHP Test"
+;;     ("d" "only this method (with debug logging)" nl/phpunit-run-this-method-with-debug-logging :transient nil)
+;;     ("p" "All tests" nl/phpunit-project :transient nil)
+;;     ("f" "only this file" nl/phpunit-test-this-file :transient nil)
+;;     ("m" "only this method" nl/phpunit-only-this-method :transient nil)
+;;     ("r" "Open coverage report in Chrome" nl/phpunit-coverage-report-in-chrome :transient nil)
+;;     ("t" "toggle exclude end-to-end" nl/phpunit-end-to-end-toggle :transient nil)
+;;     ]]
+;;   [["Build"
+;;     ("o" "Open Other" dired-find-file-other-window :transient nil)]]
+;;   [["YAML"
+;;     ("y" "build PW YAML file" nl/nordita-build-page-from-yaml :transient nil)]]
+;;   )
 
 (key-chord-define php-ts-mode-map "jc" 'hydra-nl-nordita-project/body)
 

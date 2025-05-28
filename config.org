@@ -1113,6 +1113,19 @@ A quick way to jump around text in buffers.
 
 (use-package casual-suite)
 #+end_src
+** [[https://github.com/xenodium/chatgpt-shell][chatgpt-shell]]
+
+#+begin_src emacs-lisp
+(use-package chatgpt-shell
+  :ensure t
+  :custom
+  ((chatgpt-shell-openai-key
+    (lambda ()
+      (auth-source-pick-first-password :host "api.openai.com"))))
+  :config
+  (setq chatgpt-shell-model-version "chatgpt-4o-latest")
+  )
+#+end_src
 
 ** [[https://github.com/jordonbiondo/column-enforce-mode][column-enforce-mode]]
 
@@ -1727,7 +1740,7 @@ command line. Use an easy keybinding to access magit.
 
 #+begin_src emacs-lisp
 (use-package magit
-  :pin melpa
+  ;;:pin melpa
   :bind (("C-x g" . magit-status))
   ;;:hook (magit-mode . magit-todos-mode)
   :config
@@ -1938,7 +1951,9 @@ See https://tsdh.org/posts/2022-08-01-difftastic-diffing-with-magit.html
 
 ** [[https://github.com/karthink/gptel][gptel]]
 
-#+begin_src emacs-lisp
+Found this packe hard to use.
+
+#+begin_src emacs-lisp :tangle no
 (use-package gptel
   :config
   (setq gptel-api-key #'gptel-api-key-from-auth-source)
@@ -2981,7 +2996,6 @@ the beginning of the buffer.
 (use-package substitute
   :bind-keymap ("C-c s" . substitute-prefix-map))
 #+end_src
-
 ** typescript
 
 #+begin_src emacs-lisp
@@ -3289,7 +3303,9 @@ See above.
   (org-modern-list '((43 . "➤") (45 . "•") (42 . "◦"))) ;; Custom list markers
   (org-modern-table nil) ;; Disable table styling if not needed
   (org-modern-hide-stars t) ;; hide stars in headlines
-  (org-modern-block-fringe t) ;; Add fringe to blocks
+  (org-modern-block-fringe 2) ;; Add fringe to blocks
+  (org-hide-emphasis-markers t) ;; hides ~ and =
+  (org-modern-block-name '("«" . "»"))
   (org-modern-todo-faces
    '(("TODO" . (:foreground "red" :weight bold))
      ("DONE" . (:foreground "green" :weight bold))))

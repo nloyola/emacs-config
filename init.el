@@ -25,7 +25,8 @@
 
 (defvar file-name-handler-alist-old file-name-handler-alist)
 
-(setq package-enable-at-startup nil
+(setq package-install-upgrade-built-in t
+      package-enable-at-startup nil
       file-name-handler-alist nil
       message-log-max 16384
       gc-cons-threshold 402653184
