@@ -88,7 +88,6 @@
 
 (defhydra hydra-nl-nordita-project (:color red :hint nil)
   "Project commands"
-  ("a" hydra-nl-align/body "align" :color blue :column "General")
   ("t" hydra-nl/php-test/body "test" :color blue :column "PHP")
   ("c" nl/php-code-sniffer "Run PHP CodeSniffer" :column "Build")
   ("y" nl/nordita-build-page-from-yaml "Build ProcessWire page from YAML file" :color blue)

@@ -141,7 +141,6 @@
 
 (defhydra hydra-nl-python (:hint nil)
   "Project"
-  ("a" hydra-nl-align/body "align" :color blue :column "Python")
   ("i" nl/indent-whole-buffer "indent buffer" :color blue)
   ("x" lsp-find-references "find references" :color blue)
   ("p" dumb-jump-go-prompt "prompt" :color blue)

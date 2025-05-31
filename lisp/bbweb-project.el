@@ -70,7 +70,6 @@
 (defhydra hydra-nl-bbweb-scala (:hint nil)
   "bbweb scala build"
   ("b" nl/sbt-bloop-install "sbt bloopInstall" :color blue :column "Scala")
-  ("a" hydra-nl-align/body "align" :color blue)
   ("i" nl/indent-whole-buffer "indent buffer" :color blue)
   ("x" lsp-find-references "find references" :column "Source Navigation" :color blue)
   ("p" dumb-jump-go-prompt "prompt" :color blue)

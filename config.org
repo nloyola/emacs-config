@@ -1415,10 +1415,10 @@ Complete anything.
 ;; Enable `partial-completion' for file path expansion.
 ;; You may prefer to use `initials' instead of `partial-completion'.
 (use-package orderless
-  :init
-  (setq completion-styles '(orderless basic)
-        ;;completion-category-defaults nil
-        completion-category-overrides '((file (styles partial-completion)))))
+  :custom
+  (completion-styles '(orderless basic)) ;; Enable orderless for flexible matching
+  (completion-category-defaults nil)
+  (completion-category-overrides '((file (styles partial-completion)))))
 
 ;; Persist history over Emacs restarts. Vertico sorts by history position.
 (use-package savehist
@@ -1996,7 +1996,12 @@ This package can be used to tie related commands into a family of short bindings
   :custom
   (hydra-hint-display-type 'posframe)
   :config
-  ;;(setq hydra-posframe-show-params (plist-put hydra-posframe-show-params :family "Fira Code Retina"))
+  (setq hydra-posframe-show-params
+      '(:internal-border-width 3
+        :internal-border-color "#4e4a7b"
+        :left-fringe 8
+        :right-fringe 8
+        :poshandler posframe-poshandler-frame-center))
   (setq hydra-posframe-show-params
         (plist-put hydra-posframe-show-params :family nl/gui-fixed-font-name))
 
@@ -2026,24 +2031,6 @@ This package can be used to tie related commands into a family of short bindings
                        (if (eq arg '-)
                            (list -4)
                          '(4)))))
-
-
-   (defhydra hydra-files (:columns 2 :color red)
-     "Files hydra"
-     ("h" (dired "~/.") "home" :column "System" :color blue)
-     ("e" (dired "~/.emacs.d") "Emacs" :color blue)
-     ("c" (dired "~/.config") "Config" :color blue)
-     ("l" (dired "~/.local") "Local" :color blue)
-     ("P" (dired "~/src") "src" :column "Projects" :color blue)
-     ("n" (dired "~/src/nordita/norweb-2021") "Norweb" :color blue)
-     ("N" (dired "~/src/nordita/norweb-2021-dev") "Norweb-dev" :color blue)
-     ("o" (dired "~/src/openTA/openta") "OpenTA" :color blue)
-     ("C" (dired "~/home_config") "My config" :column "Mine" :color blue)
-     ("S" (dired "~/src/nelson/nlscripts") "My scripts" :color blue)
-     ("O" (dired "~/Dropbox/orgfiles") "Org" :color blue)
-     )
-
-  (global-set-key (kbd "C-,") 'hydra-files/body)
 
    (defhydra hydra-window (:color red :idle 0.0)
      "Window hydra"
@@ -2119,7 +2106,7 @@ This package can be used to tie related commands into a family of short bindings
 
   (global-set-key
    (kbd "C-c w")
-   (defhydra hydra-windows-nav (:color red)
+   (defhydra hydra-windows-alt (:color red)
      ("s" shrink-window-horizontally "shrink horizontally" :column "Sizing")
      ("e" enlarge-window-horizontally "enlarge horizontally")
      ("S" shrink-window "shrink vertically")
@@ -2127,12 +2114,12 @@ This package can be used to tie related commands into a family of short bindings
      ("b" balance-windows "balance window height")
      ("m" maximize-window "maximize current window")
      ("M" minimize-window "minimize current window")
-     ("h" split-window-below "split horizontally" :column "Split management")
+     ("H" split-window-below "split horizontally" :column "Split management")
      ("v" split-window-right "split vertically")
      ("d" delete-window "delete current window")
      ("x" delete-other-windows "delete-other-windows")
-     ("z" ace-window "ace window" :color blue :column "Navigation")
-     ("h" windmove-left "← window")
+     ;;("z" ace-window "ace window" :color blue :column "Navigation")
+     ("h" windmove-left "← window" :column "Navigation")
      ("j" windmove-down "↓ window")
      ("k" windmove-up "↑ window")
      ("l" windmove-right "→ window")
@@ -2140,19 +2127,25 @@ This package can be used to tie related commands into a family of short bindings
      ("q" nil "quit menu" :color blue :column nil)))
 
 
+  (defhydra hydra-nl-frames (:hint nil)
+    "Frames"
+    ("w" (nl/create-frame-in-workspace "emacs-ws19" "19") "Open Emacs frame in WS19"))
+
   (defhydra hydra-nl-common (:color red :hint nil)
-    "Common"
-    ("w" (nl/create-frame-in-workspace "emacs-ws19" "19") "WS19"))
+    ("f" hydra-nl-frames/body "frames" :color blue :column "Frames")
+    ("w" hydra-window/body "windows" :color blue :column "Windows")
+    ("n" hydra-windows-alt/body "windows alt" :color blue)
+    ("b" hydra-buffer/body "buffer" :color blue :column "Buffers")
+    ("a" hydra-nl-align/body "align" :color blue :column "Align")
+    ("c" nl/open-alacritty-here "alacrity here" :color blue :column "Shell"))
+
+  (key-chord-define-global "jv" 'hydra-nl-common/body)
   )
 #+end_src
 
 *** Aligning things
 
 Align by colons (handy for JavaScript), align by commas, and align by equal signs.
-
-Borrowed from:
-
-http://danconnor.com/post/5028ac91e8891a000000111f/align_and_columnize_key_value_data_in_emacs
 
 #+begin_src emacs-lisp
 (defun nl/align-regexp-command (regexp)

@@ -226,7 +226,6 @@
 (defhydra hydra-nl/angular-project (:color red :hint nil)
   ("j" hydra-nl/angular-jump-to-file/body "Jump to file" :color blue :column "Angular")
   ("c" hydra-nl/angular-compile/body "TypeScript compile" :color blue)
-  ("a" hydra-nl-align/body "align" :color blue)
   ("i" nl/indent-whole-buffer "indent buffer" :color blue)
   ("s" hydra-nl/angular-search/body "search" :color blue)
   ("t" hydra-nl/angular-test/body "test" :color blue))

@@ -145,7 +145,6 @@
 
 (defhydra hydra-nl-java-project (:color red :hint nil)
   "Project commands"
-  ("a" hydra-nl-align/body "align" :color blue :column "Java")
   ("f" hydra-nl/java-format/body "format" :color blue :column "Format")
   ("t" hydra-nl/java-test/body "test" :color blue :column "Test"))
 

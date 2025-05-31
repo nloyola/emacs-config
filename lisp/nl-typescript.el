@@ -90,7 +90,6 @@
                                   :related-files-fn #'nl/related-files)
 
 (defhydra hydra-nl/typescript-project (:color red :hint nil)
-  ("a" hydra-nl-align/body "align" :color blue)
   ("i" nl/indent-whole-buffer "indent buffer" :color blue))
 
 (key-chord-define typescript-ts-mode-map "jc" 'hydra-nl/typescript-project/body)
