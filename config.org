@@ -537,7 +537,7 @@ See: https://kristofferbalintona.me/posts/202206071000/
 
   :bind
   ("<home>" . nl/beginning-of-line-or-indentation)
-  ("<f5>" . nl/consult-compile)
+  ("<f5>" . projectile-compile-project)
   ("<C-f5>" . compile)
   )
 #+end_src
@@ -639,10 +639,13 @@ See https://github.com/doomemacs/themes/tree/screenshots#screenshots
 #+begin_src emacs-lisp
 (use-package doom-themes
   :init
+  (add-to-list 'custom-theme-load-path "~/src/github/elisp/doom-two-tone-themes/themes/")
+  (require 'doom-two-tone-themes)
+
   (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
         doom-themes-enable-italic t) ; if nil, italics is universally disabled
 
-  (load-theme 'doom-challenger-deep t)
+  (load-theme 'doom-navy-copper t)
   ;;(load-theme 'base16-brewer t)
 
   ;; Enable flashing mode-line on errors
@@ -666,17 +669,33 @@ Allow changing themes on the fly with the following.
   :init
   (defun ap/load-doom-theme (theme)
     "Disable active themes and load a Doom theme."
-    (interactive (list (intern (completing-read "Theme: "
-                                                (->> (custom-available-themes)
-                                                     (-map #'symbol-name)
-                                                     (--select (string-prefix-p "doom-" it))))))))
+    (interactive
+     (list
+      (intern
+       (completing-read
+        "Theme: "
+        (seq-filter
+         (lambda (it) (string-prefix-p "doom-" it))
+         (mapcar #'symbol-name (custom-available-themes))))))))
+
   (defun ap/switch-theme (theme)
     "Disable active themes and load THEME."
-    (interactive (list (intern (completing-read "Theme: "
-                                                (->> (custom-available-themes)
-                                                     (-map #'symbol-name))))))
+    (interactive
+     (list
+      (intern
+       (completing-read
+        "Theme: "
+        (mapcar #'symbol-name (custom-available-themes))))))
     (mapc #'disable-theme custom-enabled-themes)
     (load-theme theme 'no-confirm)))
+#+end_src
+
+****** Doom two tone themes
+
+#+begin_src emacs-lisp
+(add-to-list 'custom-theme-load-path "~/src/github/elisp/doom-two-tone-themes/themes/")
+(require 'doom-two-tone-themes)
+;;(setq doom-theme 'doom-navy-copper)
 #+end_src
 
 ** [[https://protesilaos.com/emacs/ef-themes#h:dd9e06f2-eef0-4afe-8a12-b7af5d597108][ef-themes]]
@@ -1466,9 +1485,11 @@ Complete anything.
   :preface
   (defun corfu-lsp-setup ()
     (setq-local completion-styles '(orderless)
-                completion-category-defaults nil))
+                completion-category-overrides '((lsp-capf (styles orderless)))))
   :hook (lsp-mode . corfu-lsp-setup)
   ;; Optional customizations
+  ;; :custom-face
+  ;; (corfu-current ((t (:background "#440F04"))))
   :custom
   (corfu-cycle t)                ;; Enable cycling for `corfu-next/previous'
   (corfu-auto t)                 ;; Enable auto completion
@@ -1490,6 +1511,11 @@ Complete anything.
   ;; `global-corfu-modes' to exclude certain modes.
   :init
   (global-corfu-mode))
+
+;; could not get this to work: ":custom-face"
+(with-eval-after-load 'corfu
+  (set-face-attribute 'corfu-current nil
+                      :background "#440F04"))
 
 ;; A few more useful configurations...
 (use-package emacs
@@ -2126,6 +2152,16 @@ This package can be used to tie related commands into a family of short bindings
      ("r" toggle-window-split "rotate windows") ; Located in utility functions
      ("q" nil "quit menu" :color blue :column nil)))
 
+  (defhydra hydra-git-gutter (:body-pre (git-gutter-mode 1) :hint nil)
+       ("n" git-gutter:next-hunk "next hunk")
+       ("p" git-gutter:previous-hunk "previous hunk")
+       ("h" (progn (goto-char (point-min)) (git-gutter:next-hunk 1)) "first hunk")
+       ("l" (progn (goto-char (point-min)) (git-gutter:previous-hunk 1)) "last hunk")
+       ("<SPC>" git-gutter:popup-hunk "popup hunk")
+       ("s" git-gutter:stage-hunk "stage hunk")
+       ("r" git-gutter:revert-hunk "revert hunk")
+       ("q" nil "quit"))
+
 
   (defhydra hydra-nl-frames (:hint nil)
     "Frames"
@@ -2137,7 +2173,8 @@ This package can be used to tie related commands into a family of short bindings
     ("n" hydra-windows-alt/body "windows alt" :color blue)
     ("b" hydra-buffer/body "buffer" :color blue :column "Buffers")
     ("a" hydra-nl-align/body "align" :color blue :column "Align")
-    ("c" nl/open-alacritty-here "alacrity here" :color blue :column "Shell"))
+    ("c" nl/open-alacritty-here "alacrity here" :color blue :column "Shell")
+    ("g" hydra-git-gutter/body "git" :color blue :column "Git"))
 
   (key-chord-define-global "jv" 'hydra-nl-common/body)
   )
@@ -2571,7 +2608,8 @@ Provides a minor mode that enables code folding and outlining based on indentati
   (defun nl/php-mode-hook ()
     "My PHP mode configuration."
     (require 'flycheck-phpstan)
-    (setq php-mode-lineup-cascaded-calls t)
+    (setq php-mode-lineup-cascaded-calls t
+          php-cs-fixer-config-option (concat (projectile-project-root) ".php-cs-fixer.php"))
     (flycheck-mode t)
     (subword-mode +1)
     ;;(prettier-mode)
@@ -2601,8 +2639,7 @@ Provides a minor mode that enables code folding and outlining based on indentati
           phpstan-level 6
           projectile-project-install-cmd "composer update"
           projectile-project-test-cmd  "composer host-test"
-          create-lockfiles nil
-          php-cs-fixer-config-option (concat (projectile-project-root) ".php-cs-fixer.php"))
+          create-lockfiles nil)
     (cond ((string= (projectile-project-root) (expand-file-name "~/src/nordita/norweb-2021/"))
            (setq lsp-intelephense-files-exclude
                  (vconcat lsp-intelephense-files-exclude
