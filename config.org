@@ -510,6 +510,20 @@ See: https://kristofferbalintona.me/posts/202206071000/
         (back-to-indentation)
       (beginning-of-line)))
 
+  (defun my/consult-projectile-compile-with-history ()
+    "Prompt for a compile command using Consult and Projectile's default."
+    (interactive)
+    (require 'projectile)
+    (let* ((project-root (projectile-project-root))
+           (default (projectile-compilation-command project-root))
+           (command (consult--read
+                     (delete-dups (cons default compile-history))
+                     :prompt "Compile command: "
+                     :default default)))
+      (add-to-history 'compile-history command)
+      (let ((default-directory project-root))
+        (compile command))))
+
   ;; https://www.emacs.dyerdwelling.family/emacs/20240804075952-emacs--finding-files-using-completing-read/
   (defun nl/find-file ()
     "Find file from current directory in many different ways."
@@ -537,7 +551,7 @@ See: https://kristofferbalintona.me/posts/202206071000/
 
   :bind
   ("<home>" . nl/beginning-of-line-or-indentation)
-  ("<f5>" . projectile-compile-project)
+  ("<f5>" . my/consult-projectile-compile-with-history)
   ("<C-f5>" . compile)
   )
 #+end_src
@@ -638,14 +652,10 @@ See https://github.com/doomemacs/themes/tree/screenshots#screenshots
 
 #+begin_src emacs-lisp
 (use-package doom-themes
-  :init
-  (add-to-list 'custom-theme-load-path "~/src/github/elisp/doom-two-tone-themes/themes/")
-  (require 'doom-two-tone-themes)
-
+  :config
   (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
-        doom-themes-enable-italic t) ; if nil, italics is universally disabled
+       doom-themes-enable-italic t) ; if nil, italics is universally disabled
 
-  (load-theme 'doom-navy-copper t)
   ;;(load-theme 'base16-brewer t)
 
   ;; Enable flashing mode-line on errors
@@ -659,7 +669,8 @@ See https://github.com/doomemacs/themes/tree/screenshots#screenshots
   (doom-themes-org-config)
   )
 
-
+(add-to-list 'custom-theme-load-path (file-name-as-directory (expand-file-name "~/src/github/elisp/doom-two-tone-themes/themes/")))
+(load-theme 'doom-navy-copper t)
 #+end_src
 
 Allow changing themes on the fly with the following.
@@ -1326,10 +1337,19 @@ Complete anything.
 
 #+begin_src emacs-lisp
 (defun nl/consult-ripgrep-pwd ()
+  "Run `consult-ripgrep` in the current directory."
   (interactive)
   (consult-ripgrep (if (buffer-file-name)
                        default-directory
                      dired-directory)))
+
+(defun nl/consult-ripgrep-project-src ()
+  "Run `consult-ripgrep` in the Projectile project root."
+  (interactive)
+  (let ((project-root (concat (projectile-project-root) "src/")))
+    (if project-root
+        (consult-ripgrep project-root)
+      (message "Not in a Projectile project."))))
 #+end_src
 
 *** [[https://github.com/gagbo/consult-lsp][consult-lsp]]
@@ -1974,7 +1994,31 @@ See https://tsdh.org/posts/2022-08-01-difftastic-diffing-with-magit.html
 (use-package magit-delta
   :hook (magit-mode . magit-delta-mode))
 #+end_src
+** Go
 
+#+begin_src emacs-lisp
+(use-package go-mode
+  :ensure t
+  :mode "\\.go\\'"
+  :init
+  ;; prefer gofumpt; fall back to gofmt
+  (setq gofmt-command (if (executable-find "gofumpt") "gofumpt" "gofmt"))
+  :hook
+  (
+   (before-save . gofmt-before-save)
+   (go-mode . nl/go-mode-hook)
+   (go-ts-mode . nl/go-mode-hook)
+   )
+  :preface
+  (defun nl/go-before-save-hook ()
+    (when (bound-and-true-p lsp-mode)
+      (lsp-format-buffer)
+      (lsp-organize-imports)))
+  (defun nl/go-mode-hook ()
+    (add-hook 'before-save-hook 'nl/go-before-save-hook)
+    )
+  )
+#+end_src
 ** [[https://github.com/karthink/gptel][gptel]]
 
 Found this packe hard to use.
@@ -2362,6 +2406,9 @@ Add filler lorem ipsum text to Emacs.
   (lsp-rust-analyzer-display-reborrow-hints nil)
   :config
   (lsp-enable-which-key-integration t)
+  (lsp-register-custom-settings
+   '(("gopls.staticcheck" t t)               ; enable staticcheck if installed
+     ("gopls.gofumpt" t t)))
   (setq read-process-output-max (* 1024 1024)
         lsp-prefer-capf t
         lsp-idle-delay 0.5
@@ -3151,9 +3198,10 @@ To save all buffers that wgrep has changed, run =M-x wgrep-save-all-buffers=.
 
 #+begin_src emacs-lisp
 (use-package web-mode
+  :after php-ts-mode
   :mode (("\\.html\\'" . web-mode)
          ("\\.css\\'" . web-mode)
-         ("\\.tpl.php\\'" . web-mode))
+         ("\\.tpl\\.php\\'" . web-mode))
   :preface
   (defun nl/web-mode-hook ()
     (lsp-deferred)
@@ -3168,8 +3216,6 @@ To save all buffers that wgrep has changed, run =M-x wgrep-save-all-buffers=.
   (web-mode-css-indent-offset 2)
   (web-mode-code-indent-offset 4)
   (web-mode-block-padding 4)
-  :config
-  (add-to-list 'auto-mode-alist '("\\.tpl\\.php\\'" . php-ts-mode))
   )
 #+end_src
 
@@ -3189,10 +3235,10 @@ To save all buffers that wgrep has changed, run =M-x wgrep-save-all-buffers=.
            (file-name (nth 1 (split-string buffer-file-name (project-root (project-current)))))
            (base-name (replace-regexp-in-string "\.yaml$" "" (file-name-nondirectory file-name))))
       (unless file-name (user-error "File not in project"))
-      (compile
-       (format "./docker-wrapper.sh cli pw-page %s build --no-ansi -d -f -i ../default_pages/main_site" base-name))
       ;; (compile
-      ;;  (format "cd public && php cli.php pw-page %s build --no-ansi -d -f -i ../default_pages/main_site" base-name))
+      ;;  (format "./docker-wrapper.sh cli pw-page %s build --no-ansi -f -i ../default_pages/main_site" base-name))
+      (compile
+       (format "cd public && php cli.php pw-page %s build --no-ansi -vvv -f -i ../default_pages/main_site" base-name))
       ))
 
   (defhydra hydra-nl-yaml (:color red :hint nil)
@@ -3240,7 +3286,6 @@ See above.
     :bind
     ("C-c c" . org-capture)
     :hook
-    (org-mode . variable-pitch-mode)
     (org-mode . visual-line-mode)
     ;;(org-mode . nl/org-mode-setup)
     :preface
@@ -3256,9 +3301,9 @@ See above.
                (string= lang "sqlite")
                )))
     :config
-    ;; (custom-set-faces
+    (custom-set-faces
     ;; '(org-table ((t (:inherit fixed-pitch :foreground "#91b831" :height 120))))
-    ;; '(org-block ((t (:inherit fixed-pitch))))
+    '(org-block ((t (:background "gray18" :inherit fixed-pitch))))
     ;; '(org-code ((t (:inherit fixed-pitch :height 110))))
     ;; '(org-verbatim ((t (:inherit (shadow fixed-pitch) :height 120))))
     ;; '(org-link ((t (:underline t))))
@@ -3274,12 +3319,12 @@ See above.
     ;; ;; '(org-level-3 ((t (:inherit outline-3 :height 160))))
     ;; ;; '(org-level-4 ((t (:inherit outline-4 :height 140))))
     ;; ;; '(org-level-5 ((t (:inherit outline-5 :height 120))))
-    ;; )
+    )
     (setq org-confirm-babel-evaluate 'nl/org-confirm-babel-evaluate
           ;;org-ellipsis " ⤵"
           ;;org-hide-emphasis-markers t
           org-catch-invisible-edits 'error
-          ;;org-startup-indented t
+          org-startup-indented t
           org-cycle-include-plain-lists 'integrate
           org-return-follows-link t
           org-M-RET-may-split-line nil
@@ -3328,6 +3373,7 @@ See above.
   :hook
   (org-mode . org-modern-mode)
   (org-agenda-finalize . org-modern-agenda)
+  (org-modern-mode . variable-pitch-mode)
   :custom
   (org-modern-star '("◉" "○" "✸" "✿")) ;; Custom bullets for headlines
   (org-modern-list '((43 . "➤") (45 . "•") (42 . "◦"))) ;; Custom list markers
