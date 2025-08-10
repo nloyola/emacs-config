@@ -668,9 +668,6 @@ See https://github.com/doomemacs/themes/tree/screenshots#screenshots
   ;; Corrects (and improves) org-mode's native fontification.
   (doom-themes-org-config)
   )
-
-(add-to-list 'custom-theme-load-path (file-name-as-directory (expand-file-name "~/src/github/elisp/doom-two-tone-themes/themes/")))
-(load-theme 'doom-navy-copper t)
 #+end_src
 
 Allow changing themes on the fly with the following.
@@ -701,12 +698,11 @@ Allow changing themes on the fly with the following.
     (load-theme theme 'no-confirm)))
 #+end_src
 
-****** Doom two tone themes
+*** Doom two tone themes
 
 #+begin_src emacs-lisp
 (add-to-list 'custom-theme-load-path "~/src/github/elisp/doom-two-tone-themes/themes/")
-(require 'doom-two-tone-themes)
-;;(setq doom-theme 'doom-navy-copper)
+(load-theme 'doom-navy-copper t)
 #+end_src
 
 ** [[https://protesilaos.com/emacs/ef-themes#h:dd9e06f2-eef0-4afe-8a12-b7af5d597108][ef-themes]]
@@ -2646,8 +2642,7 @@ Provides a minor mode that enables code folding and outlining based on indentati
 (use-package php-mode
   :mode "\\.php\\'"
   :hook
-  (php-mode . nl/php-mode-hook)
-  (php-ts-mode . nl/php-mode-hook)
+  ((php-mode php-ts-mode) . nl/php-mode-hook)
   :preface
   (use-package flycheck-phpstan)
   (use-package nl-nordita-php-project :demand :load-path "~/.emacs.d/lisp")
@@ -2911,40 +2906,54 @@ Pulse highlight line on demand or after running select functions
 #+end_src
 
 ** Python
+*** [[https://github.com/jorgenschaefer/pyvenv][pyvenv.el]]
+
+#+begin_src emacs-lisp
+(use-package pyvenv
+  :hook (python-base-mode . nl/auto-activate-venv)
+  :config
+  (defun nl/auto-activate-venv ()
+    "If a .venv exists at or above the project root, activate it."
+    (let ((root (or (and (fboundp 'project-root)
+                         (when-let ((pr (project-current nil)))
+                           (project-root pr)))
+                    (locate-dominating-file default-directory ".git")
+                    default-directory)))
+      (when root
+        (let ((venv (expand-file-name ".venv" root)))
+          (when (file-directory-p venv)
+            (pyvenv-activate venv))))))
+
+  ;; Optional: display current venv in mode line
+  (setq pyvenv-mode-line-indicator '(pyvenv-virtual-env-name (" venv:" pyvenv-virtual-env-name)))
+  (pyvenv-mode 1))
+#+end_src
+
 *** [[https://github.com/scop/emacs-ruff-format][ruff-format]]
 
 #+begin_src emacs-lisp
 (use-package ruff-format
-  :preface
-  (defun nl/python-hook ()
-    (require 'ruff-format)
-    (lsp-deferred)
-    (ruff-format-on-save-mode))
   :hook
-  (python-ts-mode . nl/python-hook)
+  ((python-mode python-ts-mode) . nl/python-ruff-hook)
+  :init
+  (defun nl/python-ruff-hook ()
+    (require 'ruff-format)
+    (ruff-format-on-save-mode))
   :config
   (setq ruff-format-command "ruff"))
-#+end_src
-
-*** [[https://github.com/jorgenschaefer/pyvenv][pyvenv.el]]
-
-#+begin_src emacs-lisp
-(use-package pyvenv)
 #+end_src
 
 *** lsp-pyright
 
 Using ruff now.
 
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp
 (use-package lsp-pyright
-  :preface
-  (defun nl/pyright-hook ()
-    (require 'lsp-pyright)
+  :hook ((python-mode python-ts-mode) . nl/pytjon-pyright-rook)
+  :init
+  (defun nl/pytjon-pyright-rook ()
     (lsp-deferred)
-    (python-black-on-save-mode))
-  :hook
-  (python-ts-mode . nl/pyright-hook))
+    (require 'lsp-pyright)))
 #+end_src
 
 *** [[https://github.com/wbolster/emacs-python-black][emacs-python-black]]
