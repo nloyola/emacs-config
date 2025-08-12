@@ -2012,6 +2012,8 @@ See https://tsdh.org/posts/2022-08-01-difftastic-diffing-with-magit.html
       (lsp-organize-imports)))
   (defun nl/go-mode-hook ()
     (add-hook 'before-save-hook 'nl/go-before-save-hook)
+    (setq tab-width 4)
+    (setq indent-tabs-mode t)
     )
   )
 #+end_src
