@@ -1007,7 +1007,7 @@ Remember position in a file.
   :preface
   (defun nl/sql-mode-hook ()
     "My SQL Mode configuration"
-    (lsp-deferred)
+    ;;(lsp-deferred)
     (flycheck-mode t)
     )
   :hook ((sql-mode . nl/sql-mode-hook))
@@ -2012,11 +2012,13 @@ See https://tsdh.org/posts/2022-08-01-difftastic-diffing-with-magit.html
       (lsp-organize-imports)))
   (defun nl/go-mode-hook ()
     (add-hook 'before-save-hook 'nl/go-before-save-hook)
+    (lsp-deferred)
     (setq tab-width 4)
     (setq indent-tabs-mode t)
     )
   )
 #+end_src
+
 ** [[https://github.com/karthink/gptel][gptel]]
 
 Found this packe hard to use.
@@ -3212,7 +3214,8 @@ To save all buffers that wgrep has changed, run =M-x wgrep-save-all-buffers=.
   :after php-ts-mode
   :mode (("\\.html\\'" . web-mode)
          ("\\.css\\'" . web-mode)
-         ("\\.tpl\\.php\\'" . web-mode))
+         ("\\.tpl\\.php\\'" . web-mode)
+         ("\\.tmpl\\.html\\'" . web-mode))
   :preface
   (defun nl/web-mode-hook ()
     (lsp-deferred)
@@ -3227,6 +3230,17 @@ To save all buffers that wgrep has changed, run =M-x wgrep-save-all-buffers=.
   (web-mode-css-indent-offset 2)
   (web-mode-code-indent-offset 4)
   (web-mode-block-padding 4)
+  :config
+  (add-to-list 'web-mode-engines-alist '("go" . "\\.tmpl\\.html\\'"))
+  (add-to-list 'web-mode-engines-alist '("php" . "\\.tpl\\.php\\'"))
+  (setq web-mode-enable-block-face t
+        web-mode-enable-part-face t
+        web-mode-enable-current-column-highlight t
+        web-mode-enable-current-element-highlight t
+        web-mode-enable-auto-pairing t
+        web-mode-enable-auto-closing t
+        web-mode-enable-auto-opening t
+        web-mode-enable-comment-interpolation t)
   )
 #+end_src
 
