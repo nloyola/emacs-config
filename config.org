@@ -887,7 +887,7 @@ A minimalist package that enhances compilation-mode.
 (use-package css-mode
   :preface
   (defun nl/css-mode-hook ()
-    (lsp-deferred))
+    (my/lsp-deferred-unless-remote))
   :hook (css-mode . nl/css-mode-hook)
   )
 #+end_src
@@ -1007,7 +1007,7 @@ Remember position in a file.
   :preface
   (defun nl/sql-mode-hook ()
     "My SQL Mode configuration"
-    ;;(lsp-deferred)
+    ;;(my/lsp-deferred-unless-remote)
     (flycheck-mode t)
     )
   :hook ((sql-mode . nl/sql-mode-hook))
@@ -2012,7 +2012,7 @@ See https://tsdh.org/posts/2022-08-01-difftastic-diffing-with-magit.html
       (lsp-organize-imports)))
   (defun nl/go-mode-hook ()
     (add-hook 'before-save-hook 'nl/go-before-save-hook)
-    (lsp-deferred)
+    (my/lsp-deferred-unless-remote)
     (setq tab-width 4)
     (setq indent-tabs-mode t)
     )
@@ -2286,7 +2286,7 @@ Indent, move around and act on code based on indentation.
   (use-package nl-java-project :demand :load-path "~/.emacs.d/lisp")
   (defun nl/java-mode-hook ()
     "My Java mode configuration."
-    (lsp-deferred)
+    (my/lsp-deferred-unless-remote)
     (flycheck-mode t)
     (subword-mode +1)
     (setq indent-tabs-mode nil
@@ -2326,7 +2326,7 @@ Indent, move around and act on code based on indentation.
   :preface
   (defun nl/javascript-mode ()
     "Setup JavaScript mode."
-    (lsp-deferred)
+    (my/lsp-deferred-unless-remote)
     (setq column-enforce-column 120)
     (flycheck-mode +1)
     (column-enforce-mode +1)
@@ -2671,7 +2671,7 @@ Provides a minor mode that enables code folding and outlining based on indentati
   (defun nl-php-project-settings ()
     ;; this style is based on the symfony2 style
     ;;(php-set-style "nl/php")
-    (lsp-deferred))
+    (my/lsp-deferred-unless-remote))
 
   (defun nl-nordita-project-settings ()
     "Nordita's PHP mode configuration."
@@ -2817,7 +2817,14 @@ Allows the Emacs editor to fix most issues in PHP code when you want to follow t
 
 ** prog-mode
 
+Disable LSP mode for remote buffers to save performance.
+
 #+begin_src emacs-lisp
+(defun my/lsp-deferred-unless-remote ()
+  "Enable LSP only for local files; disable for remote (TRAMP)."
+  (unless (file-remote-p (or buffer-file-name default-directory))
+    (lsp)))
+
 (use-package prog-mode
   :ensure nil
   :preface
@@ -2956,7 +2963,7 @@ Using ruff now.
   :hook ((python-mode python-ts-mode) . nl/pytjon-pyright-rook)
   :init
   (defun nl/pytjon-pyright-rook ()
-    (lsp-deferred)
+    (my/lsp-deferred-unless-remote)
     (require 'lsp-pyright)))
 #+end_src
 
@@ -2967,7 +2974,6 @@ Using ruff now
 #+begin_src emacs-lisp :tangle no
 (use-package python-black)
 #+end_src
-
 
 ** [[https://github.com/purcell/emacs-reformatter][reformatter]]
 
@@ -3086,6 +3092,94 @@ the beginning of the buffer.
 (use-package substitute
   :bind-keymap ("C-c s" . substitute-prefix-map))
 #+end_src
+** tramp
+
+#+begin_src emacs-lisp
+;; TRAMP performance enhancements
+(use-package tramp
+  :defer t
+  :config
+  ;; Prevent lockfile and auto-save clutter
+  (setq remote-file-name-inhibit-locks t
+        remote-file-name-inhibit-auto-save-visited t
+        tramp-use-scp-direct-remote-copying t)     ;; prefer scp for file transfers
+  ;; Increase threshold for inline vs out-of-band copying (optimize for >1 MB)
+  (setq tramp-copy-size-limit (* 1024 1024)      ;; 1 MB threshold
+        tramp-verbose 2)                         ;; modest verbosity for debugging
+  ;; Re-enable SSH ControlMaster in compile to avoid password prompt per connection
+  (with-eval-after-load 'compile
+    (remove-hook 'compilation-mode-hook
+                 #'tramp-compile-disable-ssh-controlmaster-options)))
+
+;; Enable direct async processes on TRAMP (Emacs tramp 2.7+)
+(use-package tramp
+  :config
+  (connection-local-set-profile-variables
+   'remote-direct-async-process
+   '((tramp-direct-async-process . t)))
+  (connection-local-set-profiles
+   '(:application tramp :protocol "scp")
+   'remote-direct-async-process)
+  ;; Ensure magit works over async TRAMP
+  (setq magit-tramp-pipe-stty-settings 'pty))
+
+;; Magit optimizations for TRAMP sessions
+;; (use-package magit
+;;   :commands (magit-status magit-dispatch magit-file-dispatch)
+;;   :init
+;;   ;; Avoid status-buffer overhead; use dispatch commands when possible
+;;   :config
+;;   (setq magit-commit-show-diff nil
+;;         magit-branch-direct-configure nil
+;;         magit-refresh-status-buffer nil)
+;;   ;; Optionally, remind to use magit-dispatch or shell commands over TRAMP
+;;   )
+
+;; Cache remote-only operations to avoid repeated TRAMP calls
+(defmacro my/advice-memoize-remote (fn cache-var)
+  "Wrap FN to memoize remote results in CACHE-VAR."
+  `(advice-add ,fn :around
+               (lambda (orig &rest args)
+                 (let ((key (car args)))
+                   (if (and key (file-remote-p key))
+                       (let ((entry (assoc key ,cache-var)))
+                         (if entry
+                             (cdr entry)
+                           (let ((result (apply orig args)))
+                             (setq ,cache-var (cons (cons key result) ,cache-var))
+                             result)))
+                     (apply orig args))))))
+
+(defvar my/project-current-cache nil)
+(my/advice-memoize-remote project-current my/project-current-cache)
+
+(defvar my/magit-toplevel-cache nil)
+(my/advice-memoize-remote magit-toplevel my/magit-toplevel-cache)
+
+(defvar my/vc-git-root-cache nil)
+(advice-add 'vc-git-root :around
+            (lambda (orig file)
+              (let ((dir (file-name-directory file)))
+                (if (file-remote-p file)
+                    (or (cdr (assoc dir my/vc-git-root-cache))
+                        (let ((res (funcall orig file)))
+                          (setq my/vc-git-root-cache
+                                (cons (cons dir res) my/vc-git-root-cache))
+                          res))
+                  (funcall orig file)))))
+
+(defvar my/counsel-git-cands-cache nil)
+(advice-add 'counsel-git-cands :around
+            (lambda (orig dir)
+              (if (file-remote-p dir)
+                  (or (cdr (assoc dir my/counsel-git-cands-cache))
+                      (let ((res (funcall orig dir)))
+                        (setq my/counsel-git-cands-cache
+                              (cons (cons dir res) my/counsel-git-cands-cache))
+                        res))
+                (funcall orig dir))))
+#+end_src
+
 ** typescript
 
 #+begin_src emacs-lisp
@@ -3131,7 +3225,7 @@ the beginning of the buffer.
   (use-package nl-react :load-path "~/.emacs.d/lisp")
   (defun nl/typescript-mode ()
     "Setup TypeScript/TSX mode."
-    (lsp-deferred)
+    (my/lsp-deferred-unless-remote)
     (setq column-enforce-column 120)
     (flycheck-mode +1)
     (column-enforce-mode +1)
@@ -3160,7 +3254,7 @@ the beginning of the buffer.
 #+begin_src emacs-lisp
 (defun nl/vue-mode-hook ()
   (subword-mode)
-  (lsp-deferred)
+  (my/lsp-deferred-unless-remote)
   (display-line-numbers-mode)
   (yas-minor-mode 1))
 
@@ -3218,7 +3312,7 @@ To save all buffers that wgrep has changed, run =M-x wgrep-save-all-buffers=.
          ("\\.tmpl\\.html\\'" . web-mode))
   :preface
   (defun nl/web-mode-hook ()
-    (lsp-deferred)
+    (my/lsp-deferred-unless-remote)
     (prettier-mode)
     (setq web-mode-auto-quote-style 1)
     (local-set-key (kbd "M-q") #'fill-paragraph)) ;; did not work with :bind)
