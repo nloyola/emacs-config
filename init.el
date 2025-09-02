@@ -77,6 +77,9 @@
 (unless (assoc-default "nongnu" package-archives)
   (add-to-list 'package-archives '("nongnu" . "http://elpa.nongnu.org/packages/") t))
 
+(setf (alist-get "gnu" package-archives nil nil #'string=)
+      "https://www.mirrorservice.org/sites/elpa.gnu.org/packages/")
+
 (setq package-archive-priorities
       '(;;("melpa-stable" . 10)
         ;; ("marmalade" . 7)

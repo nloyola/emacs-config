@@ -1,3 +1,4 @@
+
 #+TITLE: Emacs Configuration
 #+AUTHOR: Nelson Loyola
 #+STARTUP: content
@@ -10,6 +11,23 @@
 
 Links:
 - ~use-pacakge~: https://github.com/jwiegley/use-package
+
+* Usage
+** Registers
+
+- ~C-x r SPC r~ :: Record the position of point and the current buffer in register r (point-to-register).
+
+- ~C-x r j r~ :: Jump to the position and buffer saved in register r (jump-to-register).
+
+- ~M-x append-to-register RET r~ :: Append region to text in register r.
+
+- ~M-#~ :: consult-register-load
+
+- ~C-M-#~ :: consult-register
+
+- ~C-u number C-x r n r~ :: Store number into register r (number-to-register).
+
+- ~C-u number C-x r +r~ :: Increment the number in register r by number (increment-register).
 
 * Basic settings
 
@@ -192,6 +210,9 @@ See https://tony-zorman.com/posts/emacs-potpourri.html
 
   (windmove-default-keybindings 'meta)
 
+  (setq sh-basic-offset 4
+      sh-indent-after-case 'always)
+
   (electric-pair-mode 1)
   (setq electric-pair-pairs
         '(
@@ -315,7 +336,7 @@ Help from here:  https://howardabrams.com/hamacs/ha-display.html#org54a2529
 (defun nl/linux-monitor-fontsize ()
   "Quickly set reset my font size when I connect my laptop to a monitor on Linux."
   (interactive)
-  (nl/set-favorite-font-size 12))
+  (nl/set-favorite-font-size 11))
 
 (defun nl/mac-laptop-fontsize ()
   "Quickly set reset my font size when I disconnect my laptop to a monitor from a Mac."
@@ -625,7 +646,7 @@ See: https://kristofferbalintona.me/posts/202206071000/
                ,nl/side-window-parameters))
 
 (add-to-list 'display-buffer-alist
-             '("\\(?:\\*\\(?:grep\\|Warnings\\|xref\\|eat\\)\\*\\)"
+             '("\\(?:\\*\\(?:grep\\|Warnings\\|xref\\)\\*\\)"
                display-buffer-in-side-window
                (window-height . 0.18)
                (side . bottom)
@@ -636,7 +657,6 @@ See: https://kristofferbalintona.me/posts/202206071000/
 (add-to-list 'display-buffer-alist
              '("\\*\\(?:compilation\\|Backtrace\\|Warnings\\|Completions\\|Compile-Log\\|cargo-run\\|\\Flycheck.*\\)\\*"
                display-buffer-in-side-window
-               (window-height . 0.2)
                (side . bottom)
                (slot . 1) ;; right side
                (preserve-size . (nil . nil))
@@ -866,19 +886,18 @@ A minimalist package that enhances compilation-mode.
 *** =ansi-color=
 
 #+begin_src emacs-lisp
+(defun my/apply-ansi-color-to-compilation-buffer ()
+  "Apply carriage-return fix and ANSI colors to compilation output."
+  (ansi-color-apply-on-region compilation-filter-start (point)))
+
 (use-package ansi-color
   :ensure nil
   :hook ((shell-mode . ansi-color-for-comint-mode-on)
          (compilation-filter . my/apply-ansi-color-to-compilation-buffer))
   :config
-  ;; Function to apply ANSI colors in *compilation* buffer
-  (defun my/apply-ansi-color-to-compilation-buffer ()
-    (let ((inhibit-read-only t))
-      (ansi-color-apply-on-region compilation-filter-start (point))))
-
+  ;; Customize ANSI colors if you like
   (set-face-attribute 'ansi-color-red nil :background "#440000")
-  (set-face-attribute 'ansi-color-blue nil :background "#000055")
-  )
+  (set-face-attribute 'ansi-color-blue nil :background "#000055"))
 #+end_src
 
 ** =css-mode=
@@ -1019,6 +1038,8 @@ Remember position in a file.
 Had to install TSX tag =v0.20.2= since the latest in the repository cause a parsing failure
 
 #+begin_src emacs-lisp
+(add-to-list 'warning-suppress-types '(treesit-font-lock-rules-mismatch))
+
 (use-package treesit-auto
   :config
   (global-treesit-auto-mode))
@@ -1035,12 +1056,14 @@ Had to install TSX tag =v0.20.2= since the latest in the repository cause a pars
      (html "https://github.com/tree-sitter/tree-sitter-html")
      (java "https://github.com/tree-sitter/tree-sitter-java")
      (javascript "https://github.com/tree-sitter/tree-sitter-javascript" "master" "src")
+     ;;(javascript "https://github.com/tree-sitter/tree-sitter-javascript")
      (json "https://github.com/tree-sitter/tree-sitter-json")
      (make "https://github.com/alemuller/tree-sitter-make")
      (markdown "https://github.com/ikatyang/tree-sitter-markdown")
-     ;; (php "https://github.com/tree-sitter/tree-sitter-php")
-     (php "https://github.com/tree-sitter/tree-sitter-php" "v0.23.10" "php/src")
+     ;;(php "https://github.com/tree-sitter/tree-sitter-php")
+     (php "https://github.com/tree-sitter/tree-sitter-php" "v0.24.1" "php/src")
      (python "https://github.com/tree-sitter/tree-sitter-python")
+     (templ "https://github.com/vrischmann/tree-sitter-templ")
      (toml "https://github.com/tree-sitter/tree-sitter-toml")
      (tsx "https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src")
      ;;(tsx "https://github.com/tree-sitter/tree-sitter-typescript" "v0.23.2" "tsx/src")
@@ -1049,13 +1072,14 @@ Had to install TSX tag =v0.20.2= since the latest in the repository cause a pars
      (vue "https://github.com/ikatyang/tree-sitter-vue")))
   (setq major-mode-remap-alist
         '((bash-mode . bash-ts-mode)
-          (js2-mode . js-ts-mode)
-          (typescript-mode . typescript-ts-mode)
-          (json-mode . json-ts-mode)
           (css-mode . css-ts-mode)
+          (go-mode . go-ts-mode)
           (java-mode . java-ts-mode)
+          (js2-mode . js-ts-mode)
+          (json-mode . json-ts-mode)
           (php-mode . php-ts-mode)
           (python-mode . python-ts-mode)
+          (typescript-mode . typescript-ts-mode)
           (yaml-mode . yaml-ts-mode))
         )
   (setq treesit-auto-fallback-alist
@@ -1339,10 +1363,12 @@ Complete anything.
                        default-directory
                      dired-directory)))
 
+(defvar nl/project-src-folder "src")
+
 (defun nl/consult-ripgrep-project-src ()
   "Run `consult-ripgrep` in the Projectile project root."
   (interactive)
-  (let ((project-root (concat (projectile-project-root) "src/")))
+  (let ((project-root (concat (projectile-project-root) nl/project-src-folder "/")))
     (if project-root
         (consult-ripgrep project-root)
       (message "Not in a Projectile project."))))
@@ -1568,6 +1594,8 @@ Complete anything.
 
 #+begin_src emacs-lisp
 (use-package eat
+  ;; ensure the eat entry points are autoloaded
+  :commands (eat eat-other-window)
   :custom-face
   (eat-term-color-0 ((t :foreground "deep sky blue")))
   (eat-term-color-8 ((t :foreground "grey57")))
@@ -1993,6 +2021,18 @@ See https://tsdh.org/posts/2022-08-01-difftastic-diffing-with-magit.html
 ** Go
 
 #+begin_src emacs-lisp
+(defun nl/go-before-save-hook ()
+    (when (bound-and-true-p lsp-mode)
+      (lsp-format-buffer)
+      (lsp-organize-imports)))
+
+(defun nl/go-mode-hook ()
+    (add-hook 'before-save-hook 'nl/go-before-save-hook)
+    (my/lsp-deferred-unless-remote)
+    (subword-mode +1)
+    (setq indent-tabs-mode nil
+          tab-width 4))
+
 (use-package go-mode
   :ensure t
   :mode "\\.go\\'"
@@ -2000,23 +2040,27 @@ See https://tsdh.org/posts/2022-08-01-difftastic-diffing-with-magit.html
   ;; prefer gofumpt; fall back to gofmt
   (setq gofmt-command (if (executable-find "gofumpt") "gofumpt" "gofmt"))
   :hook
-  (
-   (before-save . gofmt-before-save)
+  ((before-save . gofmt-before-save)
    (go-mode . nl/go-mode-hook)
-   (go-ts-mode . nl/go-mode-hook)
-   )
-  :preface
-  (defun nl/go-before-save-hook ()
-    (when (bound-and-true-p lsp-mode)
-      (lsp-format-buffer)
-      (lsp-organize-imports)))
-  (defun nl/go-mode-hook ()
-    (add-hook 'before-save-hook 'nl/go-before-save-hook)
-    (my/lsp-deferred-unless-remote)
-    (setq tab-width 4)
-    (setq indent-tabs-mode t)
-    )
+   (go-ts-mode . nl/go-mode-hook))
   )
+#+end_src
+
+*** templ-ts-mode
+
+#+begin_src emacs-lisp
+(defun nl/templ-mode-hook()
+  ;; visual width of a tab character
+  ;;(setq tab-width 4)
+  (subword-mode +1)
+  )
+
+(use-package templ-ts-mode
+  :after js
+  :load-path "~/src/github/elisp/templ-ts-mode"
+  :mode "\\.templ\\'"
+  :hook
+  (templ-ts-mode . nl/templ-mode-hook))
 #+end_src
 
 ** [[https://github.com/karthink/gptel][gptel]]
@@ -2211,11 +2255,16 @@ This package can be used to tie related commands into a family of short bindings
     "Frames"
     ("w" (nl/create-frame-in-workspace "emacs-ws19" "19") "Open Emacs frame in WS19"))
 
+  (defhydra hydra-nl-search (:hint nil)
+    "Search"
+    ("p" (nl/consult-ripgrep-project-src) "project's src folder" :exit t))
+
   (defhydra hydra-nl-common (:color red :hint nil)
     ("f" hydra-nl-frames/body "frames" :color blue :column "Frames")
     ("w" hydra-window/body "windows" :color blue :column "Windows")
     ("n" hydra-windows-alt/body "windows alt" :color blue)
     ("b" hydra-buffer/body "buffer" :color blue :column "Buffers")
+    ("s" hydra-nl-search/body "search" :color blue :column "Search")
     ("a" hydra-nl-align/body "align" :color blue :column "Align")
     ("c" nl/open-alacritty-here "alacrity here" :color blue :column "Shell")
     ("g" hydra-git-gutter/body "git" :color blue :column "Git"))
@@ -2313,6 +2362,7 @@ Indent, move around and act on code based on indentation.
   ;;(lsp-java-save-actions-organize-imports t)
   )
 #+end_src
+
 ** JavaScript
 
 #+begin_src emacs-lisp
@@ -2351,6 +2401,26 @@ Jinx is a fast just-in-time spell-checker for Emacs.
                '(jinx grid (vertico-grid-annotate . 20)))
   )
 #+end_src
+
+** js-mode
+
+#+begin_src emacs-lisp :tangle no
+;; Load JS early, then create back-compat vars from the new functions.
+(use-package js
+  :ensure nil
+  :defer nil
+  :config
+  ;; If Emacs exposes a FUNCTION js--treesit-indent-rules, also define a VAR.
+  (when (and (fboundp 'js--treesit-indent-rules)
+             (not (boundp 'js--treesit-indent-rules)))
+    (defvar js--treesit-indent-rules (funcall #'js--treesit-indent-rules)))
+
+  ;; Same story for font-lock settings.
+  (when (and (fboundp 'js--treesit-font-lock-settings)
+             (not (boundp 'js--treesit-font-lock-settings)))
+    (defvar js--treesit-font-lock-settings (funcall #'js--treesit-font-lock-settings))))
+#+end_src
+
 ** [[https://github.com/emacsorphanage/key-chord][key-chord]]
 
 See =init.el=.
@@ -2585,7 +2655,10 @@ Sometimes you end up with cursors outside of your view. You can scroll the scree
                ("y"   . mc/mark-next-symbol-like-this)
                ("Y"   . mc/mark-previous-symbol-like-this)
                ("w"   . mc/mark-next-word-like-this)
-               ("W"   . mc/mark-previous-word-like-this))))
+               ("W"   . mc/mark-previous-word-like-this)))
+  :config
+  (setq mc/always-run-for-all t)
+  )
 #+end_src
 
 *
@@ -2975,6 +3048,17 @@ Using ruff now
 (use-package python-black)
 #+end_src
 
+
+**  [][rainbow-mode]
+
+#+begin_src emacs-lisp
+(use-package rainbow-mode
+  :defer t
+  :load-path "~/src/github/elisp/rainbow-mode"
+  :hook ((prog-mode text-mode conf-mode) . rainbow-mode)
+  :bind ("C-c r" . rainbow-mode))
+#+end_src
+
 ** [[https://github.com/purcell/emacs-reformatter][reformatter]]
 
 Easily define an idiomatic command to reformat the current buffer using a command-line program, together with an optional minor mode which can apply this command automatically on save.
@@ -3094,7 +3178,7 @@ the beginning of the buffer.
 #+end_src
 ** tramp
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 ;; TRAMP performance enhancements
 (use-package tramp
   :defer t
@@ -3305,37 +3389,51 @@ To save all buffers that wgrep has changed, run =M-x wgrep-save-all-buffers=.
 
 #+begin_src emacs-lisp
 (use-package web-mode
-  :after php-ts-mode
-  :mode (("\\.html\\'" . web-mode)
-         ("\\.css\\'" . web-mode)
-         ("\\.tpl\\.php\\'" . web-mode)
-         ("\\.tmpl\\.html\\'" . web-mode))
+  :mode (("\\.html?\\'"      . web-mode)
+         ("\\.css\\'"        . web-mode)
+         ("\\.tpl\\.php\\'"  . web-mode)
+         ("\\.tmpl\\.html\\'". web-mode))
   :preface
   (defun nl/web-mode-hook ()
     (my/lsp-deferred-unless-remote)
-    (prettier-mode)
     (setq web-mode-auto-quote-style 1)
-    (local-set-key (kbd "M-q") #'fill-paragraph)) ;; did not work with :bind)
-  :hook ((web-mode . nl/web-mode-hook))
+    (local-set-key (kbd "M-q") #'fill-paragraph))
+  :hook (web-mode . nl/web-mode-hook)
   :custom
-  (web-mode-auto-quote-style 1)
-  (web-mode-code-indent-offset 2)
-  (web-mode-markup-indent-offset 2)
-  (web-mode-css-indent-offset 2)
-  (web-mode-code-indent-offset 4)
-  (web-mode-block-padding 4)
+  ;; Indentation sizes
+  (web-mode-markup-indent-offset 2) ; HTML
+  (web-mode-code-indent-offset   2) ; PHP/JS inside
+  (web-mode-css-indent-offset    2) ; CSS inside
+
+  ;; Don’t inject extra padding inside blocks
+  (web-mode-block-padding 0)
+  (web-mode-script-padding 0)
+  (web-mode-style-padding  0)
+
+  ;; Newline behavior
+  (web-mode-enable-auto-indentation t)
+  (web-mode-enable-element-content-newline nil)
+  (web-mode-enable-control-block-indentation t)
+
+  ;; Pairing/closing
+  (web-mode-enable-auto-pairing t)
+  (web-mode-enable-auto-closing t)
+  (web-mode-enable-auto-opening t)
+
+  ;; Visual helpers (fine)
+  (web-mode-enable-block-face t)
+  (web-mode-enable-part-face t)
+  (web-mode-enable-current-column-highlight t)
+  (web-mode-enable-current-element-highlight t)
   :config
-  (add-to-list 'web-mode-engines-alist '("go" . "\\.tmpl\\.html\\'"))
+  ;; Make sure PHP engine is used for these files
   (add-to-list 'web-mode-engines-alist '("php" . "\\.tpl\\.php\\'"))
-  (setq web-mode-enable-block-face t
-        web-mode-enable-part-face t
-        web-mode-enable-current-column-highlight t
-        web-mode-enable-current-element-highlight t
-        web-mode-enable-auto-pairing t
-        web-mode-enable-auto-closing t
-        web-mode-enable-auto-opening t
-        web-mode-enable-comment-interpolation t)
-  )
+  (add-to-list 'web-mode-engines-alist '("php" . "\\.php\\'"))
+  (add-to-list 'web-mode-engines-alist '("php" . "\\.phtml\\'"))
+
+  ;; Optional: RET indents
+  (define-key web-mode-map (kbd "RET") #'newline-and-indent))
+
 #+end_src
 
 ** [[https://github.com/yoshiki/yaml-mode][yaml-mode]]
