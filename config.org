@@ -1,4 +1,3 @@
-
 #+TITLE: Emacs Configuration
 #+AUTHOR: Nelson Loyola
 #+STARTUP: content
@@ -212,6 +211,8 @@ See https://tony-zorman.com/posts/emacs-potpourri.html
 
   (setq sh-basic-offset 4
       sh-indent-after-case 'always)
+
+  (setq ispell-dictionary "canadian")
 
   (electric-pair-mode 1)
   (setq electric-pair-pairs
@@ -611,7 +612,7 @@ See: https://kristofferbalintona.me/posts/202206071000/
   (defun nl/frame-resize ()
     "Resizes the frame based on its current width."
     (interactive)
-    (if (<= (window-total-width) 150)
+    (if (<= (qwindow-total-width) 150)
         (nl/frame-grow-horizontally)
       (nl/frame-shrink-horizontally)))
 
@@ -624,7 +625,10 @@ See: https://kristofferbalintona.me/posts/202206071000/
     (windmove-right))
   :bind
   ("<f9>" . nl/frame-resize)
-  ("<S-f9>" . nl/split-window-same-file))
+  ("<S-f9>" . nl/split-window-same-file)
+  :config
+  (setq switch-to-buffer-obey-display-actions t)
+  )
 #+end_src
 
 ** Side windows
@@ -636,19 +640,22 @@ See: https://kristofferbalintona.me/posts/202206071000/
 
 ;; (setq display-buffer-alist '())
 
+;; left, top, right, bottom
+(setq window-sides-slots '(0 0 1 1))
+
 (add-to-list 'display-buffer-alist
-             '("\\(?:\\*\\(?:[Hh]elp\\|shell\\)\\*\\)"
+             '("\\(?:\\*\\(?:[Hh]elp\\|shell\\|info\\)\\*\\)"
                display-buffer-in-side-window
-               (window-width . 0.3)
+               (window-width . 80)
                (side . right)
-               (slot . 1) ;; right side
-               (preserve-size . (t . nil))
+               (slot . 0) ;; right side
+               ;;(preserve-size . (t . nil))
                ,nl/side-window-parameters))
 
 (add-to-list 'display-buffer-alist
-             '("\\(?:\\*\\(?:grep\\|Warnings\\|xref\\)\\*\\)"
+             '("\\(?:\\*\\(?:Warnings\\)\\*\\)"
                display-buffer-in-side-window
-               (window-height . 0.18)
+               ;;(window-height . 0.18)
                (side . bottom)
                (slot . -1) ;; left side
                (preserve-size . (nil . nil))
@@ -658,19 +665,46 @@ See: https://kristofferbalintona.me/posts/202206071000/
              '("\\*\\(?:compilation\\|Backtrace\\|Warnings\\|Completions\\|Compile-Log\\|cargo-run\\|\\Flycheck.*\\)\\*"
                display-buffer-in-side-window
                (side . bottom)
-               (slot . 1) ;; right side
+               (slot . 1)
                (preserve-size . (nil . nil))
                ,nl/side-window-parameters))
+
+(add-to-list 'display-buffer-alist
+          `(,(rx (| "*xref*"
+                    "*grep*"
+                    "*Occur*"))
+            display-buffer-reuse-window
+            (inhibit-same-window . nil)))
+
+(add-to-list 'display-buffer-alist
+  '("\\*eat\\*" display-buffer-in-direction
+    (direction . bottom)
+    (window . root)
+    (window-height . 0.3)))
 
 #+end_src
 
 * Theme
 See https://tinted-theming.github.io/base16-gallery/
+** Xresources theme (for pywal)
+
+#+begin_src emacs-lisp
+(use-package xresources-theme
+  :hook (after-init . (lambda ()
+                        (setq frame-background-mode 'dark)
+                        (load-theme 'xresources t))))
+
+(defun reload-xresources-theme ()
+  (interactive)
+  (disable-theme 'xresources)
+  (load-theme 'xresources t))
+#+end_src
+
 ** Doom Themes
 
 See https://github.com/doomemacs/themes/tree/screenshots#screenshots
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 (use-package doom-themes
   :config
   (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
@@ -692,7 +726,7 @@ See https://github.com/doomemacs/themes/tree/screenshots#screenshots
 
 Allow changing themes on the fly with the following.
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 (use-package emacs
   :init
   (defun ap/load-doom-theme (theme)
@@ -1508,8 +1542,6 @@ Complete anything.
   ;; Enable recursive minibuffers
   (setq enable-recursive-minibuffers t)
   :custom
-  (frame-background-mode 'dark)
-  :custom
   (mapc 'frame-set-background-mode (frame-list)))
 
 (use-package vertico-posframe
@@ -2049,9 +2081,17 @@ See https://tsdh.org/posts/2022-08-01-difftastic-diffing-with-magit.html
 *** templ-ts-mode
 
 #+begin_src emacs-lisp
+(defun nl/indent-line-function()
+              (lambda ()
+                (let ((col (* 3 (car (syntax-ppss)))))
+                  (indent-line-to col))))
+
 (defun nl/templ-mode-hook()
   ;; visual width of a tab character
-  ;;(setq tab-width 4)
+  (setq tab-width 3
+        standard-indent 3
+        indent-tabs-mode nil)
+  (setq-local indent-line-function `nl/indent-line-function)
   (subword-mode +1)
   )
 
