@@ -689,10 +689,15 @@ See https://tinted-theming.github.io/base16-gallery/
 ** Xresources theme (for pywal)
 
 #+begin_src emacs-lisp
+(defun nl/xresources-theme-hook ()
+  (setq frame-background-mode 'dark)
+  (load-theme 'xresources t))
+
 (use-package xresources-theme
-  :hook (after-init . (lambda ()
-                        (setq frame-background-mode 'dark)
-                        (load-theme 'xresources t))))
+  :load-path "~/src/github/elisp/xresources-theme"
+  :init
+  (add-to-list 'custom-theme-load-path "~/src/github/elisp/xresources-theme")
+  :hook (after-init . nl/xresources-theme-hook))
 
 (defun reload-xresources-theme ()
   (interactive)
@@ -3559,7 +3564,7 @@ See above.
                )))
     :config
     (custom-set-faces
-    ;; '(org-table ((t (:inherit fixed-pitch :foreground "#91b831" :height 120))))
+    '(org-table ((t (:inherit fixed-pitch :foreground "#91b831" :height 120))))
     '(org-block ((t (:background "gray18" :inherit fixed-pitch))))
     ;; '(org-code ((t (:inherit fixed-pitch :height 110))))
     ;; '(org-verbatim ((t (:inherit (shadow fixed-pitch) :height 120))))
@@ -3686,7 +3691,6 @@ See above.
   :config
   (org-roam-setup))
 #+end_src
-
 * Computer-specific settings
 
 Load some computer-specific settings, such as the name and and email address.
