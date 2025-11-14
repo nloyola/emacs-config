@@ -1,0 +1,1 @@
+test.Logger.Info("$1", "$2", $0)

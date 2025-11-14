@@ -102,7 +102,7 @@
 
 (defun nl/projectile-test-suffix-function (project-type)
   "Return the suffix for test files for PROJECT-TYPE."
-  (message "%s" project-type)
+  ;;(message "%s" project-type)
   (cond
    ((string-equal "php-symfony" project-type) "Test")))
 

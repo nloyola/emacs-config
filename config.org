@@ -2071,15 +2071,20 @@ See https://tsdh.org/posts/2022-08-01-difftastic-diffing-with-magit.html
           tab-width 4))
 
 (use-package go-mode
-  :ensure t
   :mode "\\.go\\'"
+  :preface
+  (use-package nl-go-project :demand :load-path "~/.emacs.d/lisp")
   :init
   ;; prefer gofumpt; fall back to gofmt
   (setq gofmt-command (if (executable-find "gofumpt") "gofumpt" "gofmt"))
   :hook
-  ((before-save . gofmt-before-save)
+  (;;(before-save . gofmt-before-save)
    (go-mode . nl/go-mode-hook)
    (go-ts-mode . nl/go-mode-hook))
+  :config
+  (lsp-register-custom-settings
+   '(("gopls.completeUnimported" t t)
+     ("gopls.staticcheck" t t)))
   )
 #+end_src
 
