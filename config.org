@@ -2073,6 +2073,8 @@ See https://tsdh.org/posts/2022-08-01-difftastic-diffing-with-magit.html
 (use-package go-mode
   :ensure t
   :mode "\\.go\\'"
+  :preface
+  (use-package nl-go-project :demand :load-path "~/.emacs.d/lisp")
   :init
   ;; prefer gofumpt; fall back to gofmt
   (setq gofmt-command (if (executable-find "gofumpt") "gofumpt" "gofmt"))
