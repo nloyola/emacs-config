@@ -28,7 +28,7 @@
 ;; from https://github.com/D4lj337/Emacs-performance
 (setenv "LSP_USE_PLISTS" "true")
 (setq lsp-use-plists t)
-(setq package-quickstart t)
+;;(setq package-quickstart t)
 
 ;; Disable "file-name-handler-alist" than enable it later for speed.
 (defvar startup/file-name-handler-alist file-name-handler-alist)
@@ -101,7 +101,7 @@
         ("org"       . 70)
         ("melpa"     . 0)))
 
-(package-initialize)
+;;(package-initialize)
 
 ;; Using HTTPS for downloading packages, make sure HTTPS is not going through a proxy.
 ;; (setenv "https_proxy" "")

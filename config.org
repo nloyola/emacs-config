@@ -702,7 +702,7 @@ See https://tinted-theming.github.io/base16-gallery/
   (disable-theme 'xresources)
   (load-theme 'xresources t))
 
-(unless (string-match "-[Mm]icrosoft" operating-system-release)
+(unless (string-match "-microsoft" (downcase operating-system-release))
   (use-package xresources-theme
     :load-path "~/src/github/elisp/xresources-theme"
     :init
@@ -715,7 +715,7 @@ See https://tinted-theming.github.io/base16-gallery/
 See https://github.com/doomemacs/themes/tree/screenshots#screenshots
 
 #+begin_src emacs-lisp
-(when (string-match "-[Mm]icrosoft" operating-system-release)
+(when (string-match "-microsoft" (downcase operating-system-release))
   (use-package doom-themes
     :config
     (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
@@ -731,8 +731,10 @@ See https://github.com/doomemacs/themes/tree/screenshots#screenshots
     ;;(doom-themes-treemacs-config)
 
     ;; Corrects (and improves) org-mode's native fontification.
-    (doom-themes-org-config)
-    ))
+    (doom-themes-org-config)))
+
+(when (string-match "-microsoft" (downcase operating-system-release))
+  (load-theme 'doom-dark+))
 #+end_src
 
 Allow changing themes on the fly with the following.
@@ -766,8 +768,10 @@ Allow changing themes on the fly with the following.
 *** Doom two tone themes
 
 #+begin_src emacs-lisp
-(add-to-list 'custom-theme-load-path "~/src/github/elisp/doom-two-tone-themes/themes/")
-(load-theme 'doom-navy-copper t)
+(let ((theme-path "~/src/github/elisp/doom-two-tone-themes/themes/"))
+  (when (file-directory-p (expand-file-name theme-path))
+    (add-to-list 'custom-theme-load-path theme-path)
+    (load-theme 'doom-navy-copper t)))
 #+end_src
 
 ** [[https://protesilaos.com/emacs/ef-themes#h:dd9e06f2-eef0-4afe-8a12-b7af5d597108][ef-themes]]
@@ -1852,6 +1856,7 @@ A great interface for git projects. It's much more pleasant to use than the git 
 command line. Use an easy keybinding to access magit.
 
 #+begin_src emacs-lisp
+(require 'autorevert)
 (use-package magit
   ;;:pin melpa
   :bind (("C-x g" . magit-status))
@@ -1895,7 +1900,7 @@ The following code makes magit-status run alone in the frame, and then restores 
 
 *** [[https://github.com/alphapapa/magit-todos][magit-todos]]
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 (use-package magit-todos
   :diminish
   :after magit
@@ -2699,31 +2704,46 @@ Modified the bindings to coincide with the ones used in =org-mode=.
 Sometimes you end up with cursors outside of your view. You can scroll the screen to center on each cursor with ~C-v~ and ~M-v~.
 
 #+begin_src emacs-lisp
-(use-package multiple-cursors
-  :after selected
-  :bind (("C-S-c C-S-c" . mc/edit-lines)
-         ("C->"         . mc/mark-next-like-this)
-         ("C-<"         . mc/mark-previous-like-this)
-         ("C-M->"       . mc/unmark-next-like-this)
-         ("C-M-<"       . mc/unmark-previous-like-this)
-         ("C-c C-<"     . mc/mark-all-like-this)
-         ("C-!"         . mc/mark-next-symbol-like-this)
-         ("C-x C-m"     . mc/mark-all-dwim)
-         (:map selected-keymap
-               ("C-'" . mc/edit-lines)
-               ("."   . mc/mark-next-like-this)
-               ("<"   . mc/unmark-next-like-this)
-               ("C->" . mc/skip-to-next-like-this)
-               (","   . mc/mark-previous-like-this)
-               (">"   . mc/unmark-previous-like-this)
-               ("C-<" . mc/skip-to-previous-like-this)
-               ("y"   . mc/mark-next-symbol-like-this)
-               ("Y"   . mc/mark-previous-symbol-like-this)
-               ("w"   . mc/mark-next-word-like-this)
-               ("W"   . mc/mark-previous-word-like-this)))
-  :config
-  (setq mc/always-run-for-all t)
-  )
+(unless (string-match "-microsoft" (downcase operating-system-release))
+  (use-package multiple-cursors
+    :after selected
+    :bind (("C-S-c C-S-c" . mc/edit-lines)
+           ("C->"         . mc/mark-next-like-this)
+           ("C-<"         . mc/mark-previous-like-this)
+           ("C-M->"       . mc/unmark-next-like-this)
+           ("C-M-<"       . mc/unmark-previous-like-this)
+           ("C-c C-<"     . mc/mark-all-like-this)
+           ("C-!"         . mc/mark-next-symbol-like-this)
+           ("C-x C-m"     . mc/mark-all-dwim)
+           (:map selected-keymap
+                 ("C-'" . mc/edit-lines)
+                 ("."   . mc/mark-next-like-this)
+                 ("<"   . mc/unmark-next-like-this)
+                 ("C->" . mc/skip-to-next-like-this)
+                 (","   . mc/mark-previous-like-this)
+                 (">"   . mc/unmark-previous-like-this)
+                 ("C-<" . mc/skip-to-previous-like-this)
+                 ("y"   . mc/mark-next-symbol-like-this)
+                 ("Y"   . mc/mark-previous-symbol-like-this)
+                 ("w"   . mc/mark-next-word-like-this)
+                 ("W"   . mc/mark-previous-word-like-this)))
+    :config
+    (setq mc/always-run-for-all t)
+    )
+
+(match (string-match "-microsoft" (downcase operating-system-release))
+  (use-package multiple-cursors
+    :bind (("C-S-c C-S-c" . mc/edit-lines)
+           ("C->"         . mc/mark-next-like-this)
+           ("C-<"         . mc/mark-previous-like-this)
+           ("C-M->"       . mc/unmark-next-like-this)
+           ("C-M-<"       . mc/unmark-previous-like-this)
+           ("C-c C-<"     . mc/mark-all-like-this)
+           ("C-!"         . mc/mark-next-symbol-like-this)
+           ("C-x C-m"     . mc/mark-all-dwim))
+    :config
+    (setq mc/always-run-for-all t)
+    )
 #+end_src
 
 *
@@ -3184,19 +3204,21 @@ See https://robert.kra.hn/posts/rust-emacs-setup/
 
 Provides the =selected-minor-mode= for Emacs. When =selected-minor-mode= is active, the keybindings in =selected-keymap= will be enabled when the region is active.
 
-#+begin_src emacs-lisp :tangle no
-(use-package selected
-  :diminish selected-minor-mode
-  ;; :bind (:map selected-keymap
-  ;;            ("M-%" . query-replace-regexp)
-  ;;            ("C-[" . align-entire)
-  ;;            ("C-f" . fill-region)
-  ;;            ("C-U" . unfill-region)
-  ;;            ("C-d" . downcase-region)
-  ;;            ("C-r" . reverse-region)
-  ;;            ("C-s" . sort-lines)
-  ;;            ("C-u" . upcase-region))
-  :init (selected-global-mode 1))
+#+begin_src emacs-lisp
+(unless (string-match "-microsoft" (downcase operating-system-release))
+  (use-package selected
+    :diminish selected-minor-mode
+    ;; :bind (:map selected-keymap
+    ;;            ("M-%" . query-replace-regexp)
+    ;;            ("C-[" . align-entire)
+    ;;            ("C-f" . fill-region)
+    ;;            ("C-U" . unfill-region)
+    ;;            ("C-d" . downcase-region)
+    ;;            ("C-r" . reverse-region)
+    ;;            ("C-s" . sort-lines)
+    ;;            ("C-u" . upcase-region))
+    :init (selected-global-mode 1))
+  )
 #+end_src
 
 ** [[https://github.com/ljos/sparql-mode/tree/15960092e8ce8ebe6a6afd82202ccf47cb306e76][sparql-mode]]

@@ -1,27 +1,36 @@
-(defun nl/monitor-pixel-dimensions (monitor)
-  (let* ((monitor-attributes (display-monitor-attributes-list))
-         (num-displays (length (display-monitor-attributes-list))))
-    (if (<= monitor num-displays)
-        (list (nth 3 (assq 'geometry (nth monitor monitor-attributes)))
-              (nth 4 (assq 'geometry (nth monitor monitor-attributes))))
-      (error "invalid monitor number: %d" monitor))))
+;;; -*- lexical-binding: t; -*-
 
-(defun nl/monitor-pixel-width (monitor)
-  (car (nl/monitor-pixel-dimensions monitor)))
+(setq select-enable-clipboard t)
+(setq select-enable-primary t)
 
-(defun nl/monitor-pixel-height (monitor)
-  (nth 1 (nl/monitor-pixel-dimensions monitor)))
+(setq wl-copy-process nil)
+(defun wl-copy (text)
+  (setq wl-copy-process
+        (make-process
+         :name "wl-copy"
+         :buffer nil
+         :command '("wl-copy" "--foreground")
+         :connection-type 'pipe))
+  (process-send-string wl-copy-process text)
+  (process-send-eof wl-copy-process))
+
+(defun wl-paste ()
+  (shell-command-to-string "wl-paste"))
+
+(setq interprogram-cut-function 'wl-copy)
+(setq interprogram-paste-function 'wl-paste)
 
 (defun nl/main-frame-set-size-and-position ()
-  "Set usable size for WSL or Linux."
+  "Set usable size for WSL."
   (interactive)
   (let* ((frame (selected-frame))
-         (desired-width-in-chars 94)
-         (desired-height-in-chars 48))
+         (desired-width-in-chars 100)
+         (desired-height-in-chars 36))
     (when (display-graphic-p)
       (set-frame-size frame desired-width-in-chars desired-height-in-chars)
-      (unless (string-match "microsoft" (downcase (system-configuration)))
-        (set-frame-position frame 100 50)))))
+      ;; this is useless in WSL
+      ;;(set-frame-position frame 0 100)
+      )))
 
 (defun nl/new-frame ()
   "Create a new frame on the 4k display."
@@ -35,20 +44,6 @@
                     (* 120 (frame-char-width frame))
                     (* 70 (frame-char-height frame))
                     t)))
-
-(defun nl/vterm-frame ()
-  "Create a new frame, running vterm, at a specific location on the 4k display."
-  (interactive)
-  (let* ((frame (make-frame)))
-    (select-frame-set-input-focus frame)
-    (switch-to-buffer (current-buffer))
-    (set-frame-position frame (+ (nl/monitor-pixel-width 1) 0) 0)
-    (set-face-attribute 'default frame :font (nl/gui-fixed-font-normal))
-    (set-frame-size frame
-                    (* 146 (frame-char-width frame))
-                    (* 54 (frame-char-height frame))
-                    t)
-    (funcall #'vterm)))
 
 (defun nl/window-setup-hook ()
   (let ((frame (selected-frame)))
