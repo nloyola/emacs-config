@@ -315,7 +315,9 @@ Help from here:  https://howardabrams.com/hamacs/ha-display.html#org54a2529
     (or
      (seq-first
       (seq-filter (lambda (font) (when (x-list-fonts font) font))
-                  '("SN Pro" "Overpass" "DejaVu Sans"
+                  '("SN Pro"
+                    "Overpass"
+                    "DejaVu Sans"
                     "Verdana" "Overpass"
                     "Source Sans Pro"
                     "Lucida Grande"
@@ -410,22 +412,24 @@ See https://www.gonsie.com/blorg/modeline.html for additional details.
                         :background "#565063"
                         :foreground "white"
                         :box '(:line-width 2 :color "#3d3947")
-                        :height 110
+                        :height 130
                         :overline nil
                         :underline nil
+                        :family "SN Pro"
                         :inherit 'variable-pitch)
 
     (set-face-attribute 'mode-line-inactive nil
                         :background "#353644"
                         :foreground "white"
                         :box '(:line-width 2 :color "#353644")
-                        :height 110
+                        :height 130
                         :overline nil
+                        :family "SN Pro"
                         :inherit 'variable-pitch)
 
-    (set-face-attribute 'mode-line-buffer-id nil :foreground "goldenrod" :height 120 :inherit 'variable-pitch)
-    (set-face-attribute 'mode-line-emphasis nil :inherit 'fixed-pitch)
-    (set-face-attribute 'mode-line-highlight nil :slant 'italic :inherit 'fixed-pitch)
+    (set-face-attribute 'mode-line-buffer-id nil :foreground "goldenrod" :background "#565063" :height 120)
+    (set-face-attribute 'mode-line-emphasis nil :background "#565063" :inherit 'fixed-pitch)
+    (set-face-attribute 'mode-line-highlight nil :slant 'italic :background "#565063" :inherit 'fixed-pitch)
     )
   :init
   (setq-default
@@ -662,7 +666,7 @@ See: https://kristofferbalintona.me/posts/202206071000/
                ,nl/side-window-parameters))
 
 (add-to-list 'display-buffer-alist
-             '("\\*\\(?:compilation\\|Backtrace\\|Warnings\\|Completions\\|Compile-Log\\|cargo-run\\|\\Flycheck.*\\)\\*"
+             '("\\*\\(?:compilation\\|Backtrace\\|Warnings\\|Completions\\|Compile-Log\\|cargo-run\\|\\Flycheck.*\\|Go Test\\)\\*"
                display-buffer-in-side-window
                (side . bottom)
                (slot . 1)
@@ -693,40 +697,42 @@ See https://tinted-theming.github.io/base16-gallery/
   (setq frame-background-mode 'dark)
   (load-theme 'xresources t))
 
-(use-package xresources-theme
-  :load-path "~/src/github/elisp/xresources-theme"
-  :init
-  (add-to-list 'custom-theme-load-path "~/src/github/elisp/xresources-theme")
-  :hook (after-init . nl/xresources-theme-hook))
-
 (defun reload-xresources-theme ()
   (interactive)
   (disable-theme 'xresources)
   (load-theme 'xresources t))
+
+(unless (string-match "-[Mm]icrosoft" operating-system-release)
+  (use-package xresources-theme
+    :load-path "~/src/github/elisp/xresources-theme"
+    :init
+    (add-to-list 'custom-theme-load-path "~/src/github/elisp/xresources-theme")
+    :hook (after-init . nl/xresources-theme-hook)))
 #+end_src
 
 ** Doom Themes
 
 See https://github.com/doomemacs/themes/tree/screenshots#screenshots
 
-#+begin_src emacs-lisp :tangle no
-(use-package doom-themes
-  :config
-  (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
-       doom-themes-enable-italic t) ; if nil, italics is universally disabled
+#+begin_src emacs-lisp
+(when (string-match "-[Mm]icrosoft" operating-system-release)
+  (use-package doom-themes
+    :config
+    (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
+          doom-themes-enable-italic t) ; if nil, italics is universally disabled
 
-  ;;(load-theme 'base16-brewer t)
+    ;;(load-theme 'base16-brewer t)
 
-  ;; Enable flashing mode-line on errors
-  (doom-themes-visual-bell-config)
+    ;; Enable flashing mode-line on errors
+    (doom-themes-visual-bell-config)
 
-  ;;treemacs
-  (setq doom-themes-treemacs-theme "doom-colors")
-  ;;(doom-themes-treemacs-config)
+    ;;treemacs
+    (setq doom-themes-treemacs-theme "doom-colors")
+    ;;(doom-themes-treemacs-config)
 
-  ;; Corrects (and improves) org-mode's native fontification.
-  (doom-themes-org-config)
-  )
+    ;; Corrects (and improves) org-mode's native fontification.
+    (doom-themes-org-config)
+    ))
 #+end_src
 
 Allow changing themes on the fly with the following.
@@ -2113,6 +2119,15 @@ See https://tsdh.org/posts/2022-08-01-difftastic-diffing-with-magit.html
   (templ-ts-mode . nl/templ-mode-hook))
 #+end_src
 
+*** [[https://github.com/nlamirault/gotest.el][gotest]]
+
+#+begin_src emacs-lisp
+(use-package gotest
+  :ensure t
+  :config
+  (setq go-test-verbose t))
+#+end_src
+
 ** [[https://github.com/karthink/gptel][gptel]]
 
 Found this packe hard to use.
@@ -3169,7 +3184,7 @@ See https://robert.kra.hn/posts/rust-emacs-setup/
 
 Provides the =selected-minor-mode= for Emacs. When =selected-minor-mode= is active, the keybindings in =selected-keymap= will be enabled when the region is active.
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 (use-package selected
   :diminish selected-minor-mode
   ;; :bind (:map selected-keymap

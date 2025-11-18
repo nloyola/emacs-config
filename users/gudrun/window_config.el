@@ -13,34 +13,15 @@
   (nth 1 (nl/monitor-pixel-dimensions monitor)))
 
 (defun nl/main-frame-set-size-and-position ()
-  "Set the size and position of the Emacs window."
+  "Set usable size for WSL or Linux."
   (interactive)
   (let* ((frame (selected-frame))
-         (num-displays (length (display-monitor-attributes-list)))
          (desired-width-in-chars 94)
-         (desired-width-in-pixels (* desired-width-in-chars (frame-char-width))))
-    (set-face-attribute 'default frame :font (nl/gui-fixed-font-normal))
-    (cond
-     ((eq num-displays 1)
-      (set-frame-size frame
-                      desired-width-in-chars
-                      (/ (nl/monitor-pixel-height 0) (+ 1 (frame-char-height))))
-      ;; cannot use negative value for X since it is not placed in correct location on startup
-      (set-frame-position frame
-                          (- (+ (nl/monitor-pixel-width 0) (nl/monitor-pixel-width 0))
-                             desired-width-in-pixels)
-                          0))
-     ((eq num-displays 3)
-      (let* ((window-frame-in-pixels 16))
-        ;; cannot use negative value for X since it is not placed in correct location on startup
-        (set-frame-position frame
-                            (- (+ (nl/monitor-pixel-width 0) (nl/monitor-pixel-width 1))
-                               window-frame-in-pixels
-                               desired-width-in-pixels)
-                            0)
-        (set-frame-size frame
-                        desired-width-in-chars
-                        (/ (nl/monitor-pixel-height 1) (frame-char-height))))))))
+         (desired-height-in-chars 48))
+    (when (display-graphic-p)
+      (set-frame-size frame desired-width-in-chars desired-height-in-chars)
+      (unless (string-match "microsoft" (downcase (system-configuration)))
+        (set-frame-position frame 100 50)))))
 
 (defun nl/new-frame ()
   "Create a new frame on the 4k display."

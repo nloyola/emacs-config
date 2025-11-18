@@ -23,3 +23,5 @@
 /projects
 /.org-id-locations
 /elpa.old/
+/package-quickstart.el
+/package-quickstart.elc
