@@ -37,192 +37,44 @@ See https://tony-zorman.com/posts/emacs-potpourri.html
 #+begin_src emacs-lisp
 (use-package emacs
   :preface
+  ;; Conditional/Special Logic
   (when (eq system-type 'darwin)
     (require 'ls-lisp)
     (setq ls-lisp-use-insert-directory-program nil))
 
-  (setq user-full-name "Nelson Loyola"
-        user-mail-address "nloyola@gmail.com"
-        custom-file (expand-file-name "custom.el" user-emacs-directory))
-
+  ;; custom-file setup and loading (MUST be early)
+  (setq custom-file (expand-file-name "custom.el" user-emacs-directory))
   (load custom-file)
 
-  (setq comp-async-report-warnings-errors nil ;; native-comp warnings
-        byte-compile-warnings '(not free-vars unresolved noruntime lexical make-local))
-
+  ;; Property List Modifications (put) - Not customs
   (put 'downcase-region 'disabled nil)
   (put 'upcase-region 'disabled nil)
   (put 'narrow-to-region 'disabled nil)
   (put 'dired-find-alternate-file 'disabled nil)
   (put 'erase-buffer 'disabled nil)
 
-  ;; Sentences end with a single space.
-  (setq sentence-end-double-space nil)
-
-  ;; Set the default major mode to =text-mode=. By default it's =fundamental= mode which is
-  ;; not what we want. Also, use =text-mode= for the scratch buffer.
-  (setq default-major-mode 'text-mode
-        initial-major-mode 'text-mode)
-
-  ;; Don't scroll to middle of the page. Also, scroll line by line, without
-  ;; scrolloff and try to keep point at the same visual place when
-  ;; scrolling by page.
-  (setq-default scroll-up-aggressively 0.01 scroll-down-aggressively 0.01)
-  (setq redisplay-dont-pause t
-        scroll-step 1
-        scroll-margin 3
-        scroll-conservatively 10
-        scroll-preserve-screen-position t)
-
-  ;; Level of decoration {1 - 3}, t = max.
-  (setq font-lock-maximum-decoration t)
-
-  ;; For symlinks, automatically follow the link and visit the real file instead.
-  (setq vc-follow-symlinks nil)
-
-  ;; Make searches case insensitive.
-  (setq-default case-fold-search t)
-
-  ;; Autosave files are created between saves after a sufficient timeout in
-  ;; the current directory for crash detection, they begin and end with
-  ;; =#=.  Change this location to the emacs directory.
-  (setq auto-save-list-file-prefix "~/.emacs.d/autosave/"
-        auto-save-file-name-transforms `((".*" "~/.emacs.d/autosave/" t))
-        backup-directory-alist `(("." . ,(concat user-emacs-directory "autosave"))))
-
-  ;;Set line wrap at column 100.
-  (setq-default fill-column 100)
-
-  ;; Replace =yes or no= prompt with =y or n= prompt.
+  ;; Function Calls / Mode Toggles / Aliases - Not customs
   (defalias 'yes-or-no-p 'y-or-n-p)
-
-  ;; Use UTF-8 everywhere.
-  (setq locale-coding-system 'utf-8)
   (set-terminal-coding-system 'utf-8)
   (set-keyboard-coding-system 'utf-8)
   (set-selection-coding-system 'utf-8)
   (prefer-coding-system 'utf-8)
-
-  ;; Use spaces instead of tabs.
-  (setq-default indent-tabs-mode nil)
-
-  ;; Delete the region when typing, just like as we expect nowadays.
   (delete-selection-mode t)
-
-  ;; Highlight matches in query-replace mode.
-  (setq query-replace-highlight t)
-
-  ;; Use visual line mode to display long lines.
   (global-visual-line-mode -1)
-
-  ;;Revert these files without asking.
-  (setq revert-without-query '(".*"))
-
-  ;; Middle-clicking is nice to paste, however it should not adjust point
-  ;; and paste at the then adjusted point.
-  (setq mouse-yank-at-point t)
-
-  ;; Save clipboard data of other programs in the kill ring when possible.
-  (setq save-interprogram-paste-before-kill t)
-
-  ;; Set environment variable for shells.
   (setenv "PAGER" "cat")
-
-  ;; Configure =next-buffer= and =previous-buffer= to only visit file
-  ;; buffers (has to be called for each frame):
   (set-frame-parameter (selected-frame) 'buffer-predicate #'buffer-file-name)
-
-  ;; These are taken from
-  ;; https://github.com/patrickt/emacs/blob/master/init.el:
-  (setq
-   kill-whole-line t                      ; Lets C-k delete the whole line
-   ;;default-directory "~/src/"             ; My code lives here
-   enable-recursive-minibuffers t         ; don't freak out if I use the minibuffer twice
-   sentence-end-double-space nil          ; are you kidding me
-   confirm-kill-processes nil             ; don't when quitting
-   )
-
-  (setq-default cursor-type 'box
-                cursor-in-non-selected-windows nil)
-
-  ;; Cursor Movement
-  (setq auto-window-vscroll nil)
-
-  ;; Turn off auto-save.
-  (setq auto-save-default nil)
-
-  ;; Don't make any backup files.
-  (setq make-backup-files nil)
-
-  ;; Get rid of the menu bar. Tool bar and scroll bars are disabled in
-  ;; ~init.el~..
   (when (fboundp 'menu-bar-mode) (menu-bar-mode -1))
-
-  ;; Turn off the blinking cursor.
   (blink-cursor-mode -1)
+  (global-so-long-mode 1)
+  (windmove-default-keybindings 'meta)
+  (electric-pair-mode 1)
+  (show-paren-mode 1)
 
-  ;; Don't use dialog boxes
-  (setq use-dialog-box nil)
-
-  ;; Don't want an audible bell.
-  (setq visible-bell t)
-
-  ;; Display the running program and the selected buffer in the frame title.
-  (setq frame-title-format
-        '("" invocation-name ": " (:eval (replace-regexp-in-string
-                                          "^ +" "" (buffer-name)))))
-  ;; Don't add new lines past end of file, and indicate unused lines at the
-  ;; end of the window with a small image in the left fringe.
-  (setq next-line-add-newlines nil)
-  (setq-default indicate-empty-lines t)
-
-  ;; Add =\n= to end of file if required.
-  (setq require-final-newline t)
-
-  ;; Eshell
-  (setq eshell-history-size 100000)
-
-  ;; Follow Buffer
-
+  ;; Hooks / List Modifications
   (add-to-list 'auto-mode-alist '("\\.log\\'" . auto-revert-mode))
 
-  ;; Don’t compact font caches during GC.
-  (setq inhibit-compacting-font-caches t)
-
-  ;; Automatically cycle through the highlighting faces listed in
-  ;; ~hi-lock-face-defaults~ instead of bothering the user to pick a face
-  ;; each time.
-  (setq hi-lock-auto-select-face t)
-
-  ;; History
-  (setq history-delete-duplicates t)
-
-  ;; Use the directory name to make buffer names unique.
-  (setq uniquify-buffer-name-style 'forward)
-
-  (global-so-long-mode 1)
-
-  (setq fit-window-to-buffer-horizontally t)
-  (setq window-resize-pixelwise t)
-
-  (setq bookmark-default-file "~/.emacs.d/etc/bookmarks")
-
-  (windmove-default-keybindings 'meta)
-
-  (setq sh-basic-offset 4
-      sh-indent-after-case 'always)
-
-  (setq ispell-dictionary "canadian")
-
-  (electric-pair-mode 1)
-  (setq electric-pair-pairs
-        '(
-          (?\" . ?\")
-          (?\' . ?\')
-          (?\{ . ?\})))
-  (show-paren-mode 1)
   :bind
-  ("C-z" . nil)     ;; I never want to suspend the frame
+  ("C-z" . nil)                ;; I never want to suspend the frame
   ("M-%" . query-replace-regexp)
   ("C-S-s" . isearch-forward)
   ("C-x C-n" . next-error)
@@ -238,6 +90,87 @@ See https://tony-zorman.com/posts/emacs-potpourri.html
   ("<f8>" . window-toggle-side-windows)
   ("S-<f11>" . eval-region)
   ("C-S-<f11>" . align-regexp)
+
+  :custom
+  ;; User Identity
+  (user-full-name "Nelson Loyola")
+  (user-mail-address "nloyola@gmail.com")
+
+  ;; Compilation and Byte-Code
+  (comp-async-report-warnings-errors nil) ;; native-comp warnings
+  (byte-compile-warnings '(not free-vars unresolved noruntime lexical make-local))
+
+  ;; Text Handling
+  (sentence-end-double-space nil)
+  (default-major-mode 'text-mode)
+  (initial-major-mode 'text-mode)
+  (case-fold-search t)
+  (fill-column 100)
+  (locale-coding-system 'utf-8)
+  (indent-tabs-mode nil)
+  (require-final-newline t)
+  (electric-pair-pairs
+   '(
+     (?\" . ?\")
+     (?\' . ?\')
+     (?\{ . ?\})))
+
+  ;; Window/Scrolling Behavior
+  (scroll-up-aggressively 0.01)
+  (scroll-down-aggressively 0.01)
+  (redisplay-dont-pause t)
+  (scroll-step 1)
+  (scroll-margin 3)
+  (scroll-conservatively 10)
+  (scroll-preserve-screen-position t)
+  (auto-window-vscroll nil)
+  (fit-window-to-buffer-horizontally t)
+  (window-resize-pixelwise t)
+
+  ;; Appearance
+  (font-lock-maximum-decoration t)
+  (cursor-type 'box)
+  (cursor-in-non-selected-windows nil)
+  (use-dialog-box nil)
+  (visible-bell t)
+  (frame-title-format
+   '("" invocation-name ": " (:eval (replace-regexp-in-string
+                                     "^ +" "" (buffer-name)))))
+  (next-line-add-newlines nil)
+  (indicate-empty-lines t)
+  (inhibit-compacting-font-caches t)
+
+  ;; File and Buffer Management
+  (vc-follow-symlinks nil)
+  (auto-save-list-file-prefix "~/.emacs.d/autosave/")
+  (auto-save-file-name-transforms `((".*" "~/.emacs.d/autosave/" t)))
+  (backup-directory-alist `(("." . ,(concat user-emacs-directory "autosave"))))
+  (revert-without-query '(".*"))
+  (auto-save-default nil)
+  (make-backup-files nil)
+  (uniquify-buffer-name-style 'forward)
+  (bookmark-default-file "~/.emacs.d/etc/bookmarks")
+
+  ;; Search and Replace
+  (query-replace-highlight t)
+  (hi-lock-auto-select-face t)
+
+  ;; History and Kill-ring
+  (mouse-yank-at-point t)
+  (save-interprogram-paste-before-kill t)
+  (history-delete-duplicates t)
+  (kill-whole-line t)
+
+  ;; Minibuffer / Utilities
+  (enable-recursive-minibuffers t)
+  (confirm-kill-processes nil)
+  (use-short-answers t)
+
+  ;; Mode Specific
+  (eshell-history-size 100000)
+  (sh-basic-offset 4)
+  (sh-indent-after-case 'always)
+  (ispell-dictionary "canadian")
   )
 #+end_src
 
@@ -1856,7 +1789,6 @@ A great interface for git projects. It's much more pleasant to use than the git 
 command line. Use an easy keybinding to access magit.
 
 #+begin_src emacs-lisp
-(require 'autorevert)
 (use-package magit
   ;;:pin melpa
   :bind (("C-x g" . magit-status))
@@ -2066,6 +1998,7 @@ See https://tsdh.org/posts/2022-08-01-difftastic-diffing-with-magit.html
 (use-package magit-delta
   :hook (magit-mode . magit-delta-mode))
 #+end_src
+
 ** Go
 
 #+begin_src emacs-lisp
@@ -2729,9 +2662,9 @@ Sometimes you end up with cursors outside of your view. You can scroll the scree
                  ("W"   . mc/mark-previous-word-like-this)))
     :config
     (setq mc/always-run-for-all t)
-    )
+    ))
 
-(match (string-match "-microsoft" (downcase operating-system-release))
+(when (string-match "-microsoft" (downcase operating-system-release))
   (use-package multiple-cursors
     :bind (("C-S-c C-S-c" . mc/edit-lines)
            ("C->"         . mc/mark-next-like-this)
@@ -2743,7 +2676,7 @@ Sometimes you end up with cursors outside of your view. You can scroll the scree
            ("C-x C-m"     . mc/mark-all-dwim))
     :config
     (setq mc/always-run-for-all t)
-    )
+    ))
 #+end_src
 
 *
