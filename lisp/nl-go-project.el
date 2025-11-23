@@ -147,6 +147,12 @@ Raise an error if coverage.html does not exist in the project root."
         (browse-url-chrome (concat "file://" coverage-file))
       (user-error "Coverage report not found: %s" coverage-file))))
 
+(defun nl/go-test-current-test-verbose ()
+    "Run the Go test at point with verbose logging."
+    (interactive)
+    (let ((go-test-args "-v"))
+      (call-interactively #'go-test-current-test)))
+
 ;; ----------------------------------------------------------------------
 ;; Hydras
 ;; ----------------------------------------------------------------------
@@ -177,6 +183,7 @@ Raise an error if coverage.html does not exist in the project root."
 ;; ----------------------------------------------------------------------
 
 (define-key go-ts-mode-map (kbd "C-c , t") 'go-test-current-test)
+(define-key go-ts-mode-map (kbd "C-c , d") 'nl/go-test-current-test-verbose)
 (define-key go-ts-mode-map (kbd "C-c , f") 'go-test-current-file)
 (define-key go-ts-mode-map (kbd "C-c , p") 'go-test-current-project)
 

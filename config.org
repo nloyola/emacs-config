@@ -1127,8 +1127,10 @@ A quick way to jump around text in buffers.
 #+begin_src emacs-lisp
 (use-package avy
   :bind
-  (("C-c SPC" . avy-goto-char)
-   ("C-:" . avy-goto-char-timer)))
+  (("C-c SPC" . avy-goto-char-timer)
+   ("C-:" . avy-goto-char))
+  :custom
+  (avy-timeout-seconds 1.5))
 #+end_src
 
 ** [[https://github.com/kickingvegas/casual][casual]]
@@ -2811,7 +2813,7 @@ Provides a minor mode that enables code folding and outlining based on indentati
                            "**/RockMigrations/**"
                            "**/TracyDebugger/**"
                            ])
-                 lsp-intelephense-php-version "8.2")
+                 lsp-intelephense-php-version "8.4")
            ))
     )
 
@@ -3330,7 +3332,7 @@ the beginning of the buffer.
   (defun nl/typescript-mode ()
     "Setup TypeScript/TSX mode."
     (my/lsp-deferred-unless-remote)
-    (setq column-enforce-column 120)
+    ;;(setq column-enforce-column 120)
     (flycheck-mode +1)
     (column-enforce-mode +1)
     (subword-mode +1)
