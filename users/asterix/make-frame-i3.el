@@ -14,3 +14,5 @@
                                     "i3-msg"
                                     (format "workspace %s" workspace)))))
     frame))
+
+;; (nl/create-frame-in-workspace "test" "19")

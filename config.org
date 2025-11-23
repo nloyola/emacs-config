@@ -889,8 +889,7 @@ A minimalist package that enhances compilation-mode.
   :preface
   (defun nl/css-mode-hook ()
     (my/lsp-deferred-unless-remote))
-  :hook (css-mode . nl/css-mode-hook)
-  )
+  :hook (css-mode . nl/css-mode-hook))
 #+end_src
 
 ** =scss-mode=
@@ -1127,8 +1126,10 @@ A quick way to jump around text in buffers.
 #+begin_src emacs-lisp
 (use-package avy
   :bind
-  (("C-c SPC" . avy-goto-char)
-   ("C-:" . avy-goto-char-timer)))
+  (("C-c SPC" . avy-goto-char-timer)
+   ("C-:" . avy-goto-char))
+  :custom
+  (avy-timeout-seconds 1.5))
 #+end_src
 
 ** [[https://github.com/kickingvegas/casual][casual]]
@@ -2003,16 +2004,18 @@ See https://tsdh.org/posts/2022-08-01-difftastic-diffing-with-magit.html
 
 #+begin_src emacs-lisp
 (defun nl/go-before-save-hook ()
-    (when (bound-and-true-p lsp-mode)
-      (lsp-format-buffer)
-      (lsp-organize-imports)))
+  (when (bound-and-true-p lsp-mode)
+    (lsp-format-buffer)
+    (lsp-organize-imports)))
 
 (defun nl/go-mode-hook ()
-    (add-hook 'before-save-hook 'nl/go-before-save-hook)
-    (my/lsp-deferred-unless-remote)
-    (subword-mode +1)
-    (setq indent-tabs-mode nil
-          tab-width 4))
+  (require 'nl-colors)
+  (add-hook 'before-save-hook 'nl/go-before-save-hook)
+  (my/lsp-deferred-unless-remote)
+  (subword-mode +1)
+  (setq-local go-ts-mode-indent-offset 4
+              indent-tabs-mode nil
+              tab-width 4))
 
 (use-package go-mode
   :mode "\\.go\\'"
@@ -2032,20 +2035,17 @@ See https://tsdh.org/posts/2022-08-01-difftastic-diffing-with-magit.html
   )
 #+end_src
 
-*** templ-ts-mode
+*** [[https://github.com/danderson/templ-ts-mode][templ-ts-mode]]
 
 #+begin_src emacs-lisp
-(defun nl/indent-line-function()
-              (lambda ()
-                (let ((col (* 3 (car (syntax-ppss)))))
-                  (indent-line-to col))))
-
 (defun nl/templ-mode-hook()
+  (message ">>> nl/templ-mode-hook")
+  (add-hook 'before-save-hook 'nl/go-before-save-hook)
   ;; visual width of a tab character
-  (setq tab-width 3
-        standard-indent 3
-        indent-tabs-mode nil)
-  (setq-local indent-line-function `nl/indent-line-function)
+  (setq-local go-ts-mode-indent-offset 4
+              js-indent-level 4
+              tab-width 4
+              indent-tabs-mode nil)
   (subword-mode +1)
   )
 
@@ -2503,6 +2503,9 @@ Add filler lorem ipsum text to Emacs.
      ("pyls.plugins.pyls_mypy.live_mode" nil t)
      ("pyls.plugins.pyls_black.enabled" t t)
      ("pyls.plugins.pyls_isort.enabled" t t)))
+  ;; Tree-sitter JS/TS modes need explicit ids so tsserver activates.
+  (add-to-list 'lsp-language-id-configuration '(typescript-ts-mode . "typescript"))
+  (add-to-list 'lsp-language-id-configuration '(tsx-ts-mode . "typescriptreact"))
   (setq lsp-clients-typescript-server "typescript-language-server"))
 
 (use-package lsp-ui
@@ -2811,7 +2814,7 @@ Provides a minor mode that enables code folding and outlining based on indentati
                            "**/RockMigrations/**"
                            "**/TracyDebugger/**"
                            ])
-                 lsp-intelephense-php-version "8.2")
+                 lsp-intelephense-php-version "8.4")
            ))
     )
 
@@ -2978,14 +2981,26 @@ Had to disable prettier for *css-mode* because syntax highlighting when exportin
 #+begin_src emacs-lisp
 (use-package prettier
   :diminish
-  :hook ((tsx-ts-mode . prettier-mode)
-         (typescript-ts-mode . prettier-mode)
+  :init
+  ;; Use the correct variable so Prettier actually runs on save.
+  (setq prettier-prettify-on-save-flag t)
+  :hook (
          (js-ts-mode . prettier-mode)
          (json-mode . prettier-mode)
          (vue-mode . prettier-mode)
+         (tsx-ts-mode . prettier-mode)
+         (typescript-ts-mode . prettier-mode)
          ;;(css-mode . prettier-mode)
          (css-mode . prettier-mode)
-         (yaml-mode . prettier-mode)))
+         (yaml-mode . prettier-mode))
+  :config
+  ;; Teach prettier.el about the tree-sitter JS/TS modes so it can pick a parser.
+  (setf (alist-get 'typescript-ts-mode prettier-major-mode-parsers)
+        '(typescript babel-ts))
+  (setf (alist-get 'tsx-ts-mode prettier-major-mode-parsers)
+        '(typescript babel-ts))
+  (setf (alist-get 'js-ts-mode prettier-major-mode-parsers)
+        #'prettier--guess-js-ish))
 #+end_src
 
 ** [[https://protesilaos.com/emacs/pulsar][pulsar]]
@@ -3288,61 +3303,72 @@ the beginning of the buffer.
 
 #+begin_src emacs-lisp
 (defun nl/tsx-comment-dwim (arg)
-  "Toggle JSX comment {/* */} at the beginning of each line in tsx-mode."
+  "Toggle JSX comment {/* */} on each line in region or current line."
   (interactive "P")
-  (let ((beg (if (use-region-p) (region-beginning) (line-beginning-position)))
-        (end (if (use-region-p) (region-end) (line-end-position))))
-    (save-excursion
+  (save-excursion
+    (let* ((use-region (use-region-p))
+           (beg (if use-region
+                    (region-beginning)
+                  (line-beginning-position)))
+           (end (if use-region
+                    (region-end)
+                  (line-end-position)))
+           (end-line (progn
+                       (goto-char end)
+                       (line-number-at-pos))))
       (goto-char beg)
-      (if (looking-at "[ \t]*{/\\*")  ;; Detect already commented JSX lines
-          ;; Uncomment each line
-          (while (<= (point) end)
-            (beginning-of-line)
-            (when (looking-at "[ \t]*{/\\* ?")
-              (delete-region (match-beginning 0) (+ (match-beginning 0) 4)))
-            (end-of-line)
-            (search-backward " */}" (line-beginning-position) t)
-            (delete-region (point) (+ (point) 4))
-            (forward-line 1))
-        ;; Comment each line
-        (while (<= (point) end)
+      (let ((commented (looking-at "[ \t]*{/\\*")))
+        (while (<= (line-number-at-pos) end-line)
           (beginning-of-line)
-          (insert "{/* ")
-          (end-of-line)
-          (insert " */}")
+          (if commented
+              (progn
+                (when (looking-at "[ \t]*{/\\* ?")
+                  (delete-region
+                   (match-beginning 0)
+                   (+ (match-beginning 0) 4)))
+                (when (search-forward " */}" (line-end-position) t)
+                  (delete-region (- (point) 4) (point))))
+            (insert "{/* ")
+            (end-of-line)
+            (insert " */}"))
           (forward-line 1))))))
+
+(defun nl/typescript-mode ()
+  "Setup TypeScript/TSX mode."
+  ;;(setq column-enforce-column 120)
+  (message "nl/typescript-mode")
+  (lsp-deferred)
+  (flycheck-mode +1)
+  (column-enforce-mode +1)
+  (subword-mode +1)
+  ;; Ensure the TS/TSX parser is used when running Prettier on save.
+  (setq-local prettier-parsers '(typescript babel-ts))
+  (prettier-mode +1)
+  ;;(eldoc-mode +1)
+  ;;(company-mode +1)
+  ;; (push '(">=" . ?≥) prettify-symbols-alist)
+  ;; (push '("<=" . ?≤) prettify-symbols-alist)
+  ;; (push '("->" . ?→) prettify-symbols-alist)
+  ;; (push '("=>" . ?↦) prettify-symbols-alist)
+  ;; (prettify-symbols-mode)
+  (when (fboundp 'nl/yas-reload-all)
+    (nl/yas-reload-all)))
 
 (use-package typescript-ts-mode
   :mode (("\\.ts\\'" . typescript-ts-mode)
          ("\\.tsx\\'" . tsx-ts-mode)
          ("\\.jsx\\'" . tsx-ts-mode))
+  :hook
+  ((typescript-ts-mode . nl/typescript-mode)
+   (tsx-ts-mode . nl/typescript-mode))
   :bind
   (:map typescript-ts-mode-map
         ("M-j" . c-indent-new-comment-line))
   (:map tsx-ts-mode-map
         ("M-;" . nl/tsx-comment-dwim))
-  :hook
-  (typescript-ts-mode . nl/typescript-mode)
-  (tsx-ts-mode . nl/typescript-mode)
   :preface
   (use-package nl-typescript :load-path "~/.emacs.d/lisp")
   (use-package nl-react :load-path "~/.emacs.d/lisp")
-  (defun nl/typescript-mode ()
-    "Setup TypeScript/TSX mode."
-    (my/lsp-deferred-unless-remote)
-    (setq column-enforce-column 120)
-    (flycheck-mode +1)
-    (column-enforce-mode +1)
-    (subword-mode +1)
-    ;;(eldoc-mode +1)
-    ;;(company-mode +1)
-    ;; (push '(">=" . ?≥) prettify-symbols-alist)
-    ;; (push '("<=" . ?≤) prettify-symbols-alist)
-    ;; (push '("->" . ?→) prettify-symbols-alist)
-    ;; (push '("=>" . ?↦) prettify-symbols-alist)
-    ;; (prettify-symbols-mode)
-    (when (fboundp 'nl/yas-reload-all)
-      (nl/yas-reload-all)))
   :config
   (setq lsp-clients-typescript-server "typescript-language-server")
   (setq lsp-disabled-clients '(vue-semantic-server lsp-volar))
@@ -3410,13 +3436,13 @@ To save all buffers that wgrep has changed, run =M-x wgrep-save-all-buffers=.
 #+begin_src emacs-lisp
 (use-package web-mode
   :mode (("\\.html?\\'"      . web-mode)
-         ("\\.css\\'"        . web-mode)
          ("\\.tpl\\.php\\'"  . web-mode)
          ("\\.tmpl\\.html\\'". web-mode))
   :preface
   (defun nl/web-mode-hook ()
     (my/lsp-deferred-unless-remote)
     (setq web-mode-auto-quote-style 1)
+    (require 'nl-colors)
     (local-set-key (kbd "M-q") #'fill-paragraph))
   :hook (web-mode . nl/web-mode-hook)
   :custom
@@ -3506,7 +3532,7 @@ Large collection of snippets: [[https://github.com/AndreaCrotti/yasnippet-snippe
   :config
   (setq yas-snippet-dirs
       '("~/.emacs.d/snippets"                 ;; personal snippets
-        "~/.emacs.d/elpa/yasnippet-snippets-1.0/snippets"
+        ;;"~/.emacs.d/elpa/yasnippet-snippets-1.0/snippets"
         ))
   (yas-reload-all))
 #+end_src
