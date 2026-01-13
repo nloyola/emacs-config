@@ -1307,8 +1307,8 @@ Complete anything.
    consult-theme :preview-key '(:debounce 0.2 any)
    consult-ripgrep consult-git-grep consult-grep
    consult-bookmark consult-recent-file consult-xref
-   consult--source-bookmark consult--source-file-register
-   consult--source-recent-file consult--source-project-recent-file
+   ;;consult--source-bookmark consult--source-file-register
+   ;;consult--source-recent-file consult--source-project-recent-file
    ;; :preview-key "M-."
    :preview-key '(:debounce 0.4 any))
 
@@ -2704,7 +2704,37 @@ Sometimes you end up with cursors outside of your view. You can scroll the scree
  :commands nginx-mode)
 #+end_src
 
-** [[https://github.com/nex3/perspective-el][perspective.el]]
+** [[https://github.com/jamescherti/outline-indent.el][outline-indent]]
+
+Provides a minor mode that enables code folding and outlining based on indentation levels for various indentation-based text files, such as YAML, Python, and any other indented text files.
+
+#+begin_src emacs-lisp
+(use-package outline-indent
+  :custom
+  (outline-indent-ellipsis " ▼ "))
+#+end_src
+
+** [[https://github.com/arnm/ob-mermaid][ob-mermaid]]
+
+#+begin_src emacs-lisp
+(use-package ob-mermaid
+  :ensure t
+  :after org
+  :config
+  ;; Automatically find the path to @mermaid-js/mermaid-cli
+  (let ((mmdc-path (executable-find "mmdc")))
+    (if mmdc-path
+        (setq ob-mermaid-cli-path mmdc-path)
+      (warn "mmdc not found. Install it with: npm install -g @mermaid-js/mermaid-cli")))
+
+  ;; Register mermaid in Org-babel
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   (append org-babel-load-languages
+           '((mermaid . t)))))
+#+end_src
+
+** [[https://github.com/nex3/perspective-el][perspective.el]
 
 The Perspective package provides multiple named workspaces (or "perspectives") in Emacs, similar to multiple desktops in window managers like Awesome and XMonad, and Spaces on the Mac.
 
@@ -2723,16 +2753,6 @@ The Perspective package provides multiple named workspaces (or "perspectives") i
   (consult-customize consult--source-buffer :hidden t :default nil)
   (add-to-list 'consult-buffer-sources persp-consult-source))
 #+end_src
-** [[https://github.com/jamescherti/outline-indent.el][outline-indent]]
-
-Provides a minor mode that enables code folding and outlining based on indentation levels for various indentation-based text files, such as YAML, Python, and any other indented text files.
-
-#+begin_src emacs-lisp
-(use-package outline-indent
-  :custom
-  (outline-indent-ellipsis " ▼ "))
-#+end_src
-
 ** PHP
 *** [[https://github.com/ejmr/php-mode][php-mode]]
 
@@ -3336,7 +3356,7 @@ the beginning of the buffer.
 (defun nl/typescript-mode ()
   "Setup TypeScript/TSX mode."
   ;;(setq column-enforce-column 120)
-  (message "nl/typescript-mode")
+  ;;(message "nl/typescript-mode")
   (lsp-deferred)
   (flycheck-mode +1)
   (column-enforce-mode +1)
@@ -3599,9 +3619,37 @@ See above.
           ;; org-link-frame-setup '((file . find-file))
           org-export-backends '(ascii html icalendar latex md)
           org-log-into-drawer t
-          org-file-apps '(("\\.png\\'" . browse-url) (auto-mode . emacs)))
-
-    (setq org-capture-templates
+          org-file-apps '(("\\.png\\'" . browse-url) (auto-mode . emacs))
+          org-export-babel-evaluate t ; Ensure babel blocks are evaluated on export
+          org-confirm-babel-evaluate nil ; Optional: Stops Emacs from asking 'yes/no' every time)
+          org-babel-default-header-args:mermaid
+          '((:results . "file")
+            (:exports . "results")))
+          (defun nl/org-run-css-inliner (file)
+            "Inline CSS in FILE for email clients when an inliner is available."
+            (when (and file (file-exists-p file))
+              (cond
+               ((executable-find "juice")
+                (call-process "juice" nil nil nil
+                              "--web-resources"
+                              file
+                              "--output" file))
+               ((executable-find "premailer")
+                (call-process "premailer" nil nil nil
+                              "--mode=html"
+                              "--base-url" "file:///"
+                              "--remove-classes"
+                              "--output" file
+                              file))
+               (t (message "No CSS inliner found (juice or premailer).")))))
+          (defun nl/org-export-inline-css (orig backend file &optional async subtreep visible-only body-only ext-plist post-process)
+            "Inline CSS after HTML export to file when not exporting asynchronously."
+            (let ((output (funcall orig backend file async subtreep visible-only body-only ext-plist post-process)))
+              (when (and (not async) (org-export-derived-backend-p backend 'html))
+                (nl/org-run-css-inliner output))
+              output))
+          (advice-add 'org-export-to-file :around #'nl/org-export-inline-css)
+          (setq org-capture-templates
           '(("t" "Todo" entry (file+headline "~/Sync/orgfiles/todo.org" "Tasks")
              "* TODO %?\n  %i\n  %a")
             ("l" "Link" entry (file+headline "~/Sync/orgfiles/links.org" "Links")
@@ -3620,6 +3668,7 @@ See above.
        (latex . t)
        (java . t)
        (js . t)
+       (mermaid . t)
        (python . t)
        (ruby . t)
        (shell . t)
