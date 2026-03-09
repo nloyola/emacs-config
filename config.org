@@ -77,6 +77,7 @@ See https://tony-zorman.com/posts/emacs-potpourri.html
   ("C-z" . nil)                ;; I never want to suspend the frame
   ("M-%" . query-replace-regexp)
   ("C-S-s" . isearch-forward)
+  ("C-x <mouse-movement>" . ignore) ;; Ignore stray motion events after focus changes
   ("C-x C-n" . next-error)
   ("C-x k" . nl/kill-this-buffer)
   ("M-f" . forward-to-word)
@@ -623,9 +624,69 @@ See: https://kristofferbalintona.me/posts/202206071000/
 
 * Theme
 See https://tinted-theming.github.io/base16-gallery/
-** Xresources theme (for pywal)
+
+** [[https://protesilaos.com/emacs/ef-themes#h:dd9e06f2-eef0-4afe-8a12-b7af5d597108][ef-themes]]
 
 #+begin_src emacs-lisp
+(use-package ef-themes
+  :init
+  (setq ef-themes-to-toggle '(ef-winter ef-night)
+        ef-themes-mixed-fonts t
+        ef-themes-variable-pitch-ui t
+        ef-themes-headings ; read the manual's entry or the doc string
+        '((0 variable-pitch 1.4)
+          (1 variable-pitch 1.3)
+          (2 variable-pitch regular 1.2)
+          (3 variable-pitch regular 1.1)
+          (4 variable-pitch regular 1.0)
+          (5 variable-pitch 1.0) ; absence of weight means `bold'
+          (6 variable-pitch 1.0)
+          (7 variable-pitch 1.0)
+          (t variable-pitch 1.0)))
+  :config
+  (defun nl/fix-gnus-group-news-face-cycle (&rest _)
+    "Break the Gnus news face inheritance cycle after theme changes."
+    (custom-theme-set-faces
+     'user
+     '(gnus-group-news-low ((t (:inherit gnus-group-mail-1 :weight bold))))
+     '(gnus-group-news-low-empty ((t (:inherit gnus-group-mail-1-empty :weight normal))))
+     '(gnus-group-news-4 ((t (:inherit gnus-group-news-low))))
+     '(gnus-group-news-4-empty ((t (:inherit gnus-group-news-low-empty))))
+     '(gnus-group-news-5 ((t (:inherit gnus-group-news-low))))
+     '(gnus-group-news-5-empty ((t (:inherit gnus-group-news-low-empty))))
+     '(gnus-group-news-6 ((t (:inherit gnus-group-news-low))))
+     '(gnus-group-news-6-empty ((t (:inherit gnus-group-news-low-empty))))))
+
+  (advice-add 'load-theme :after #'nl/fix-gnus-group-news-face-cycle)
+  (mapc #'disable-theme custom-enabled-themes)
+  (load-theme 'ef-winter :no-confirm)
+  (nl/fix-gnus-group-news-face-cycle))
+#+end_src
+
+** [[https://protesilaos.com/emacs/modus-themes][modus-themes]]
+
+#+begin_src emacs-lisp :tangle no
+(use-package modus-themes
+  :init
+  (setq modus-themes-mixed-fonts t
+      modus-themes-variable-pitch-ui t
+      modus-themes-headings ; read the manual's entry or the doc string
+      '((0 variable-pitch light 1.4)
+        (1 variable-pitch light 1.3)
+        (2 variable-pitch regular 1.2)
+        (3 variable-pitch regular 1.1)
+        (4 variable-pitch regular 1.0)
+        (5 variable-pitch 1.0) ; absence of weight means `bold'
+        (6 variable-pitch 1.0)
+        (7 variable-pitch 1.0)
+        (t variable-pitch 1.0)))
+  (load-theme 'modus-vivendi-deuteranopia :no-confirm)
+  )
+#+end_src
+
+** Xresources theme (for pywal)
+
+#+begin_src emacs-lisp :tangle no
 (defun nl/xresources-theme-hook ()
   (setq frame-background-mode 'dark)
   (load-theme 'xresources t))
@@ -651,7 +712,7 @@ See https://tinted-theming.github.io/base16-gallery/
 
 See https://github.com/doomemacs/themes/tree/screenshots#screenshots
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 (when (string-match "-microsoft" (downcase operating-system-release))
   (use-package doom-themes
     :config
@@ -704,33 +765,11 @@ Allow changing themes on the fly with the following.
 
 *** Doom two tone themes
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 (let ((theme-path "~/src/github/elisp/doom-two-tone-themes/themes/"))
   (when (file-directory-p (expand-file-name theme-path))
     (add-to-list 'custom-theme-load-path theme-path)
     (load-theme 'doom-navy-copper t)))
-#+end_src
-
-** [[https://protesilaos.com/emacs/ef-themes#h:dd9e06f2-eef0-4afe-8a12-b7af5d597108][ef-themes]]
-
-#+begin_src emacs-lisp :tangle no
-(use-package ef-themes
-  :init
-  (setq ef-themes-to-toggle '(ef-bio ef-deuteranopia-dark))
-  (setq ef-themes-headings ; read the manual's entry or the doc string
-      '((0 variable-pitch light 1.9)
-        (1 variable-pitch light 1.8)
-        (2 variable-pitch regular 1.7)
-        (3 variable-pitch regular 1.6)
-        (4 variable-pitch regular 1.5)
-        (5 variable-pitch 1.4) ; absence of weight means `bold'
-        (6 variable-pitch 1.3)
-        (7 variable-pitch 1.2)
-        (t variable-pitch 1.1)))
-  (setq ef-themes-mixed-fonts t
-      ef-themes-variable-pitch-ui t)
-  (load-theme 'ef-winter :no-confirm)
-  )
 #+end_src
 
 ** Base-16
@@ -1463,7 +1502,8 @@ Complete anything.
   ;; (setq vertico-resize t)
 
   ;; Optionally enable cycling for `vertico-next' and `vertico-previous'.
-  (setq vertico-cycle t)
+  (setq vertico-cycle t
+        vertico-sort-function #'vertico-sort-history-alpha)
   :config
   (vertico-multiform-mode 1)
   )
@@ -1474,9 +1514,9 @@ Complete anything.
 (use-package orderless
   :custom
   (completion-styles '(orderless basic)) ;; Enable orderless for flexible matching
-  (orderless-matching-styles '(orderless-flex))
+  ;;(orderless-matching-styles '(orderless-literal orderless-regexp orderless-flex))
   (completion-category-defaults nil)
-  (completion-category-overrides '((file (styles orderless partial-completion)))))
+  (completion-category-overrides '((file (styles partial-completion)))))
 
 ;; Persist history over Emacs restarts. Vertico sorts by history position.
 (use-package savehist
