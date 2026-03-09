@@ -640,7 +640,11 @@ See https://tinted-theming.github.io/base16-gallery/
     :load-path "~/src/github/elisp/xresources-theme"
     :init
     (add-to-list 'custom-theme-load-path "~/src/github/elisp/xresources-theme")
-    :hook (after-init . nl/xresources-theme-hook)))
+    :hook (after-init . nl/xresources-theme-hook)
+    :custom-face
+    (ansi-color-red ((t (:background "#440F04"))))
+    (ansi-color-bright-red ((t (:background "#A02409"))))
+  ))
 #+end_src
 
 ** Doom Themes
@@ -726,9 +730,6 @@ Allow changing themes on the fly with the following.
   (setq ef-themes-mixed-fonts t
       ef-themes-variable-pitch-ui t)
   (load-theme 'ef-winter :no-confirm)
-  :custom-face
-  (ansi-color-red ((t (:background "#440F04"))))
-  (ansi-color-bright-red ((t (:background "#A02409"))))
   )
 #+end_src
 
@@ -876,10 +877,11 @@ A minimalist package that enhances compilation-mode.
   :ensure nil
   :hook ((shell-mode . ansi-color-for-comint-mode-on)
          (compilation-filter . my/apply-ansi-color-to-compilation-buffer))
-  :config
-  ;; Customize ANSI colors if you like
-  (set-face-attribute 'ansi-color-red nil :background "#440000")
-  (set-face-attribute 'ansi-color-blue nil :background "#000055"))
+  :custom-face
+  (ansi-color-red ((t (:background "#440F04"))))
+  (ansi-color-bright-red ((t (:background "#A02409"))))
+  (ansi-color-blue ((t (:background "#000055"))))
+  )
 #+end_src
 
 ** =css-mode=
@@ -1347,14 +1349,25 @@ Complete anything.
                      dired-directory)))
 
 (defvar nl/project-src-folder "src")
+(defvar nl/project-test-folder "test")
 
 (defun nl/consult-ripgrep-project-src ()
-  "Run `consult-ripgrep` in the Projectile project root."
+  "Run `consult-ripgrep` in the Projectile project's src and test folders."
   (interactive)
-  (let ((project-root (concat (projectile-project-root) nl/project-src-folder "/")))
-    (if project-root
-        (consult-ripgrep project-root)
-      (message "Not in a Projectile project."))))
+  (let* ((project-root (projectile-project-root)))
+    (if (not project-root)
+        (message "Not in a Projectile project.")
+      (let* ((src-path (expand-file-name nl/project-src-folder project-root))
+             (test-path (expand-file-name nl/project-test-folder project-root))
+             (globs (delq nil
+                          (list (when (file-directory-p src-path)
+                                  (format " --glob %s/**" nl/project-src-folder))
+                                (when (file-directory-p test-path)
+                                  (format " --glob %s/**" nl/project-test-folder))))))
+        (if (null globs)
+            (message "No src/test folder in project.")
+          (let ((consult-ripgrep-args (concat consult-ripgrep-args (apply #'concat globs))))
+            (consult-ripgrep project-root)))))))
 #+end_src
 
 *** [[https://github.com/gagbo/consult-lsp][consult-lsp]]
@@ -1461,8 +1474,9 @@ Complete anything.
 (use-package orderless
   :custom
   (completion-styles '(orderless basic)) ;; Enable orderless for flexible matching
+  (orderless-matching-styles '(orderless-flex))
   (completion-category-defaults nil)
-  (completion-category-overrides '((file (styles partial-completion)))))
+  (completion-category-overrides '((file (styles orderless partial-completion)))))
 
 ;; Persist history over Emacs restarts. Vertico sorts by history position.
 (use-package savehist
@@ -3518,10 +3532,8 @@ To save all buffers that wgrep has changed, run =M-x wgrep-save-all-buffers=.
            (file-name (nth 1 (split-string buffer-file-name (project-root (project-current)))))
            (base-name (replace-regexp-in-string "\.yaml$" "" (file-name-nondirectory file-name))))
       (unless file-name (user-error "File not in project"))
-      ;; (compile
-      ;;  (format "./docker-wrapper.sh cli pw-page %s build --no-ansi -f -i ../default_pages/main_site" base-name))
       (compile
-       (format "cd public && php cli.php pw-page %s build --no-ansi -vvv -f -i ../default_pages/main_site" base-name))
+       (format "cd public && php cli.php pw:page %s build --no-ansi -vvv -f -i ../default_pages/main_site" base-name))
       ))
 
   (defhydra hydra-nl-yaml (:color red :hint nil)
