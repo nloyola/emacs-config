@@ -569,6 +569,42 @@ See: https://kristofferbalintona.me/posts/202206071000/
   )
 #+end_src
 
+#+begin_src emacs-lisp
+(use-package repeat
+  :ensure nil
+  :init
+  (repeat-mode 1))
+#+end_src
+
+The following was borrowed from:
+https://www.reddit.com/r/emacs/comments/1rhi075/elegant_implementation_of_otherwindowmru/?share_id=AoEb3bVezA9LRJXrLMlv_&utm_content=2&utm_medium=android_app&utm_name=androidcss&utm_source=share&utm_term=2
+
+#+begin_src emacs-lisp
+(use-package window
+  :ensure nil
+  :preface
+  (let ((windows nil)
+        (index 0))
+    (defun my/other-window-mru ()
+      "Cycle windows in most-recently-used order."
+      (interactive)
+      (if (one-window-p t)
+          (message "No other window to select")
+        (if (eq last-command this-command)
+            (setq index (mod (1+ index) (length windows)))
+          (select-window (selected-window))
+          (setq windows (sort (window-list nil 'nomini)
+                              :key #'window-use-time :reverse t)
+                index 1))
+        (select-window (nth index windows) 'norecord))))
+  :bind
+  (("C-x o" . my/other-window-mru)
+   :map other-window-repeat-map
+   ("o" . my/other-window-mru))
+  :config
+  (put 'my/other-window-mru 'repeat-map 'other-window-repeat-map))
+#+end_src
+
 ** Side windows
 
 #+begin_src emacs-lisp
@@ -579,15 +615,14 @@ See: https://kristofferbalintona.me/posts/202206071000/
 ;; (setq display-buffer-alist '())
 
 ;; left, top, right, bottom
-(setq window-sides-slots '(0 0 1 1))
+(setq window-sides-slots '(1 0 1 1))
 
 (add-to-list 'display-buffer-alist
-             '("\\(?:\\*\\(?:[Hh]elp\\|shell\\|info\\)\\*\\)"
-               display-buffer-in-side-window
-               (window-width . 80)
-               (side . right)
-               (slot . 0) ;; right side
-               ;;(preserve-size . (t . nil))
+             `("\\(?:\\*\\(?:[Hh]elp\\|[Hh]elpful.*\\|shell\\|info\\)\\*\\)"
+               (display-buffer-in-side-window)
+               (window-width . 100)
+               (side . left)
+               (slot . 0)
                ,nl/side-window-parameters))
 
 (add-to-list 'display-buffer-alist
@@ -1108,10 +1143,7 @@ Had to install TSX tag =v0.20.2= since the latest in the repository cause a pars
       '((toml-ts-mode . conf-toml-mode)
         ;; I don't actually know if the future tree-sitter mode for HTML will be
         ;; called html-ts-mode or mhtml-ts-mode, but if it's the former I'd include this
-        (html-ts-mode . mhtml-mode)
-        ;; See the note in their README: https://github.com/emacs-typescript/typescript.el#a-short-note-on-development-halt
-        (typescript-ts-mode . nil)
-        (tsx-ts-mode . nil)))
+        (html-ts-mode . mhtml-mode)))
   (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode)
   )
 #+end_src
@@ -2153,6 +2185,21 @@ So that hungry deletion can be used in all modes.
   (global-hungry-delete-mode))
 #+end_src
 
+** [[https://github.com/Wilfred/helpful][helpful]]
+
+#+begin_src emacs-lisp
+(use-package helpful
+    :ensure t
+    :bind
+    (("C-h f" . helpful-callable)
+     ("C-h v" . helpful-variable)
+     ("C-h k" . helpful-key)
+     ("C-h x" . helpful-command)
+     ("C-c C-d" . helpful-at-point)
+     ("C-h F" . helpful-function)
+     ("C-h C" . helpful-command)))
+#+end_src
+
 ** [[https://github.com/abo-abo/hydra][hydra]]
 
 This package can be used to tie related commands into a family of short bindings with a common prefix - a Hydra.
@@ -2481,6 +2528,28 @@ Jinx is a fast just-in-time spell-checker for Emacs.
 ** [[https://github.com/emacsorphanage/key-chord][key-chord]]
 
 See =init.el=.
+
+** [[https://github.com/tarsius/keycast][keycast]]
+
+#+begin_src emacs-lisp
+(use-package keycast
+  :ensure t
+  :config
+  ;; This config replaces `mode-line-buffer-identification`, so keycast
+  ;; needs to insert after a segment that actually exists.
+  (setq keycast-mode-line-insert-after 'mode-line-process)
+
+  ;; This enables the display in the mode-line (bottom bar)
+  (keycast-mode-line-mode 1)
+
+  ;; Optional: If you want a more prominent display,
+  ;; you can use the header-line (top of the window) instead:
+  ;; (keycast-header-line-mode 1)
+
+  ;; Optional: Control what exactly is shown (keys + command name)
+  (setq keycast-substitute-alist '((self-insert-command nil nil)))))
+#+end_src
+
 ** [[https://github.com/jschaf/emacs-lorem-ipsum][lorem-ipsum]]
 
 Add filler lorem ipsum text to Emacs.
@@ -2788,7 +2857,7 @@ Provides a minor mode that enables code folding and outlining based on indentati
            '((mermaid . t)))))
 #+end_src
 
-** [[https://github.com/nex3/perspective-el][perspective.el]
+** [[https://github.com/nex3/perspective-el][perspective.el]]
 
 The Perspective package provides multiple named workspaces (or "perspectives") in Emacs, similar to multiple desktops in window managers like Awesome and XMonad, and Spaces on the Mac.
 
@@ -3411,7 +3480,7 @@ the beginning of the buffer.
   "Setup TypeScript/TSX mode."
   ;;(setq column-enforce-column 120)
   ;;(message "nl/typescript-mode")
-  (lsp-deferred)
+  (my/lsp-deferred-unless-remote)
   (flycheck-mode +1)
   (column-enforce-mode +1)
   (subword-mode +1)
@@ -3433,7 +3502,9 @@ the beginning of the buffer.
          ("\\.tsx\\'" . tsx-ts-mode)
          ("\\.jsx\\'" . tsx-ts-mode))
   :hook
-  ((typescript-ts-mode . nl/typescript-mode)
+  ((typescript-ts-mode . my/lsp-deferred-unless-remote)
+   (typescript-ts-mode . nl/typescript-mode)
+   (tsx-ts-mode . my/lsp-deferred-unless-remote)
    (tsx-ts-mode . nl/typescript-mode))
   :bind
   (:map typescript-ts-mode-map

@@ -101,7 +101,8 @@
         ("org"       . 70)
         ("melpa"     . 0)))
 
-;;(package-initialize)
+(unless package--initialized
+  (package-initialize))
 
 ;; Using HTTPS for downloading packages, make sure HTTPS is not going through a proxy.
 ;; (setenv "https_proxy" "")
@@ -117,23 +118,19 @@
 ;; use only for debugging startup time
 (setq use-package-verbose t)               ; report loading details)
 
-;; ;; Install use-package if it's not already installed.
-;; ;; use-package is used to configure the rest of the packages.
-;; (unless (package-installed-p 'use-package)
-;;   (package-refresh-contents)
-;;   (package-install 'use-package))
+(defun nl/ensure-package-installed (package)
+  "Install PACKAGE unless it is already installed."
+  (unless (package-installed-p package)
+    (unless package-archive-contents
+      (package-refresh-contents))
+    (package-install package)))
 
-;; (eval-when-compile
-;;   (require 'use-package))
+;; `use-package` and its helpers need to be available before any
+;; `use-package` forms are expanded or loaded.
+(dolist (package '(use-package diminish bind-key htmlize use-package-chords))
+  (nl/ensure-package-installed package))
 
-(unless (package-installed-p 'htmlize)
-  (package-refresh-contents)
-  (package-install 'htmlize))
-
-(unless (package-installed-p 'diminish)
-  (package-refresh-contents)
-  (package-install 'diminish))
-
+(require 'use-package)
 (require 'diminish)
 (require 'bind-key)
 ;;(setq use-package-verbose nil)
@@ -149,10 +146,6 @@
   :commands key-chord-define-global
   :config
   (key-chord-mode 1))
-
-(unless (package-installed-p 'use-package-chords)
-  (package-refresh-contents)
-  (package-install 'use-package-chords))
 
 (use-package use-package-chords
   :demand t
