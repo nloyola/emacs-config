@@ -1365,6 +1365,20 @@ Complete anything.
   (setq xref-show-xrefs-function #'consult-xref
         xref-show-definitions-function #'consult-xref)
 
+  :custom
+  (consult-buffer-sources
+   '(consult-source-recent-file
+     consult-source-buffer
+     consult-source-hidden-buffer
+     consult-source-modified-buffer
+     consult-source-other-buffer
+     consult-source-buffer-register
+     consult-source-file-register
+     consult-source-bookmark
+     consult-source-project-buffer-hidden
+     consult-source-project-recent-file-hidden
+     consult-source-project-root-hidden))
+
   ;; Configure other variables and modes in the :config section,
   ;; after lazily loading the package.
   :config
@@ -1537,6 +1551,23 @@ Complete anything.
   (setq vertico-cycle t
         vertico-sort-function #'vertico-sort-history-alpha)
   :config
+  (require 'vertico-multiform)
+  (add-to-list 'vertico-multiform-commands
+               '(consult-buffer
+                 posframe
+                 (vertico-sort-function . nil)
+                 (vertico-posframe-poshandler . posframe-poshandler-frame-top-center)
+                 (vertico-posframe-fallback-mode . vertico-buffer-mode)))
+  (add-to-list 'vertico-multiform-commands
+               '(consult-projectile-find-file
+                 posframe
+                 (vertico-posframe-poshandler . posframe-poshandler-frame-top-center)
+                 (vertico-posframe-fallback-mode . vertico-buffer-mode)))
+  (add-to-list 'vertico-multiform-commands
+               '(consult-projectile
+                 posframe
+                 (vertico-posframe-poshandler . posframe-poshandler-frame-top-center)
+                 (vertico-posframe-fallback-mode . vertico-buffer-mode)))
   (vertico-multiform-mode 1)
   )
 
@@ -1580,8 +1611,17 @@ Complete anything.
   (mapc 'frame-set-background-mode (frame-list)))
 
 (use-package vertico-posframe
+  :after vertico
+  :demand t
   :ensure t
+  :custom-face
+  (vertico-posframe ((t (:background "#000e17" :foreground "#afbcbf"))))
+  (vertico-posframe-border ((t (:background "#242e39"))))
   :custom
+  ;; (vertico-posframe-font
+  ;;  (when nl/gui-fixed-font-name
+  ;;    (format "%s-%d" nl/gui-fixed-font-name 14)))
+  (vertico-posframe-font "FiraCode Nerd Font-14")
   (vertico-posframe-parameters
    '((left-fringe . 8)
      (right-fringe . 8))))
@@ -2370,7 +2410,8 @@ This package can be used to tie related commands into a family of short bindings
     ("b" hydra-buffer/body "buffer" :color blue :column "Buffers")
     ("s" hydra-nl-search/body "search" :color blue :column "Search")
     ("a" hydra-nl-align/body "align" :color blue :column "Align")
-    ("c" nl/open-alacritty-here "alacrity here" :color blue :column "Shell")
+    ("c" nl/open-alacritty-project-root "alacritty project root" :color blue :column "Shell")
+    ("C" nl/open-alacritty-here "alacritty here" :color blue)
     ("g" hydra-git-gutter/body "git" :color blue :column "Git"))
 
   (key-chord-define-global "jv" 'hydra-nl-common/body)
@@ -2547,7 +2588,7 @@ See =init.el=.
   ;; (keycast-header-line-mode 1)
 
   ;; Optional: Control what exactly is shown (keys + command name)
-  (setq keycast-substitute-alist '((self-insert-command nil nil)))))
+  (setq keycast-substitute-alist '((self-insert-command nil nil))))
 #+end_src
 
 ** [[https://github.com/jschaf/emacs-lorem-ipsum][lorem-ipsum]]
@@ -3080,14 +3121,14 @@ Project navigation and management library for Emacs.
 (use-package projectile
   :diminish projectile-mode
   :bind-keymap ("C-c p" . projectile-command-map)
-  :bind (:map projectile-command-map ("f" . consult-projectile))
+  :bind (:map projectile-command-map ("f" . consult-projectile-find-file))
   :init (projectile-mode +1)
   :config
   ;; tramp-fix: https://github.com/syl20bnr/spacemacs/issues/11381
   ;; (defadvice projectile-project-root (around ignore-remote first activate)
   ;;   (unless (file-remote-p default-directory) ad-do-it))
 
-  (setq projectile-indexing-method 'alien
+  (setq projectile-indexing-method 'hybrid
         projectile-remember-window-configs nil
         projectile-switch-project-action 'projectile-dired
         projectile-completion-system 'default
