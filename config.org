@@ -664,7 +664,8 @@ See https://tinted-theming.github.io/base16-gallery/
 
 #+begin_src emacs-lisp
 (use-package ef-themes
-  :init
+  :demand t
+  :config
   (setq ef-themes-to-toggle '(ef-winter ef-night)
         ef-themes-mixed-fonts t
         ef-themes-variable-pitch-ui t
@@ -678,7 +679,6 @@ See https://tinted-theming.github.io/base16-gallery/
           (6 variable-pitch 1.0)
           (7 variable-pitch 1.0)
           (t variable-pitch 1.0)))
-  :config
   (defun nl/fix-gnus-group-news-face-cycle (&rest _)
     "Break the Gnus news face inheritance cycle after theme changes."
     (custom-theme-set-faces
@@ -846,6 +846,7 @@ A minor mode which sets the wrap-prefix property on the fly so that single-long-
 #+begin_src emacs-lisp
 (use-package auth-source
   :ensure nil ;; it's built into Emacs, no need to install
+  :demand t
   :config
   (setq auth-sources '("~/.authinfo.gpg")))
 #+end_src
@@ -1098,6 +1099,7 @@ Had to install TSX tag =v0.20.2= since the latest in the repository cause a pars
 (add-to-list 'warning-suppress-types '(treesit-font-lock-rules-mismatch))
 
 (use-package treesit-auto
+  :demand t
   :config
   (global-treesit-auto-mode))
 
@@ -1551,17 +1553,23 @@ Complete anything.
   (setq vertico-cycle t
         vertico-sort-function #'vertico-sort-history-alpha)
   :config
+  (defun nl/vertico-posframe-bottom-left-offset (info)
+    "Position Vertico posframe near the bottom-left of the frame with padding."
+    (cons 96 (- (plist-get info :parent-frame-height)
+                (plist-get info :posframe-height)
+                96)))
+
   (require 'vertico-multiform)
   (add-to-list 'vertico-multiform-commands
                '(consult-buffer
                  posframe
                  (vertico-sort-function . nil)
-                 (vertico-posframe-poshandler . posframe-poshandler-frame-top-center)
+                 (vertico-posframe-poshandler . nl/vertico-posframe-bottom-left-offset)
                  (vertico-posframe-fallback-mode . vertico-buffer-mode)))
   (add-to-list 'vertico-multiform-commands
                '(consult-projectile-find-file
                  posframe
-                 (vertico-posframe-poshandler . posframe-poshandler-frame-top-center)
+                 (vertico-posframe-poshandler . nl/vertico-posframe-bottom-left-offset)
                  (vertico-posframe-fallback-mode . vertico-buffer-mode)))
   (add-to-list 'vertico-multiform-commands
                '(consult-projectile
@@ -1724,6 +1732,7 @@ Complete anything.
 
 #+begin_src emacs-lisp
 (use-package editorconfig
+  :demand t
   :config
   (editorconfig-mode 1))
 #+end_src
@@ -1868,9 +1877,11 @@ Stopped using this package since it does not work well on Emacs 30.
 
 ** [[https://github.com/magnars/expand-region.el][expand-region]]
 
+Update: March 16, 2026 - switching to =expreg= since it works with =tree-sitter=.
+
 Expand region increases the selected region by semantic units. Just keep pressing the key until it selects what you want.
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 (use-package expand-region
   :bind
   (("C-=" . er/expand-region)
@@ -1879,6 +1890,15 @@ Expand region increases the selected region by semantic units. Just keep pressin
   :config
   (setq expand-region-smart-cursor t
         er/enable-subword-mode? nil))
+#+end_src
+
+** =expreg=
+
+#+begin_src emacs-lisp
+(use-package expreg
+  :ensure t
+  :bind (("C-=" . expreg-expand)
+         ("C--" . expreg-contract)))
 #+end_src
 
 ** [[https://github.com/flycheck/flycheck][flycheck]]
@@ -2613,6 +2633,7 @@ Add filler lorem ipsum text to Emacs.
 
 #+begin_src emacs-lisp
 (use-package which-key
+  :demand t
   :diminish
   :config
   (which-key-mode))
@@ -2737,16 +2758,22 @@ Add filler lorem ipsum text to Emacs.
   :mode (("README\\.md\\'" . gfm-mode)
          ("\\.markdown\\'" . markdown-mode)
          ("\\.md\\'"       . gfm-mode))
+  :preface
+  (defun nl/markdown-mode-setup ()
+    (auto-fill-mode -1)
+    (setq adaptive-wrap-extra-indent 1)
+    (adaptive-wrap-prefix-mode)
+    (variable-pitch-mode)
+    (visual-line-mode)
+    (local-set-key (kbd "C-c C-x m") #'markdown-toggle-markup-hiding)
+    (markdown-toggle-markup-hiding 1))
   :hook
-  (markdown-mode . (lambda ()
-                     (auto-fill-mode -1)
-                     (setq adaptive-wrap-extra-indent 1)
-                     (adaptive-wrap-prefix-mode)
-                     ))
-  (markdown-mode . variable-pitch-mode)
-  (markdown-mode . visual-line-mode)
+  (markdown-mode . nl/markdown-mode-setup)
+  (gfm-mode . nl/markdown-mode-setup)
   :config
-  (setq markdown-command "pandoc")
+  (setq markdown-command "pandoc"
+        markdown-fontify-code-blocks-natively t
+        markdown-hide-markup t)
   (custom-set-faces
    `(markdown-code-face ((t (:family ,nl/gui-fixed-font-name
                                      :foreground "#91b831"
@@ -2758,9 +2785,12 @@ Add filler lorem ipsum text to Emacs.
                                      :background "#303030"
                                      :weight normal
                                      :height 120))))
-   `(markdown-inline-code-face ((t (:family ,nl/gui-fixed-font-name))))
-   `(markdown-bold-face ((t (:family ,nl/gui-variable-font-name))))
-   `(markdown-italic-face ((t (:family ,nl/gui-variable-font-name))))
+   `(markdown-inline-code-face ((t (:family ,nl/gui-fixed-font-name
+                                            :foreground "#91b831"
+                                            :background "#303030"
+                                            :weight normal))))
+   `(markdown-bold-face ((t (:family ,nl/gui-variable-font-name :weight bold))))
+   `(markdown-italic-face ((t (:family ,nl/gui-variable-font-name :slant italic))))
    `(markdown-list-face ((t (:family ,nl/gui-variable-font-name :height 130))))
    `(markdown-header-face-1 ((t (:family ,nl/gui-variable-font-name :height 190 :foreground "#91b831"))))
    `(markdown-header-face-2 ((t (:family ,nl/gui-variable-font-name :height 170 :foreground "#91b831"))))
@@ -2929,11 +2959,100 @@ The Perspective package provides multiple named workspaces (or "perspectives") i
   (use-package flycheck-phpstan)
   (use-package nl-nordita-php-project :demand :load-path "~/.emacs.d/lisp")
 
+  (defun nl/php--comment-fill-prefix (line indentation)
+    "Return fill prefix for LINE in a PHP comment with INDENTATION."
+    (cond
+     ((string-match-p (concat "^" (regexp-quote indentation) "\\* ?") line)
+      (concat indentation "* "))
+     ((string-match-p (concat "^" (regexp-quote indentation) "//+ ?") line)
+      (concat indentation "// "))
+     ((string-match-p (concat "^" (regexp-quote indentation) "# ?") line)
+      (concat indentation "# "))
+     (t indentation)))
+
+  (defun nl/php--comment-line-text (line indentation)
+    "Return comment body text from LINE with INDENTATION."
+    (let ((trimmed (string-trim-left line)))
+      (cond
+       ((string-match "\\`/\\*+\\s-*\\(.*\\)\\'" trimmed)
+        (match-string 1 trimmed))
+       ((string-match "\\`\\*+/?\\s-*\\(.*\\)\\'" trimmed)
+        (match-string 1 trimmed))
+       ((string-match "\\`//+\\s-*\\(.*\\)\\'" trimmed)
+        (match-string 1 trimmed))
+       ((string-match "\\`#\\s-*\\(.*\\)\\'" trimmed)
+        (match-string 1 trimmed))
+       ((string-prefix-p indentation line)
+        (string-remove-prefix indentation line))
+       (t trimmed))))
+
+  (defun nl/php-fill-paragraph (&optional justify)
+    "Fill the current paragraph, including multiline PHP comments."
+    (interactive "P")
+    (if (not (nth 4 (syntax-ppss)))
+        (let ((fill-paragraph-function nil))
+          (fill-paragraph justify))
+      (let* ((start (line-beginning-position))
+             (end (line-end-position))
+             (indentation (save-excursion
+                            (back-to-indentation)
+                            (buffer-substring-no-properties
+                             (line-beginning-position)
+                             (point))))
+             (prefix (nl/php--comment-fill-prefix
+                      (buffer-substring-no-properties start end)
+                      indentation))
+             (paragraph-start-line
+              (save-excursion
+                (while (and (> (line-beginning-position) (point-min))
+                            (progn
+                              (forward-line -1)
+                              (nth 4 (syntax-ppss)))
+                            (not (string-empty-p
+                                  (string-trim
+                                   (nl/php--comment-line-text
+                                    (buffer-substring-no-properties
+                                     (line-beginning-position)
+                                     (line-end-position))
+                                    indentation)))))
+                  (setq start (line-beginning-position)))
+                start))
+             (paragraph-end-line
+              (save-excursion
+                (goto-char end)
+                (while (and (= (forward-line 1) 0)
+                            (nth 4 (syntax-ppss))
+                            (not (string-empty-p
+                                  (string-trim
+                                   (nl/php--comment-line-text
+                                    (buffer-substring-no-properties
+                                     (line-beginning-position)
+                                     (line-end-position))
+                                    indentation)))))
+                  (setq end (line-end-position)))
+                end))
+             (lines (split-string
+                     (buffer-substring-no-properties paragraph-start-line paragraph-end-line)
+                     "\n"))
+             (text (string-join
+                    (mapcar (lambda (line)
+                              (string-trim
+                               (nl/php--comment-line-text line indentation)))
+                            lines)
+                    " ")))
+        (delete-region paragraph-start-line paragraph-end-line)
+        (let ((fill-prefix prefix)
+              (start-point (point)))
+          (insert prefix text)
+          (fill-region-as-paragraph start-point (point) justify))
+        t)))
+
   (defun nl/php-mode-hook ()
     "My PHP mode configuration."
     (require 'flycheck-phpstan)
     (setq php-mode-lineup-cascaded-calls t
           php-cs-fixer-config-option (concat (projectile-project-root) ".php-cs-fixer.php"))
+    (setq-local fill-paragraph-function #'nl/php-fill-paragraph)
     (flycheck-mode t)
     (subword-mode +1)
     ;;(prettier-mode)
