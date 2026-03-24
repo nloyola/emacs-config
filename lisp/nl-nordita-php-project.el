@@ -76,22 +76,23 @@
   (let* ((default-directory (format "%s" (project-root (project-current)))))
     (compile (format "grep -nre \"%s\" {default_pages,src,pw-frontend/src/ts}" (symbol-at-point)))))
 
-(defhydra hydra-nl/php-test (:color blue)
-  "Test"
-  ("d" nl/phpunit-run-this-method-with-debug-logging "only this method (with debug logging)" :column "PHP")
-  ("x" nl/phpunit-run-this-method-with-x-debug "only this method (with x_debug)" :column "PHP")
-  ("p" nl/phpunit-project "All tests")
-  ("f" nl/phpunit-test-this-file "only this file")
-  ("m" nl/phpunit-only-this-method "only this method")
-  ("r" nl/phpunit-coverage-report-in-chrome "Open coverage report in Chrome")
-  ("t" nl/phpunit-end-to-end-toggle "toggle exclude end-to-end" :column "End to End"))
+(with-eval-after-load 'hydra
+  (defhydra hydra-nl/php-test (:color blue)
+    "Test"
+    ("d" nl/phpunit-run-this-method-with-debug-logging "only this method (with debug logging)" :column "PHP")
+    ("x" nl/phpunit-run-this-method-with-x-debug "only this method (with x_debug)" :column "PHP")
+    ("p" nl/phpunit-project "All tests")
+    ("f" nl/phpunit-test-this-file "only this file")
+    ("m" nl/phpunit-only-this-method "only this method")
+    ("r" nl/phpunit-coverage-report-in-chrome "Open coverage report in Chrome")
+    ("t" nl/phpunit-end-to-end-toggle "toggle exclude end-to-end" :column "End to End"))
 
-(defhydra hydra-nl-nordita-project (:color red :hint nil)
-  "Project commands"
-  ("t" hydra-nl/php-test/body "test" :color blue :column "PHP")
-  ("c" nl/php-code-sniffer "Run PHP CodeSniffer" :column "Build")
-  ("y" nl/nordita-build-page-from-yaml "Build ProcessWire page from YAML file" :color blue)
-  ("g" hydra-nl-common/body "common" :color blue :column "Common"))
+  (defhydra hydra-nl-nordita-project (:color red :hint nil)
+    "Project commands"
+    ("t" hydra-nl/php-test/body "test" :color blue :column "PHP")
+    ("c" nl/php-code-sniffer "Run PHP CodeSniffer" :column "Build")
+    ("y" nl/nordita-build-page-from-yaml "Build ProcessWire page from YAML file" :color blue)
+    ("g" hydra-nl-common/body "common" :color blue :column "Common")))
 
 (define-key php-ts-mode-map (kbd "C-c , d") 'nl/phpunit-run-this-method-with-debug-logging)
 (define-key php-ts-mode-map (kbd "C-c , x") 'nl/phpunit-run-this-method-with-x-debug)
@@ -163,7 +164,8 @@
 ;;     ("y" "build PW YAML file" nl/nordita-build-page-from-yaml :transient nil)]]
 ;;   )
 
-(key-chord-define php-ts-mode-map "jc" 'hydra-nl-nordita-project/body)
+(with-eval-after-load 'key-chord
+  (key-chord-define php-ts-mode-map "jc" 'hydra-nl-nordita-project/body))
 
 ;;(key-chord-define php-ts-mode-map "jc" 'casual-nl-norweb-project-tmenu)
 

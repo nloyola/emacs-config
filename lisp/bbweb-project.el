@@ -54,12 +54,6 @@
   (interactive)
   (bbweb-find-with-filetypes 'html-filename-p))
 
-(defhydra hydra-nl-bbweb-find-file (:color blue)
-  "bbweb-find-file"
-  ("s" bbweb-find-scala-file "Scala file")
-  ("j" bbweb-find-js-file "JS file")
-  ("h" bbweb-find-html-file "HTML file"))
-
 (defun nl/sbt-bloop-install ()
   (interactive)
   (async-shell-command
@@ -67,19 +61,25 @@
    "*sbt-bloop*"
    "*Messages*"))
 
-(defhydra hydra-nl-bbweb-scala (:hint nil)
-  "bbweb scala build"
-  ("b" nl/sbt-bloop-install "sbt bloopInstall" :color blue :column "Scala")
-  ("i" nl/indent-whole-buffer "indent buffer" :color blue)
-  ("x" lsp-find-references "find references" :column "Source Navigation" :color blue)
-  ("p" dumb-jump-go-prompt "prompt" :color blue)
-  ("f" nl/scalatest-find-file "find file from traceback" :color blue :column "Scala Test")
-  ("n" nl/scalatest-find-next-failure "find next scalatest failure in SBT buffer" :color blue)
-  ("s" nl/counsel-ag-scala-spec "Search Spec files" :color blue))
+(with-eval-after-load 'hydra
+  (defhydra hydra-nl-bbweb-find-file (:color blue)
+    "bbweb-find-file"
+    ("s" bbweb-find-scala-file "Scala file")
+    ("j" bbweb-find-js-file "JS file")
+    ("h" bbweb-find-html-file "HTML file"))
 
-;; this def uses a lambda to show that it is possible, id does not need to use it
-(key-chord-define scala-mode-map "jc" '(lambda () (interactive)
-                                         (hydra-nl-bbweb-scala/body)))
+  (defhydra hydra-nl-bbweb-scala (:hint nil)
+    "bbweb scala build"
+    ("b" nl/sbt-bloop-install "sbt bloopInstall" :color blue :column "Scala")
+    ("i" nl/indent-whole-buffer "indent buffer" :color blue)
+    ("x" lsp-find-references "find references" :column "Source Navigation" :color blue)
+    ("p" dumb-jump-go-prompt "prompt" :color blue)
+    ("f" nl/scalatest-find-file "find file from traceback" :color blue :column "Scala Test")
+    ("n" nl/scalatest-find-next-failure "find next scalatest failure in SBT buffer" :color blue)
+    ("s" nl/counsel-ag-scala-spec "Search Spec files" :color blue))
+
+  (key-chord-define scala-mode-map "jc" '(lambda () (interactive)
+                                           (hydra-nl-bbweb-scala/body))))
 
 ;;
 ;;

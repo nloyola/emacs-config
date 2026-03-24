@@ -133,22 +133,22 @@
             ))
 
 
-(defhydra hydra-nl/python-test (:color blue)
-  "Test"
-  ("c" nl/django-test-only-this-class "only this class" :column "Test")
-  ("m" nl/django-test-only-this-method "only this class" :column "Test")
-  ("p" nl/ng-test "project" :column "Test"))
+(with-eval-after-load 'hydra
+  (defhydra hydra-nl/python-test (:color blue)
+    "Test"
+    ("c" nl/django-test-only-this-class "only this class" :column "Test")
+    ("m" nl/django-test-only-this-method "only this class" :column "Test")
+    ("p" nl/ng-test "project" :column "Test"))
 
-(defhydra hydra-nl-python (:hint nil)
-  "Project"
-  ("i" nl/indent-whole-buffer "indent buffer" :color blue)
-  ("x" lsp-find-references "find references" :color blue)
-  ("p" dumb-jump-go-prompt "prompt" :color blue)
-  ("t" hydra-nl/python-test/body "test" :color blue))
+  (defhydra hydra-nl-python (:hint nil)
+    "Project"
+    ("i" nl/indent-whole-buffer "indent buffer" :color blue)
+    ("x" lsp-find-references "find references" :color blue)
+    ("p" dumb-jump-go-prompt "prompt" :color blue)
+    ("t" hydra-nl/python-test/body "test" :color blue))
 
-;; this def uses a lambda to show that it is possible, id does not need to use it
-(key-chord-define python-mode-map "jc" '(lambda () (interactive)
-                                         (hydra-nl-python/body)))
+  (key-chord-define python-mode-map "jc" '(lambda () (interactive)
+                                            (hydra-nl-python/body))))
 
 
 (define-key python-mode-map (kbd "C-c , m") 'nl/django-test-only-this-method)

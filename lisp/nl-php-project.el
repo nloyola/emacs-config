@@ -163,11 +163,12 @@ The class name must have the postfix 'Spec' for this function to work."
 ;;
 ;; -----------------------------------------
 
-(defhydra hydra-nl-project (:color red :hint nil)
-  "Project commands"
-  ("a" hydra-nl-align/body "align" :color blue :column "PHP"))
+(with-eval-after-load 'hydra
+  (defhydra hydra-nl-project (:color red :hint nil)
+    "Project commands"
+    ("a" hydra-nl-align/body "align" :color blue :column "PHP"))
 
-(key-chord-define php-mode-map "jc" 'hydra-nl-project/body)
+  (key-chord-define php-mode-map "jc" 'hydra-nl-project/body))
 
 (defun nl/phpunit-use-attributes ()
   (interactive)

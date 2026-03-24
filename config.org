@@ -1791,7 +1791,8 @@ Using =nerd-icons= or =all-the-icons= slows down init time.
 #+begin_src emacs-lisp
 (use-package dashboard
   ;; :after nerd-icons
-  :init
+  :demand t
+  :config
   (dashboard-setup-startup-hook)
   :custom
   (dashboard-projects-backend 'projectile)
@@ -2267,6 +2268,7 @@ This package can be used to tie related commands into a family of short bindings
 #+begin_src emacs-lisp
 (use-package hydra
   :pin melpa
+  :demand t
   :after key-chord
   :init
   (use-package cl-lib)
@@ -2423,6 +2425,13 @@ This package can be used to tie related commands into a family of short bindings
     "Search"
     ("p" (nl/consult-ripgrep-project-src) "project's src folder" :exit t))
 
+  (defhydra hydra-nl-align (:hint nil)
+    (":" align-colons "colons" :color blue :column "Align things")
+    ("," align-commas "commas" :color blue)
+    ("=" align-equals "equals" :color blue)
+    ("$" align-dollar-sign "dollar sign" :color blue)
+    ("p" align-parameters "parameters" :color blue))
+
   (defhydra hydra-nl-common (:color red :hint nil)
     ("f" hydra-nl-frames/body "frames" :color blue :column "Frames")
     ("w" hydra-window/body "windows" :color blue :column "Windows")
@@ -2469,13 +2478,6 @@ Align by colons (handy for JavaScript), align by commas, and align by equal sign
 (defun align-parameters (beg end)
   (interactive "r")
   (align-regexp beg end "\\w+\\(\\s-*\\)\\w+,?" 1 1 t))
-
-(defhydra hydra-nl-align (:hint nil)
-  (":" align-colons "colons" :color blue :column "Align things")
-  ("," align-commas "commas" :color blue)
-  ("=" align-equals "equals" :color blue)
-  ("$" align-dollar-sign "dollar sign" :color blue)
-  ("p" align-parameters "parameters" :color blue))
 #+end_src
 
 ** [[https://gitlab.com/emacs-stuff/indent-tools/][indent-tools]]
@@ -3314,7 +3316,7 @@ Pulse highlight line on demand or after running select functions
 (use-package pulsar
   :bind (("C-c l p" . pulsar-pulse-line)
          ("C-c l h" . pulsar-highlight-line))
-  :init
+  :config
   (pulsar-global-mode 1)
   :config
   (setq pulsar-pulse t)
@@ -3792,6 +3794,7 @@ To save all buffers that wgrep has changed, run =M-x wgrep-save-all-buffers=.
 #+begin_src emacs-lisp
 (use-package yaml-mode
   :mode "\\.\\(yml\\|yaml\\)\\'"
+  :after hydra
   :preface
   (defun nl/nordita-build-page-from-yaml ()
     "Builds the ProcessWire page for the visited YAML file."
@@ -3807,16 +3810,16 @@ To save all buffers that wgrep has changed, run =M-x wgrep-save-all-buffers=.
        (format "cd public && php cli.php pw:page %s build --no-ansi -vvv -f -i ../default_pages/main_site" base-name))
       ))
 
-  (defhydra hydra-nl-yaml (:color red :hint nil)
-    "Project commands"
-    ("a" hydra-nl-align/body "align" :color blue :column "General")
-    ("y" nl/nordita-build-page-from-yaml "Build ProcessWire page from YAML file" :color blue :column "Nordita"))
-
   (defun nl/yaml-mode-hook ()
     (set-fill-column 120)
     (display-line-numbers-mode)
     (outline-indent-minor-mode)
     (key-chord-define-local "jc" 'hydra-nl-yaml/body))
+  :config
+  (defhydra hydra-nl-yaml (:color red :hint nil)
+    "Project commands"
+    ("a" hydra-nl-align/body "align" :color blue :column "General")
+    ("y" nl/nordita-build-page-from-yaml "Build ProcessWire page from YAML file" :color blue :column "Nordita"))
   :hook
   (yaml-mode . nl/yaml-mode-hook)
   (yaml-ts-mode . nl/yaml-mode-hook))

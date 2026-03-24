@@ -157,26 +157,26 @@ Raise an error if coverage.html does not exist in the project root."
 ;; Hydras
 ;; ----------------------------------------------------------------------
 
-(defhydra hydra-nl/go-test (:color blue)
-  "Test"
-  ("c" nl/go-test-coverage "run test suite with coverage analysis" :column "Go")
-  ("C" nl/go-test-coverage-report-in-chrome "open coverage report in chrome" :column "Go")
-  ("f" nl/go-test-function-run "only this method (with debug logging)" :column "Go")
-  ("m" nl/go-test "make test")
-  ("p" nl/go-test-package-run "All tests for package")
-  )
+(with-eval-after-load 'hydra
+  (defhydra hydra-nl/go-test (:color blue)
+    "Test"
+    ("c" nl/go-test-coverage "run test suite with coverage analysis" :column "Go")
+    ("C" nl/go-test-coverage-report-in-chrome "open coverage report in chrome" :column "Go")
+    ("f" nl/go-test-function-run "only this method (with debug logging)" :column "Go")
+    ("m" nl/go-test "make test")
+    ("p" nl/go-test-package-run "All tests for package")
+    )
 
-(defhydra hydra-nl-go-project (:color red :hint nil)
-  "Project commands"
-  ("t" hydra-nl/go-test/body "test" :color blue :column "Go")
-  ("a" nl/go-air "Run Air" :column "Build" :color blue)
-  ("b" nl/go-build "Build" :column "Build" :color blue)
-  ("f" nl/go-fmt "Format Go code" :column "Build" :color blue)
-  ("T" nl/go-tidy "Tidy Go code" :column "Build" :color blue)
-  ("g" hydra-nl-common/body "common" :color blue :column "Common"))
+  (defhydra hydra-nl-go-project (:color red :hint nil)
+    "Project commands"
+    ("t" hydra-nl/go-test/body "test" :color blue :column "Go")
+    ("a" nl/go-air "Run Air" :column "Build" :color blue)
+    ("b" nl/go-build "Build" :column "Build" :color blue)
+    ("f" nl/go-fmt "Format Go code" :column "Build" :color blue)
+    ("T" nl/go-tidy "Tidy Go code" :column "Build" :color blue)
+    ("g" hydra-nl-common/body "common" :color blue :column "Common"))
 
-;; Optional chord to quickly open project hydra
-(key-chord-define go-ts-mode-map "jc" #'hydra-nl-go-project/body)
+  (key-chord-define go-ts-mode-map "jc" #'hydra-nl-go-project/body))
 
 ;; ----------------------------------------------------------------------
 ;; Key bindings

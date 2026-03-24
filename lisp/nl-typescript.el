@@ -89,12 +89,13 @@
                                   :test-suffix ".spec"
                                   :related-files-fn #'nl/related-files)
 
-(defhydra hydra-nl/typescript-project (:color red :hint nil)
-  ("i" nl/indent-whole-buffer "indent buffer" :color blue))
+(with-eval-after-load 'hydra
+  (defhydra hydra-nl/typescript-project (:color red :hint nil)
+    ("i" nl/indent-whole-buffer "indent buffer" :color blue))
 
-(key-chord-define typescript-ts-mode-map "jc" 'hydra-nl/typescript-project/body)
-(key-chord-define tsx-ts-mode-map "jc" 'hydra-nl/typescript-project/body)
-(key-chord-define web-mode-map "jc" 'hydra-nl/typescript-project/body)
+  (key-chord-define typescript-ts-mode-map "jc" 'hydra-nl/typescript-project/body)
+  (key-chord-define tsx-ts-mode-map "jc" 'hydra-nl/typescript-project/body)
+  (key-chord-define web-mode-map "jc" 'hydra-nl/typescript-project/body))
 
 (define-key typescript-ts-mode-map (kbd "C-c C-t c") 'nl/typescript-compile-this-file)
 

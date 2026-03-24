@@ -127,7 +127,7 @@
 
 ;; `use-package` and its helpers need to be available before any
 ;; `use-package` forms are expanded or loaded.
-(dolist (package '(use-package diminish bind-key htmlize use-package-chords))
+(dolist (package '(use-package diminish bind-key htmlize key-chord use-package-chords))
   (nl/ensure-package-installed package))
 
 (require 'use-package)

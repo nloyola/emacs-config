@@ -129,26 +129,27 @@
   (interactive)
   (browse-url-chrome (format "file://%starget/site/jacoco/index.html" (projectile-project-root))))
 
-(defhydra hydra-nl/java-format (:color blue)
-  "Java"
-  ("f" java-format-buffer "Format Java file with Prettier" :column "Format"))
+(with-eval-after-load 'hydra
+  (defhydra hydra-nl/java-format (:color blue)
+    "Java"
+    ("f" java-format-buffer "Format Java file with Prettier" :column "Format"))
 
-(defhydra hydra-nl/java-test (:color blue)
-  "Java Test"
-  ("p" nl/java-junit-test-this-project "this project" :column "JUnit")
-  ("f" nl/java-junit-test-this-file "only this file")
-  ("m" nl/java-junit-only-this-method "only this method")
-  ("d" nl/java-junit-only-this-method-with-debug-logging "only this method with DEBUG logging")
-  ("h" nl/java-junit-html "Generate the JUnit HTML report" :column "Reports")
-  ("r" nl/java-test-report-in-chrome "Open JUnit report in Chrome")
-  ("c" nl/java-test-coverage-report-in-chrome "Jacoco coverage report in Chrome"))
+  (defhydra hydra-nl/java-test (:color blue)
+    "Java Test"
+    ("p" nl/java-junit-test-this-project "this project" :column "JUnit")
+    ("f" nl/java-junit-test-this-file "only this file")
+    ("m" nl/java-junit-only-this-method "only this method")
+    ("d" nl/java-junit-only-this-method-with-debug-logging "only this method with DEBUG logging")
+    ("h" nl/java-junit-html "Generate the JUnit HTML report" :column "Reports")
+    ("r" nl/java-test-report-in-chrome "Open JUnit report in Chrome")
+    ("c" nl/java-test-coverage-report-in-chrome "Jacoco coverage report in Chrome"))
 
-(defhydra hydra-nl-java-project (:color red :hint nil)
-  "Project commands"
-  ("f" hydra-nl/java-format/body "format" :color blue :column "Format")
-  ("t" hydra-nl/java-test/body "test" :color blue :column "Test"))
+  (defhydra hydra-nl-java-project (:color red :hint nil)
+    "Project commands"
+    ("f" hydra-nl/java-format/body "format" :color blue :column "Format")
+    ("t" hydra-nl/java-test/body "test" :color blue :column "Test"))
 
-(key-chord-define java-ts-mode-map "jc" 'hydra-nl-java-project/body)
+  (key-chord-define java-ts-mode-map "jc" 'hydra-nl-java-project/body))
 
 (define-key java-ts-mode-map (kbd "C-c , d") 'nl/java-junit-only-this-method-with-debug-logging)
 (define-key java-ts-mode-map (kbd "C-c , m") 'nl/java-junit-only-this-method)

@@ -147,11 +147,12 @@ The class name must have the postfix 'Spec' for this function to work."
   (move-end-of-line nil)
   (recenter))
 
-(defhydra hydra-nl-scalatest (:hint nil)
-  "Testing scala code with scalatest"
-  ("f" nl/scalatest-find-file "find file from traceback" :color blue)
-  ("n" nl/scalatest-find-next-failure "find next scalatest failure in SBT buffer" :color blue)
-  ("s" nl/scalatest-test-only "select suite to run" :color blue))
+(with-eval-after-load 'hydra
+  (defhydra hydra-nl-scalatest (:hint nil)
+    "Testing scala code with scalatest"
+    ("f" nl/scalatest-find-file "find file from traceback" :color blue)
+    ("n" nl/scalatest-find-next-failure "find next scalatest failure in SBT buffer" :color blue)
+    ("s" nl/scalatest-test-only "select suite to run" :color blue)))
 
 (defun scala-mode-newline-comments ()
   "Custom newline appropriate for `scala-mode'."
