@@ -3866,6 +3866,13 @@ See above.
                (string= lang "sql")
                (string= lang "sqlite")
                )))
+    (defun nl/apply-org-tag-face (&rest _)
+      "Apply the preferred Org tag styling."
+      (set-face-attribute 'org-tag nil
+                          :inherit '(fixed-pitch)
+                          :background "#303030"
+                          :foreground "#ffffff"
+                          :box '(:line-width 2 :color "#505050")))
     :config
     (custom-set-faces
     '(org-table ((t (:inherit fixed-pitch :foreground "#91b831" :height 120))))
@@ -3886,6 +3893,9 @@ See above.
     ;; ;; '(org-level-4 ((t (:inherit outline-4 :height 140))))
     ;; ;; '(org-level-5 ((t (:inherit outline-5 :height 120))))
     )
+    (nl/apply-org-tag-face)
+    (add-hook 'org-mode-hook #'nl/apply-org-tag-face)
+    (advice-add 'load-theme :after #'nl/apply-org-tag-face)
     (setq org-confirm-babel-evaluate 'nl/org-confirm-babel-evaluate
           ;;org-ellipsis " ⤵"
           ;;org-hide-emphasis-markers t
@@ -3974,6 +3984,8 @@ See above.
   (org-modern-list '((43 . "➤") (45 . "•") (42 . "◦"))) ;; Custom list markers
   (org-modern-table nil) ;; Disable table styling if not needed
   (org-modern-hide-stars t) ;; hide stars in headlines
+  (org-modern-tag t) ;; Use org-modern labels for pill-like tag rendering
+  (org-modern-label-border 4)
   (org-modern-block-fringe 2) ;; Add fringe to blocks
   (org-hide-emphasis-markers t) ;; hides ~ and =
   (org-modern-block-name '("«" . "»"))
@@ -3988,6 +4000,15 @@ See above.
    '((t . (:foreground "gray" :weight bold))))
   (org-modern-horizontal-rule "────────────────────────────────────────")
   :config
+  (set-face-attribute 'org-modern-tag nil
+                      :background "#303030"
+                      :foreground "#ffffff"
+                      :inherit '(org-modern-label fixed-pitch))
+  (set-face-attribute 'org-modern-label nil
+                      :inherit '(fixed-pitch)
+                      :height 0.9
+                      :weight 'medium
+                      :width 'normal)
   ;; Adjust line spacing only in org-mode buffers
   (defun nl/org-modern-line-spacing ()
     "Set line spacing specifically for org-mode buffers."

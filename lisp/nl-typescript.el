@@ -1,4 +1,4 @@
-;;; nl-typescript --- package to help with development in TypeScript projects
+;;; nl-typescript --- package to help with development in TypeScript projects -*- lexical-binding: t; -*-
 
 ;;; Commentary:
 
