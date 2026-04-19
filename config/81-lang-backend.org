@@ -7,6 +7,54 @@
   :mode "\\.csv\\'")
 #+end_src
 
+** Clojure
+
+#+begin_src emacs-lisp
+(defun nl/clojure-mode-hook ()
+  (my/lsp-deferred-unless-remote)
+  (subword-mode +1)
+  (setq-local indent-tabs-mode nil))
+
+(use-package clojure-mode
+  :mode (("\\.clj\\'"  . clojure-mode)
+         ("\\.cljs\\'" . clojurescript-mode)
+         ("\\.cljc\\'" . clojurec-mode)
+         ("\\.edn\\'"  . clojure-mode))
+  :hook ((clojure-mode
+          clojurescript-mode
+          clojurec-mode) . nl/clojure-mode-hook))
+#+end_src
+
+*** [[https://github.com/clojure-emacs/cider][CIDER]]
+
+#+begin_src emacs-lisp
+(use-package cider
+  :after clojure-mode
+  :custom
+  (cider-repl-display-help-banner nil)
+  (cider-repl-pop-to-buffer-on-connect 'display-only)
+  (cider-save-file-on-load t))
+#+end_src
+
+*** [[https://github.com/clojure-emacs/clj-refactor.el][clj-refactor]]
+
+#+begin_src emacs-lisp
+(use-package clj-refactor
+  :after clojure-mode
+  :hook (clojure-mode . clj-refactor-mode)
+  :config
+  (cljr-add-keybindings-with-prefix "C-c C-m"))
+#+end_src
+
+*** [[https://github.com/borkdude/flycheck-clj-kondo][flycheck-clj-kondo]]
+
+Requires the =clj-kondo= binary on =PATH=.
+
+#+begin_src emacs-lisp
+(use-package flycheck-clj-kondo
+  :after (flycheck clojure-mode))
+#+end_src
+
 ** Go
 
 #+begin_src emacs-lisp
