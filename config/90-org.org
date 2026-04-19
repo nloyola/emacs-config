@@ -1,0 +1,203 @@
+* Org mode
+
+** Org mode
+
+#+begin_src emacs-lisp
+  (use-package org
+    :pin org
+    :bind
+    ("C-c c" . org-capture)
+    :hook
+    (org-mode . visual-line-mode)
+    ;;(org-mode . nl/org-mode-setup)
+    :preface
+    (defun nl/org-confirm-babel-evaluate (lang body)
+      "Do not confirm evaluation for these languages."
+      (not (or (string= lang "bash")
+               (string= lang "C")
+               (string= lang "emacs-lisp")
+               (string= lang "java")
+               (string= lang "python")
+               (string= lang "sh")
+               (string= lang "sql")
+               (string= lang "sqlite")
+               )))
+    (defun nl/apply-org-tag-face (&rest _)
+      "Apply the preferred Org tag styling."
+      (set-face-attribute 'org-tag nil
+                          :inherit '(fixed-pitch)
+                          :background "#303030"
+                          :foreground "#ffffff"
+                          :box '(:line-width 2 :color "#505050")))
+    :config
+    (custom-set-faces
+    '(org-table ((t (:inherit fixed-pitch :foreground "#91b831" :height 120))))
+    '(org-block ((t (:background "gray18" :inherit fixed-pitch))))
+    ;; '(org-code ((t (:inherit fixed-pitch :height 110))))
+    ;; '(org-verbatim ((t (:inherit (shadow fixed-pitch) :height 120))))
+    ;; '(org-link ((t (:underline t))))
+    ;; '(org-document-info ((t (:inherit fixed-pitch))))
+    ;; '(org-document-info-keyword ((t (:inherit fixed-pitch))))
+    ;; '(org-meta-line ((t (:inherit (font-lock-comment-face fixed-pitch)))))
+    ;; '(org-meta-line ((t (:inherit fixed-pitch))))
+    ;; '(org-property-value ((t (:inherit fixed-pitch))))
+    ;; '(org-special-keyword ((t (:inherit (font-lock-comment-face fixed-pitch)))))
+    ;; '(org-tag ((t (:inherit (shadow fixed-pitch) :weight bold :height 100))))
+    ;; ;; '(org-level-1 ((t (:inherit outline-1 :height 200))))
+    ;; ;; '(org-level-2 ((t (:inherit outline-2 :height 180))))
+    ;; ;; '(org-level-3 ((t (:inherit outline-3 :height 160))))
+    ;; ;; '(org-level-4 ((t (:inherit outline-4 :height 140))))
+    ;; ;; '(org-level-5 ((t (:inherit outline-5 :height 120))))
+    )
+    (nl/apply-org-tag-face)
+    (add-hook 'org-mode-hook #'nl/apply-org-tag-face)
+    (advice-add 'load-theme :after #'nl/apply-org-tag-face)
+    (setq org-confirm-babel-evaluate 'nl/org-confirm-babel-evaluate
+          ;;org-ellipsis " ⤵"
+          ;;org-hide-emphasis-markers t
+          org-catch-invisible-edits 'error
+          org-startup-indented t
+          org-cycle-include-plain-lists 'integrate
+          org-return-follows-link t
+          org-M-RET-may-split-line nil
+          org-src-fontify-natively t
+          org-src-preserve-indentation t
+          org-edit-src-content-indentation 0
+          org-enforce-todo-dependencies t
+          org-enforce-todo-checkbox-dependencies t
+          ;; org-link-frame-setup '((file . find-file))
+          org-export-backends '(ascii html icalendar latex md)
+          org-log-into-drawer t
+          org-file-apps '(("\\.png\\'" . browse-url) (auto-mode . emacs))
+          org-export-babel-evaluate t ; Ensure babel blocks are evaluated on export
+          org-confirm-babel-evaluate nil ; Optional: Stops Emacs from asking 'yes/no' every time)
+          org-babel-default-header-args:mermaid
+          '((:results . "file")
+            (:exports . "results")))
+          (defun nl/org-run-css-inliner (file)
+            "Inline CSS in FILE for email clients when an inliner is available."
+            (when (and file (file-exists-p file))
+              (cond
+               ((executable-find "juice")
+                (call-process "juice" nil nil nil
+                              "--web-resources"
+                              file
+                              "--output" file))
+               ((executable-find "premailer")
+                (call-process "premailer" nil nil nil
+                              "--mode=html"
+                              "--base-url" "file:///"
+                              "--remove-classes"
+                              "--output" file
+                              file))
+               (t (message "No CSS inliner found (juice or premailer).")))))
+          (defun nl/org-export-inline-css (orig backend file &optional async subtreep visible-only body-only ext-plist post-process)
+            "Inline CSS after HTML export to file when not exporting asynchronously."
+            (let ((output (funcall orig backend file async subtreep visible-only body-only ext-plist post-process)))
+              (when (and (not async) (org-export-derived-backend-p backend 'html))
+                (nl/org-run-css-inliner output))
+              output))
+          (advice-add 'org-export-to-file :around #'nl/org-export-inline-css)
+          (setq org-capture-templates
+          '(("t" "Todo" entry (file+headline "~/Sync/orgfiles/todo.org" "Tasks")
+             "* TODO %?\n  %i\n  %a")
+            ("l" "Link" entry (file+headline "~/Sync/orgfiles/links.org" "Links")
+             "* %? %^L %^g \n%T" :prepend t)
+            ("n" "Note" entry (file "~/Sync/orgfiles/notes.org")
+             "* NOTE %?\n%U" :empty-lines 1)
+            ("N" "Note with Clipboard" entry (file "~/Sync/orgfiles/notes.org")
+             "* NOTE %?\n%U\n   %c" :empty-lines 1)
+            ("j" "Journal" entry (file+datetree "~/Sync/orgfiles/journal.org")
+             "* %?\nEntered on %U\n  %i\n  %a")))
+
+    (org-babel-do-load-languages
+     'org-babel-load-languages
+     '((C . t)
+       (emacs-lisp . t)
+       (latex . t)
+       (java . t)
+       (js . t)
+       (mermaid . t)
+       (python . t)
+       (ruby . t)
+       (shell . t)
+       (sql . t)
+       (sqlite . t)
+       ))
+    )
+#+end_src
+
+**** org-modern
+
+#+begin_src emacs-lisp
+(use-package org-modern
+  :hook
+  (org-mode . org-modern-mode)
+  (org-agenda-finalize . org-modern-agenda)
+  (org-modern-mode . variable-pitch-mode)
+  :custom
+  (org-modern-star '("◉" "○" "✸" "✿")) ;; Custom bullets for headlines
+  (org-modern-list '((43 . "➤") (45 . "•") (42 . "◦"))) ;; Custom list markers
+  (org-modern-table nil) ;; Disable table styling if not needed
+  (org-modern-hide-stars t) ;; hide stars in headlines
+  (org-modern-tag t) ;; Use org-modern labels for pill-like tag rendering
+  (org-modern-label-border 4)
+  (org-modern-block-fringe 2) ;; Add fringe to blocks
+  (org-hide-emphasis-markers t) ;; hides ~ and =
+  (org-modern-block-name '("«" . "»"))
+  (org-modern-todo-faces
+   '(("TODO" . (:foreground "red" :weight bold))
+     ("DONE" . (:foreground "green" :weight bold))))
+  (org-modern-priority
+   '((?A . "⚡")
+     (?B . "⬆")
+     (?C . "⬇")))
+  (org-modern-keyword
+   '((t . (:foreground "gray" :weight bold))))
+  (org-modern-horizontal-rule "────────────────────────────────────────")
+  :config
+  (set-face-attribute 'org-modern-tag nil
+                      :background "#303030"
+                      :foreground "#ffffff"
+                      :inherit '(org-modern-label fixed-pitch))
+  (set-face-attribute 'org-modern-label nil
+                      :inherit '(fixed-pitch)
+                      :height 0.9
+                      :weight 'medium
+                      :width 'normal)
+  ;; Adjust line spacing only in org-mode buffers
+  (defun nl/org-modern-line-spacing ()
+    "Set line spacing specifically for org-mode buffers."
+    (setq-local line-spacing 0.2)) ;; Adjust this value as needed
+
+  (add-hook 'org-mode-hook #'nl/org-modern-line-spacing)
+  )
+#+end_src
+
+*** structure templates
+
+#+begin_src emacs-lisp
+(with-eval-after-load 'org
+  ;; This is needed as of Org 9.2
+  (require 'org-tempo)
+
+  (add-to-list 'org-structure-template-alist '("sh" . "src shell"))
+  (add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp"))
+  (add-to-list 'org-structure-template-alist '("py" . "src python")))
+#+end_src
+
+*** org-roam
+
+#+begin_src emacs-lisp
+(use-package org-roam
+  :init
+  (setq org-roam-v2-ack t)
+  :custom
+  (org-roam-db-location "~/Sync/RoamNotes/org-roam.db")
+  (org-roam-directory "~/Sync/RoamNotes")
+  :bind (("C-c n l" . org-roam-buffer-toggle)
+         ("C-c n f" . org-roam-node-find)
+         ("C-c n i" . org-roam-node-insert))
+  :config
+  (org-roam-setup))
+#+end_src

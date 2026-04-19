@@ -1,0 +1,114 @@
+* Text & prose
+
+** [[https://github.com/minad/jinx][jinx]]
+
+Jinx is a fast just-in-time spell-checker for Emacs.
+
+#+begin_src emacs-lisp
+(use-package jinx
+  :hook (emacs-startup . global-jinx-mode)
+  :bind (("M-$" . jinx-correct)
+         ("C-M-$" . jinx-languages))
+  :config
+  (setq jinx-languages "en_CA")
+  (add-to-list 'vertico-multiform-categories
+               '(jinx grid (vertico-grid-annotate . 20)))
+  )
+#+end_src
+
+** [[https://github.com/jschaf/emacs-lorem-ipsum][lorem-ipsum]]
+
+Add filler lorem ipsum text to Emacs.
+
+#+begin_src emacs-lisp
+(use-package lorem-ipsum)
+#+end_src
+
+** [[https://github.com/jamescherti/outline-indent.el][outline-indent]]
+
+Provides a minor mode that enables code folding and outlining based on indentation levels for various indentation-based text files, such as YAML, Python, and any other indented text files.
+
+#+begin_src emacs-lisp
+(use-package outline-indent
+  :custom
+  (outline-indent-ellipsis " ▼ "))
+#+end_src
+
+** [[https://github.com/arnm/ob-mermaid][ob-mermaid]]
+
+#+begin_src emacs-lisp
+(use-package ob-mermaid
+  :ensure t
+  :after org
+  :config
+  ;; Automatically find the path to @mermaid-js/mermaid-cli
+  (let ((mmdc-path (executable-find "mmdc")))
+    (if mmdc-path
+        (setq ob-mermaid-cli-path mmdc-path)
+      (warn "mmdc not found. Install it with: npm install -g @mermaid-js/mermaid-cli")))
+
+  ;; Register mermaid in Org-babel
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   (append org-babel-load-languages
+           '((mermaid . t)))))
+#+end_src
+
+** [[https://github.com/akicho8/string-inflection][string-inflection]]
+
+#+begin_src emacs-lisp
+(use-package string-inflection
+  :bind (("C-c i" . string-inflection-cycle)
+         ("C-c C" . string-inflection-camelcase)        ;; Force to CamelCase
+         ("C-c L" . string-inflection-lower-camelcase)  ;; Force to lowerCamelCase
+         ("C-c J" . 'string-inflection-java-style-cycle))
+  )
+#+end_src
+
+** [[https://github.com/mhayashi1120/Emacs-wgrep][wgrep]]
+
+You can edit the text in the grep buffer after typing =C-c C-p=. After that the changed text is
+highlighted. The following keybindings are defined:
+
+=C-c C-e=: Apply the changes to file buffers.
+
+=C-c C-u=: All changes are unmarked and ignored.
+
+=C-c C-d=: Mark as delete to current line (including newline).
+
+=C-c C-r=: Remove the changes in the region (these changes are not applied to the files. Of course, the remaining changes can still be applied to the files.)
+
+=C-c C-p=: Toggle read-only area.
+
+=C-c C-k=: Discard all changes and exit.
+
+=C-x C-q=: Exit wgrep mode.
+
+To save all buffers that wgrep has changed, run =M-x wgrep-save-all-buffers=.
+
+#+begin_src emacs-lisp
+(use-package wgrep
+  :demand t)
+#+end_src
+
+** [[https://github.com/capitaomorte/yasnippet][yasnippet]]
+
+It takes a few seconds to load and I don't need them immediately when Emacs starts up, so we can defer loading yasnippet until there's some idle time.
+
+Large collection of snippets: [[https://github.com/AndreaCrotti/yasnippet-snippets][Andrea Crotti's collection]].
+
+#+begin_src emacs-lisp
+(use-package yasnippet
+  :diminish yas-minor-mode
+  :hook (prog-mode . yas-minor-mode)
+  :config
+  (setq yas-snippet-dirs
+      '("~/.emacs.d/snippets"                 ;; personal snippets
+        ;;"~/.emacs.d/elpa/yasnippet-snippets-1.0/snippets"
+        ))
+  (yas-reload-all))
+#+end_src
+
+*** [[https://github.com/AndreaCrotti/yasnippet-snippets][yasnippet-snippets]]
+
+See above.

@@ -1,0 +1,220 @@
+* UI polish
+
+** [[https://github.com/wyuenho/all-the-icons-dired][all-the-icons-dired]]
+
+Using =nerd-icons-dired= instead.
+
+#+begin_src emacs-lisp :tangle no
+(use-package all-the-icons
+  :if window-system)
+
+;; now done in treemacs-icons-dired config
+(use-package all-the-icons-dired
+  ;; M-x all-the-icons-install-fonts
+  :hook (dired-mode . all-the-icons-dired-mode)
+  )
+#+end_src
+** [[https://github.com/jordonbiondo/column-enforce-mode][column-enforce-mode]]
+
+#+begin_src emacs-lisp
+(use-package column-enforce-mode
+  :diminish
+  :config
+  (setq column-enforce-column 120)
+  :hook (progmode-hook . column-enforce-mode))
+#+end_src
+
+** [[https://github.com/emacs-dashboard/emacs-dashboard][dashboard]]
+
+Using =nerd-icons= or =all-the-icons= slows down init time.
+
+#+begin_src emacs-lisp
+(use-package dashboard
+  ;; :after nerd-icons
+  :demand t
+  :config
+  (dashboard-setup-startup-hook)
+  :custom
+  (dashboard-projects-backend 'projectile)
+  (dashboard-center-content t)
+  ;; (dashboard-icon-type 'nerd-icons)
+  ;; (dashboard-set-heading-icons t)
+  ;; (dashboard-set-file-icons t)
+  :config
+  (setq dashboard-items '((recents  . 5)
+                          (projects . 5)
+                          (bookmarks . 5)
+                          (registers . 5)))
+  )
+#+end_src
+
+** [[https://github.com/alexluigit/dirvish][dirvish]]
+
+Dirvish is an improved version of the Emacs inbuilt package Dired.
+
+Stopped using this package since it does not work well on Emacs 30.
+
+#+begin_src emacs-lisp :tangle no
+(use-package dirvish
+  :init
+  (dirvish-override-dired-mode)
+  :custom
+  ;; Go back home? Just press `bh'
+  (dirvish-bookmark-entries
+   '(("h" "~/"                          "Home")
+     ("d" "~/Downloads/"                "Downloads")
+     ("m" "/mnt/"                       "Drives")
+     ("t" "~/.local/share/Trash/files/" "TrashCan"))
+     (dirvish-header-line-format '(:left (path) :right (free-space))))
+  (dirvish-mode-line-format ; it's ok to place string inside
+   '(:left (sort file-time " " file-size symlink) :right (omit yank index)))
+  ;; Don't worry, Dirvish is still performant even you enable all these attributes
+  (dirvish-attributes '(all-the-icons file-size collapse subtree-state vc-state))
+  ;; Maybe the icons are too big to your eyes
+  ;; (dirvish-all-the-icons-height 0.8)
+  ;; In case you want the details at startup like `dired'
+  ;; (dirvish-hide-details nil)
+  :config
+  ;; (dirvish-peek-mode)
+  ;; Dired options are respected except a few exceptions, see *In relation to Dired* section above
+  (setq dired-dwim-target t)
+  (setq delete-by-moving-to-trash t)
+  ;; Enable mouse drag-and-drop files to other applications
+  (setq dired-mouse-drag-files t)                   ; added in Emacs 29
+  (setq mouse-drag-and-drop-region-cross-program t) ; added in Emacs 29
+  ;; Make sure to use the long name of flags when exists
+  ;; eg. use "--almost-all" instead of "-A"
+  ;; Otherwise some commands won't work properly
+  (setq dired-listing-switches
+        "-l --almost-all --human-readable --time-style=long-iso --group-directories-first --no-group")
+  :bind
+  ;; Bind `dirvish|dirvish-side|dirvish-dwim' as you see fit
+  (("C-c f" . dirvish-fd)
+   :map dired-mode-map ; Dirvish respects all the keybindings in this map
+   ("<prior>" . dired-up-directory)
+   ;; ("j" . dired-next-line)
+   ;; ("k" . dired-previous-line)
+   ;; ("l" . dired-find-file)
+   ;; ("i" . wdired-change-to-wdired-mode)
+   ;; ("." . dired-omit-mode)
+   ("b"   . dirvish-bookmark-jump)
+   ("f"   . dirvish-file-info-menu)
+   ("y"   . dirvish-yank-menu)
+   ("N"   . dirvish-narrow)
+   ("^"   . dirvish-history-last)
+   ("s"   . dirvish-quicksort) ; remapped `dired-sort-toggle-or-edit'
+   ("?"   . dirvish-dispatch)  ; remapped `dired-summary'
+   ("TAB" . dirvish-subtree-toggle)
+   ("SPC" . dirvish-history-jump)
+   ("M-n" . dirvish-history-go-forward)
+   ("M-p" . dirvish-history-go-backward)
+   ("M-l" . dirvish-ls-switches-menu)
+   ("M-m" . dirvish-mark-menu)
+   ;;("M-f" . dirvish-toggle-fullscreen)
+   ;;("M-s" . dirvish-setup-menu)
+   ("M-e" . dirvish-emerge-menu)
+   ("M-j" . dirvish-fd-jump)))
+#+end_src
+
+** [[https://github.com/Wilfred/helpful][helpful]]
+
+#+begin_src emacs-lisp
+(use-package helpful
+    :ensure t
+    :bind
+    (("C-h f" . helpful-callable)
+     ("C-h v" . helpful-variable)
+     ("C-h k" . helpful-key)
+     ("C-h x" . helpful-command)
+     ("C-c C-d" . helpful-at-point)
+     ("C-h F" . helpful-function)
+     ("C-h C" . helpful-command)))
+#+end_src
+
+** [[https://github.com/tarsius/keycast][keycast]]
+
+#+begin_src emacs-lisp
+(use-package keycast
+  :ensure t
+  :config
+  ;; This config replaces `mode-line-buffer-identification`, so keycast
+  ;; needs to insert after a segment that actually exists.
+  (setq keycast-mode-line-insert-after 'mode-line-process)
+
+  ;; This enables the display in the mode-line (bottom bar)
+  (keycast-mode-line-mode 1)
+
+  ;; Optional: If you want a more prominent display,
+  ;; you can use the header-line (top of the window) instead:
+  ;; (keycast-header-line-mode 1)
+
+  ;; Optional: Control what exactly is shown (keys + command name)
+  (setq keycast-substitute-alist '((self-insert-command nil nil))))
+#+end_src
+
+** [[https://github.com/rainstormstudio/nerd-icons.el][nerd-icons]]
+
+#+begin_src emacs-lisp
+(use-package nerd-icons
+  :custom
+  (nerd-icons-font-family "FiraCode Nerd Font")
+  )
+
+(use-package nerd-icons-dired
+ :load-path "~/src/github/elisp/nerd-icons-dired"
+ :hook
+ (dired-mode . nerd-icons-dired-mode))
+#+end_src
+
+** [[https://github.com/tumashu/posframe][posframe]]
+
+Posframe can pop up a frame at point, this posframe is a child-frame connected to its root window’s buffer.
+
+#+begin_src emacs-lisp
+(use-package posframe
+  :pin melpa
+  :init
+  (setq x-gtk-resize-child-frames 'resize-mode))
+#+end_src
+
+** [[https://protesilaos.com/emacs/pulsar][pulsar]]
+
+Pulse highlight line on demand or after running select functions
+
+#+begin_src emacs-lisp
+(use-package pulsar
+  :bind (("C-c l p" . pulsar-pulse-line)
+         ("C-c l h" . pulsar-highlight-line))
+  :config
+  (pulsar-global-mode 1)
+  :config
+  (setq pulsar-pulse t)
+  (setq pulsar-delay 0.055)
+  (setq pulsar-iterations 10)
+  (setq pulsar-face 'pulsar-magenta)
+  (setq pulsar-highlight-face 'pulsar-yellow))
+
+#+end_src
+
+**  [][rainbow-mode]
+
+#+begin_src emacs-lisp
+(use-package rainbow-mode
+  :defer t
+  :load-path "~/src/github/elisp/rainbow-mode"
+  :hook ((prog-mode text-mode conf-mode) . rainbow-mode)
+  :bind ("C-c r" . rainbow-mode))
+#+end_src
+
+** [[https://github.com/protesilaos/spacious-padding][spacious-padding]]
+
+#+begin_src emacs-lisp :tangle no
+(use-package spacious-padding
+  :init
+  (setq spacious-padding-widths
+        '( :internal-border-width 15
+           :header-line-width 4
+           :tab-width 4)))
+
+  (spacious-padding-mode 1))
+#+end_src

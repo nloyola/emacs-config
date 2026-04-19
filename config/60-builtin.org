@@ -1,0 +1,334 @@
+* Packages bundled with Emacs
+** =adaptive-wrap=
+
+A minor mode which sets the wrap-prefix property on the fly so that single-long-line paragraphs get word-wrapped in a way similar to what you'd get with M-q using adaptive-fill-mode, but without actually changing the buffer's text.
+
+#+begin_src emacs-lisp
+(use-package adaptive-wrap
+  :commands (adaptive-wrap-prefix-mode))
+#+end_src
+
+** auth-source
+
+#+begin_src emacs-lisp
+(use-package auth-source
+  :ensure nil ;; it's built into Emacs, no need to install
+  :demand t
+  :config
+  (setq auth-sources '("~/.authinfo.gpg")))
+#+end_src
+
+** =compile=
+
+Do not ask me to save files before compiling, or kill a previous compilation. Also scroll to the end of the compilation buffer when it is opened.
+
+Enable ANSI colors for compilation buffers.
+
+=eat-compilation-start= taken from [[https://codeberg.org/akib/emacs-eat/issues/33][here]], but had to modify it to invoke =compilation-mode-hook=.
+
+#+begin_src emacs-lisp
+(use-package compile
+  :preface
+  (defun eat-compilation-start (command &optional mode name-function highlight-regexp continue)
+    (let ((name-of-mode "compilation")
+          (dir default-directory)
+          outbuf)
+      (if (or (not mode) (eq mode t))
+          (setq mode #'compilation-minor-mode)
+        (setq name-of-mode (replace-regexp-in-string "-mode\\'" "" (symbol-name mode))))
+      (with-current-buffer
+          (setq outbuf
+                (get-buffer-create
+                 (compilation-buffer-name name-of-mode mode name-function)))
+        (setq default-directory dir)
+        (setq buffer-read-only nil)
+        (erase-buffer)
+        (compilation-insert-annotation
+         "-*- mode: " name-of-mode
+         "; default-directory: "
+         (prin1-to-string (abbreviate-file-name default-directory))
+         " -*-\n")
+        (compilation-insert-annotation
+         (format "%s started at %s\n\n"
+                 mode-name
+	         (substring (current-time-string) 0 19))
+         command "\n")
+        (eat-mode)
+        (eat-exec outbuf "*compile*" shell-file-name nil (list "-lc" command))
+        (run-hook-with-args 'compilation-start-hook (get-buffer-process outbuf))
+        (eat-emacs-mode)
+        (funcall mode)
+        (run-mode-hooks 'compilation-mode-hook)
+        (setq next-error-last-buffer outbuf)
+        (display-buffer outbuf '(nil (allow-no-window . t)))
+        (when-let (w (get-buffer-window outbuf))
+           (set-window-start w (point-min)))
+        )))
+
+  (defun get-compilation-buffer ()
+    (catch 'found
+      (dolist (buf (buffer-list))
+        (if (string-match "\\*compilation\\*" (buffer-name buf))
+            (throw 'found buf)))))
+
+  (defun nl/show-compilation ()
+    (interactive)
+    (let ((compile-buf (get-compilation-buffer)))
+      (if compile-buf
+          (switch-to-buffer-other-window compile-buf)
+        (call-interactively 'compile))))
+
+  (defun nl/compile-hook ()
+    (hl-line-mode)
+    (setq-local scroll-conservatively most-positive-fixnum
+                scroll-margin 0))
+
+  :hook ((compilation-mode . nl/compile-hook))
+  :custom
+  (compilation-ask-about-save nil)
+  (compilation-always-kill t)
+  (compilation-max-output-line-length nil)
+  (compilation-scroll-output 'first-error)
+  ;;:config
+  ;;(advice-add #'compilation-start :override #'eat-compilation-start)
+  )
+
+#+end_src
+
+*** [[https://codeberg.org/ideasman42/emacs-fancy-compilation][emacs-fancy-compilation]]
+
+not required anymore.
+
+A minimalist package that enhances compilation-mode.
+
+#+begin_src emacs-lisp :tangle no
+(use-package fancy-compilation
+  :commands (fancy-compilation-mode))
+
+(with-eval-after-load 'compile
+  (fancy-compilation-mode))
+#+end_src
+*** =ansi-color=
+
+#+begin_src emacs-lisp
+(defun my/apply-ansi-color-to-compilation-buffer ()
+  "Apply carriage-return fix and ANSI colors to compilation output."
+  (ansi-color-apply-on-region compilation-filter-start (point)))
+
+(use-package ansi-color
+  :ensure nil
+  :hook ((shell-mode . ansi-color-for-comint-mode-on)
+         (compilation-filter . my/apply-ansi-color-to-compilation-buffer))
+  :custom-face
+  (ansi-color-red ((t (:background "#440F04"))))
+  (ansi-color-bright-red ((t (:background "#A02409"))))
+  (ansi-color-blue ((t (:background "#000055"))))
+  )
+#+end_src
+
+** =css-mode=
+
+#+begin_src emacs-lisp :tangle no
+(use-package css-mode
+  :preface
+  (defun nl/css-mode-hook ()
+    (my/lsp-deferred-unless-remote))
+  :hook (css-mode . nl/css-mode-hook))
+#+end_src
+
+** =scss-mode=
+
+- was getting this error: =flymake-allowed-file-name-masks is void=
+
+  fixed it by looking at this issue: https://github.com/haskell/haskell-mode/issues/1825
+
+  and adding =(require 'flymake-proc)= to the =:preface= section.
+
+#+begin_src emacs-lisp
+(use-package scss-mode
+  :mode "\\.scss\\'"
+  :preface
+  (require 'flymake-proc)
+  (defun nl/scss-mode-hook ()
+    (lsp-deferred))
+  :hook (scss-mode . nl/scss-mode-hook)
+  :config
+  (setq flymake-allowed-file-name-masks nil)
+  )
+#+end_src
+
+** =dired=
+
+Make =dired= show directories first.
+
+#+begin_src emacs-lisp
+(use-package emacs
+  :custom
+  (dired-recursive-copies 'always)
+  ;; Auto refresh Dired, but be quiet about it
+  (global-auto-revert-non-file-buffers t)
+  ;; Move files to trash when deleting
+  (delete-by-moving-to-trash t)
+  (dired-dwim-target t)
+  (find-file-visit-truename t)
+  :config
+  (setq dired-listing-switches "-aBhl --group-directories-first")
+  ;; Reuse same dired buffer, to prevent numerous buffers while navigating in dired
+  (put 'dired-find-alternate-file 'disabled nil)
+  :hook ((dired-mode . dired-hide-details-mode)
+         (dired-mode . hl-line-mode)))
+#+end_src
+
+** =emacsclient=
+
+#+begin_src emacs-lisp
+(use-package edit-server
+  :if (display-graphic-p)
+  :commands edit-server-start
+  :preface
+  (defun nl/after-init-hook ()
+    (server-start t)
+    (edit-server-start t)
+    )
+  :init
+  (if after-init-time
+      (edit-server-start)
+    (add-hook 'after-init-hook 'nl/after-init-hook)))
+#+end_src
+
+** =hl-line=
+
+#+begin_src emacs-lisp
+(use-package hl-line
+  :commands hl-line-mode)
+#+end_src
+
+** =recentf=
+
+Recentf is a minor mode that builds a list of recently opened files. This list is is automatically saved across Emacs sessions.
+
+Prefer saving the history of opened files somewhere other than the default.
+
+#+begin_src emacs-lisp
+(use-package recentf
+  :init (recentf-mode 1)
+  :custom
+  (recentf-save-file "~/.emacs.d/etc/recentf")
+  (recentf-max-saved-items 100))
+#+end_src
+
+** =savehist=
+
+The history of prompts like =M-:= can be saved, but let's change its
+save file and history length first. Also save search entries.
+
+#+begin_src emacs-lisp
+(setq savehist-additional-variables '(search-ring regexp-search-ring)
+      savehist-file "~/.emacs.d/etc/savehist"
+      history-length 150)
+(savehist-mode 1)
+#+end_src
+
+** =saveplace=
+
+Remember position in a file.
+
+#+begin_src emacs-lisp
+(use-package saveplace
+  :custom
+  (save-place-file (locate-user-emacs-file "etc/saveplace" "places"))
+  (save-place-forget-unreadable-files nil)
+  (save-place-ignore-files-regexp "\\(?:COMMIT_EDITMSG\\|svn-commit\\.tmp\\|config\\.org\\)$")
+  ;; activate it for all buffers
+  :init
+  ;;(setq-default save-place t)
+  (save-place-mode t))
+#+end_src
+** =SQL=
+
+#+begin_src emacs-lisp
+(use-package sql
+  :preface
+  (defun nl/sql-mode-hook ()
+    "My SQL Mode configuration"
+    ;;(my/lsp-deferred-unless-remote)
+    (flycheck-mode t)
+    )
+  :hook ((sql-mode . nl/sql-mode-hook))
+  )
+#+end_src
+
+** =tree sitter=
+
+Had to install TSX tag =v0.20.2= since the latest in the repository cause a parsing failure
+
+#+begin_src emacs-lisp
+(add-to-list 'warning-suppress-types '(treesit-font-lock-rules-mismatch))
+
+(use-package treesit-auto
+  :demand t
+  :config
+  (global-treesit-auto-mode))
+
+(use-package tree-sitter
+  :ensure tree-sitter-langs
+  :init
+  (setq treesit-language-source-alist
+   '((bash "https://github.com/tree-sitter/tree-sitter-bash")
+     (cmake "https://github.com/uyha/tree-sitter-cmake")
+     (css "https://github.com/tree-sitter/tree-sitter-css")
+     (elisp "https://github.com/Wilfred/tree-sitter-elisp")
+     (go "https://github.com/tree-sitter/tree-sitter-go")
+     (html "https://github.com/tree-sitter/tree-sitter-html")
+     (java "https://github.com/tree-sitter/tree-sitter-java")
+     (javascript "https://github.com/tree-sitter/tree-sitter-javascript" "master" "src")
+     ;;(javascript "https://github.com/tree-sitter/tree-sitter-javascript")
+     (json "https://github.com/tree-sitter/tree-sitter-json")
+     (make "https://github.com/alemuller/tree-sitter-make")
+     (markdown "https://github.com/ikatyang/tree-sitter-markdown")
+     ;;(php "https://github.com/tree-sitter/tree-sitter-php")
+     (php "https://github.com/tree-sitter/tree-sitter-php" "v0.24.1" "php/src")
+     (python "https://github.com/tree-sitter/tree-sitter-python")
+     (templ "https://github.com/vrischmann/tree-sitter-templ")
+     (toml "https://github.com/tree-sitter/tree-sitter-toml")
+     (tsx "https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src")
+     ;;(tsx "https://github.com/tree-sitter/tree-sitter-typescript" "v0.23.2" "tsx/src")
+     (typescript "https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src")
+     (yaml "https://github.com/ikatyang/tree-sitter-yaml")
+     (vue "https://github.com/ikatyang/tree-sitter-vue")))
+  (setq major-mode-remap-alist
+        '((bash-mode . bash-ts-mode)
+          (css-mode . css-ts-mode)
+          (go-mode . go-ts-mode)
+          (java-mode . java-ts-mode)
+          (js2-mode . js-ts-mode)
+          (json-mode . json-ts-mode)
+          (php-mode . php-ts-mode)
+          (python-mode . python-ts-mode)
+          (typescript-mode . typescript-ts-mode)
+          (yaml-mode . yaml-ts-mode))
+        )
+  (setq treesit-auto-fallback-alist
+      '((toml-ts-mode . conf-toml-mode)
+        ;; I don't actually know if the future tree-sitter mode for HTML will be
+        ;; called html-ts-mode or mhtml-ts-mode, but if it's the former I'd include this
+        (html-ts-mode . mhtml-mode)))
+  (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode)
+  )
+#+end_src
+
+Bulk install all tree sitter language:
+
+#+begin_src emacs-lisp :tangle no
+(mapc #'treesit-install-language-grammar (mapcar #'car treesit-language-source-alist))
+#+end_src
+
+** =winner-mode=
+
+Window management. ~C-c left (winner-undo)~ undoes the last window configuration change. Redo the changes using ~C-c right (winner-redo)~. Also move from window to window using Meta and the direction keys.
+
+#+begin_src emacs-lisp
+(use-package winner
+  :init
+  (winner-mode))
+#+end_src

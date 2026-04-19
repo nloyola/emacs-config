@@ -1,0 +1,16 @@
+* Usage
+** Registers
+
+- ~C-x r SPC r~ :: Record the position of point and the current buffer in register r (point-to-register).
+
+- ~C-x r j r~ :: Jump to the position and buffer saved in register r (jump-to-register).
+
+- ~M-x append-to-register RET r~ :: Append region to text in register r.
+
+- ~M-#~ :: consult-register-load
+
+- ~C-M-#~ :: consult-register
+
+- ~C-u number C-x r n r~ :: Store number into register r (number-to-register).
+
+- ~C-u number C-x r +r~ :: Increment the number in register r by number (increment-register).

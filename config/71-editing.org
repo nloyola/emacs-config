@@ -1,0 +1,402 @@
+* Editing
+
+** [[https://github.com/abo-abo/ace-window][ace-window]]
+
+A package that uses the same idea from ace-jump-mode for
+buffer navigation, but applies it to windows. The default keys are
+1-9, but it's faster to access the keys on the home row, so that's
+what I have them set to (with respect to Dvorak, of course).
+
+#+begin_src emacs-lisp
+(use-package ace-window
+  :config
+  (setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l)))
+#+end_src
+
+** [[https://github.com/abo-abo/avy][avy]]
+
+A quick way to jump around text in buffers.
+
+#+begin_src emacs-lisp
+(use-package avy
+  :bind
+  (("C-c SPC" . avy-goto-char-timer)
+   ("C-:" . avy-goto-char))
+  :custom
+  (avy-timeout-seconds 1.5))
+#+end_src
+
+** [[https://github.com/kickingvegas/casual][casual]]
+
+#+begin_src emacs-lisp
+(use-package casual
+  :demand t
+  :bind
+  (:map dired-mode-map ("C-o" . #'casual-dired-tmenu))
+  ;; (:map calc-mode-map ("C-o" . #'casual-calc-tmenu))
+  ;; (:map bookmark-bmenu-mode-map ("C-o" . #'casual-bookmarks-tmenu))
+  :config
+  (require 'dired))
+
+(use-package casual-suite)
+#+end_src
+** [[https://github.com/magnars/expand-region.el][expand-region]]
+
+Update: March 16, 2026 - switching to =expreg= since it works with =tree-sitter=.
+
+Expand region increases the selected region by semantic units. Just keep pressing the key until it selects what you want.
+
+#+begin_src emacs-lisp :tangle no
+(use-package expand-region
+  :bind
+  (("C-=" . er/expand-region)
+   ("M-S-<up>" . er/expand-region)
+   ("M-S-<down>" . er/contract-region))
+  :config
+  (setq expand-region-smart-cursor t
+        er/enable-subword-mode? nil))
+#+end_src
+
+** =expreg=
+
+#+begin_src emacs-lisp
+(use-package expreg
+  :ensure t
+  :bind (("C-=" . expreg-expand)
+         ("C--" . expreg-contract)))
+#+end_src
+
+** [[https://github.com/nflath/hungry-delete][hungry-delete]]
+
+So that hungry deletion can be used in all modes.
+
+#+begin_src emacs-lisp
+(use-package hungry-delete
+  :diminish hungry-delete-mode
+  :init
+  (global-hungry-delete-mode))
+#+end_src
+
+** [[https://github.com/abo-abo/hydra][hydra]]
+
+This package can be used to tie related commands into a family of short bindings with a common prefix - a Hydra.
+
+#+begin_src emacs-lisp
+(use-package hydra
+  :pin melpa
+  :demand t
+  :after key-chord
+  :init
+  (use-package cl-lib)
+  (use-package lv)
+  :custom
+  (hydra-hint-display-type 'posframe)
+  :config
+  (setq hydra-posframe-show-params
+      '(:internal-border-width 3
+        :internal-border-color "#4e4a7b"
+        :left-fringe 8
+        :right-fringe 8
+        :poshandler posframe-poshandler-frame-center))
+  (setq hydra-posframe-show-params
+        (plist-put hydra-posframe-show-params :family nl/gui-fixed-font-name))
+
+  (defun nl/pull-window ()
+    "Pull a window to the window the point is at"
+    (interactive)
+    (aw--push-window (selected-window))
+    (ace-swap-window)
+    (aw-flip-window))
+
+  (defun nl/open-buffer-in-other-window ()
+    "Open buffer in another window."
+    (interactive)
+    (let ((pt (point))
+          (buf (current-buffer))
+          (window (ace-select-window)))
+      (set-window-buffer window buf)
+      (goto-char pt)
+      (recenter-top-bottom 'top)))
+
+  ;; http://oremacs.com/2015/01/29/more-hydra-goodness/
+
+  (defun hydra-universal-argument (arg)
+    (interactive "P")
+    (setq prefix-arg (if (consp arg)
+                         (list (* 4 (car arg)))
+                       (if (eq arg '-)
+                           (list -4)
+                         '(4)))))
+
+   (defhydra hydra-window (:color red :idle 0.0)
+     "Window hydra"
+     ("h" windmove-left "move left" :color red :column "move")
+     ("j" windmove-down "move down" :color red)
+     ("k" windmove-up "move up" :color red)
+     ("l" windmove-right "move right" :color red)
+     ("s" ace-swap-window "swap window" :color blue)
+     ("p" nl/pull-window "pull window" :color blue)
+     ("|" (progn (split-window-right) (windmove-right)) "split right and move" :column "split" :color blue)
+     ("_" (progn (split-window-below) (windmove-down)) "split below and move" :color blue)
+     ("v" split-window-right "split right" :color blue)
+     ("x" split-window-below "split below" :color blue)
+     ("u" winner-undo "winner undo" :column "winner / ace " :color blue)
+     ("r" winner-redo "winner redo") ;;Fixme, not working?
+     ("a" ace-window "ace select window" :exit t)
+     ("f" new-frame "new frame" :column "frame" :exit t)
+     ("o" nl/open-buffer-in-other-window "open in other window" :exit t)
+     ("da" ace-delete-window "ace delete window" :column "delete" :color blue)
+     ("dw" delete-window "delete window")
+     ("db" kill-this-buffer "kill this buffer" :color blue)
+     ("df" delete-frame "delete frame" :exit t)
+     ("q" nil "quit"))
+
+  (key-chord-define-global "YY" 'hydra-window/body)
+
+  (defhydra hydra-buffer (:color blue :columns 3)
+     "Buffer hydra"
+     ("n" next-buffer "next" :color red)
+     ;;("b" helm-mini "switch")
+     ("B" ibuffer "ibuffer")
+     ("p" previous-buffer "prev" :color red)
+     ("C-b" buffer-menu "buffer menu")
+     ("d" kill-this-buffer "delete" :color red)
+     ;; don't come back to previous buffer after delete
+     ("D" (progn (kill-this-buffer) (next-buffer)) "Delete" :color red)
+     ("s" save-buffer "save" :color red))
+
+  (key-chord-define-global "zz" 'hydra-buffer/body)
+
+  (defhydra hydra-goto-line (goto-map "")
+     "goto-line"
+     ("g" consult-goto-line "go")
+     ("m" set-mark-command "mark" :bind nil)
+     ("q" nil "quit"))
+
+  (global-set-key (kbd "M-g M-g") 'hydra-goto-line/body)
+
+  (defun toggle-window-split ()
+    (interactive)
+    (if (= (count-windows) 2)
+        (let* ((this-win-buffer (window-buffer))
+	       (next-win-buffer (window-buffer (next-window)))
+	       (this-win-edges (window-edges (selected-window)))
+	       (next-win-edges (window-edges (next-window)))
+	       (this-win-2nd (not (and (<= (car this-win-edges)
+					   (car next-win-edges))
+				       (<= (cadr this-win-edges)
+					   (cadr next-win-edges)))))
+	       (splitter
+	        (if (= (car this-win-edges)
+		       (car (window-edges (next-window))))
+		    'split-window-horizontally
+		  'split-window-vertically)))
+	  (delete-other-windows)
+	  (let ((first-win (selected-window)))
+	    (funcall splitter)
+	    (if this-win-2nd (other-window 1))
+	    (set-window-buffer (selected-window) this-win-buffer)
+	    (set-window-buffer (next-window) next-win-buffer)
+	    (select-window first-win)
+	    (if this-win-2nd (other-window 1))))))
+
+  (global-set-key
+   (kbd "C-c w")
+   (defhydra hydra-windows-alt (:color red)
+     ("s" shrink-window-horizontally "shrink horizontally" :column "Sizing")
+     ("e" enlarge-window-horizontally "enlarge horizontally")
+     ("S" shrink-window "shrink vertically")
+     ("E" enlarge-window "enlarge vertically")
+     ("b" balance-windows "balance window height")
+     ("m" maximize-window "maximize current window")
+     ("M" minimize-window "minimize current window")
+     ("H" split-window-below "split horizontally" :column "Split management")
+     ("v" split-window-right "split vertically")
+     ("d" delete-window "delete current window")
+     ("x" delete-other-windows "delete-other-windows")
+     ;;("z" ace-window "ace window" :color blue :column "Navigation")
+     ("h" windmove-left "← window" :column "Navigation")
+     ("j" windmove-down "↓ window")
+     ("k" windmove-up "↑ window")
+     ("l" windmove-right "→ window")
+     ("r" toggle-window-split "rotate windows") ; Located in utility functions
+     ("q" nil "quit menu" :color blue :column nil)))
+
+  (defhydra hydra-git-gutter (:body-pre (git-gutter-mode 1) :hint nil)
+       ("n" git-gutter:next-hunk "next hunk")
+       ("p" git-gutter:previous-hunk "previous hunk")
+       ("h" (progn (goto-char (point-min)) (git-gutter:next-hunk 1)) "first hunk")
+       ("l" (progn (goto-char (point-min)) (git-gutter:previous-hunk 1)) "last hunk")
+       ("<SPC>" git-gutter:popup-hunk "popup hunk")
+       ("s" git-gutter:stage-hunk "stage hunk")
+       ("r" git-gutter:revert-hunk "revert hunk")
+       ("q" nil "quit"))
+
+
+  (defhydra hydra-nl-frames (:hint nil)
+    "Frames"
+    ("w" (nl/create-frame-in-workspace "emacs-ws19" "19") "Open Emacs frame in WS19"))
+
+  (defhydra hydra-nl-search (:hint nil)
+    "Search"
+    ("p" (nl/consult-ripgrep-project-src) "project's src folder" :exit t))
+
+  (defhydra hydra-nl-align (:hint nil)
+    (":" align-colons "colons" :color blue :column "Align things")
+    ("," align-commas "commas" :color blue)
+    ("=" align-equals "equals" :color blue)
+    ("$" align-dollar-sign "dollar sign" :color blue)
+    ("p" align-parameters "parameters" :color blue))
+
+  (defhydra hydra-nl-common (:color red :hint nil)
+    ("f" hydra-nl-frames/body "frames" :color blue :column "Frames")
+    ("w" hydra-window/body "windows" :color blue :column "Windows")
+    ("n" hydra-windows-alt/body "windows alt" :color blue)
+    ("b" hydra-buffer/body "buffer" :color blue :column "Buffers")
+    ("s" hydra-nl-search/body "search" :color blue :column "Search")
+    ("a" hydra-nl-align/body "align" :color blue :column "Align")
+    ("c" nl/open-alacritty-project-root "alacritty project root" :color blue :column "Shell")
+    ("C" nl/open-alacritty-here "alacritty here" :color blue)
+    ("g" hydra-git-gutter/body "git" :color blue :column "Git"))
+
+  (key-chord-define-global "jv" 'hydra-nl-common/body)
+  )
+#+end_src
+
+*** Aligning things
+
+Align by colons (handy for JavaScript), align by commas, and align by equal signs.
+
+#+begin_src emacs-lisp
+(defun nl/align-regexp-command (regexp)
+  "Align region using the provided REGEXP."
+  (interactive (list (read-string "Align regex: ")))
+  (if (use-region-p)
+      (align-regexp (region-beginning) (region-end) regexp 1 1 t)
+    (message "No active region to align.")))
+
+(defun align-colons (beg end)
+  (interactive "r")
+  (nl/align-regexp-command ":\\(\\s-+\\)"))
+
+(defun align-commas (beg end)
+  (interactive "r")
+  (align-regexp beg end ",\\(\\s-+\\)" 1 1 t))
+
+(defun align-equals (beg end)
+  (interactive "r")
+  (align-regexp beg end "\\(\\s-*\\)=" 1 1 t))
+
+(defun align-dollar-sign ()
+  (interactive)
+  (nl/align-regexp-command "\\(\\s-*\\)\\$"))
+
+(defun align-parameters (beg end)
+  (interactive "r")
+  (align-regexp beg end "\\w+\\(\\s-*\\)\\w+,?" 1 1 t))
+#+end_src
+
+** [[https://gitlab.com/emacs-stuff/indent-tools/][indent-tools]]
+
+Indent, move around and act on code based on indentation.
+
+#+begin_src emacs-lisp
+(use-package indent-tools
+  :bind (("C-c >" . indent-tools-hydra/body)))
+#+end_src
+
+** [[https://github.com/emacsorphanage/key-chord][key-chord]]
+
+See =init.el=.
+
+** [[https://github.com/emacsfodder/move-text][move-text]]
+
+MoveText allows you to move the current line using ~M-S-up~ / ~M-S-down~ (or any other bindings you choose) if a region is marked, it will move the region instead.
+
+Modified the bindings to coincide with the ones used in =org-mode=.
+
+#+begin_src emacs-lisp
+(use-package move-text
+  :bind (("M-S-<up>" . move-text-up)
+         ("M-S-<down>" . move-text-down)))
+#+end_src
+
+** [[https://github.com/magnars/multiple-cursors.el][multiple-cursors]]
+
+Sometimes you end up with cursors outside of your view. You can scroll the screen to center on each cursor with ~C-v~ and ~M-v~.
+
+#+begin_src emacs-lisp
+(unless (string-match "-microsoft" (downcase operating-system-release))
+  (use-package multiple-cursors
+    :after selected
+    :bind (("C-S-c C-S-c" . mc/edit-lines)
+           ("C->"         . mc/mark-next-like-this)
+           ("C-<"         . mc/mark-previous-like-this)
+           ("C-M->"       . mc/unmark-next-like-this)
+           ("C-M-<"       . mc/unmark-previous-like-this)
+           ("C-c C-<"     . mc/mark-all-like-this)
+           ("C-!"         . mc/mark-next-symbol-like-this)
+           ("C-x C-m"     . mc/mark-all-dwim)
+           (:map selected-keymap
+                 ("C-'" . mc/edit-lines)
+                 ("."   . mc/mark-next-like-this)
+                 ("<"   . mc/unmark-next-like-this)
+                 ("C->" . mc/skip-to-next-like-this)
+                 (","   . mc/mark-previous-like-this)
+                 (">"   . mc/unmark-previous-like-this)
+                 ("C-<" . mc/skip-to-previous-like-this)
+                 ("y"   . mc/mark-next-symbol-like-this)
+                 ("Y"   . mc/mark-previous-symbol-like-this)
+                 ("w"   . mc/mark-next-word-like-this)
+                 ("W"   . mc/mark-previous-word-like-this)))
+    :config
+    (setq mc/always-run-for-all t)
+    ))
+
+(when (string-match "-microsoft" (downcase operating-system-release))
+  (use-package multiple-cursors
+    :bind (("C-S-c C-S-c" . mc/edit-lines)
+           ("C->"         . mc/mark-next-like-this)
+           ("C-<"         . mc/mark-previous-like-this)
+           ("C-M->"       . mc/unmark-next-like-this)
+           ("C-M-<"       . mc/unmark-previous-like-this)
+           ("C-c C-<"     . mc/mark-all-like-this)
+           ("C-!"         . mc/mark-next-symbol-like-this)
+           ("C-x C-m"     . mc/mark-all-dwim))
+    :config
+    (setq mc/always-run-for-all t)
+    ))
+#+end_src
+
+*
+** [[https://github.com/Kungsgeten/selected.el][selected]]
+
+Provides the =selected-minor-mode= for Emacs. When =selected-minor-mode= is active, the keybindings in =selected-keymap= will be enabled when the region is active.
+
+#+begin_src emacs-lisp
+(unless (string-match "-microsoft" (downcase operating-system-release))
+  (use-package selected
+    :diminish selected-minor-mode
+    ;; :bind (:map selected-keymap
+    ;;            ("M-%" . query-replace-regexp)
+    ;;            ("C-[" . align-entire)
+    ;;            ("C-f" . fill-region)
+    ;;            ("C-U" . unfill-region)
+    ;;            ("C-d" . downcase-region)
+    ;;            ("C-r" . reverse-region)
+    ;;            ("C-s" . sort-lines)
+    ;;            ("C-u" . upcase-region))
+    :init (selected-global-mode 1))
+  )
+#+end_src
+
+** [[https://protesilaos.com/emacs/substitute][substitute]]
+
+Substitute is a set of commands that perform text replacement (i) throughout the buffer, (ii) limited to the
+current definition (per narrow-to-defun), (iii) from point to the end of the buffer, and (iv) from point to
+the beginning of the buffer.
+
+#+begin_src emacs-lisp
+(use-package substitute
+  :bind-keymap ("C-c s" . substitute-prefix-map))
+#+end_src

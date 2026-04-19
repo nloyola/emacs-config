@@ -1,3 +1,5 @@
+;;; fira-code-mode.el --- Fira Code ligature fallback -*- lexical-binding: t; -*-
+
 (defun fira-code-mode--make-alist (list)
   "Generate prettify-symbols alist from LIST."
   (let ((idx -1))
@@ -56,3 +58,4 @@
   (set-fontset-font t '(#Xe100 . #Xe16f) "Fira Code Symbol"))
 
 (provide 'fira-code-mode)
+;;; fira-code-mode.el ends here

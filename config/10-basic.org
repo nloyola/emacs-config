@@ -1,0 +1,198 @@
+* Basic settings
+
+Override various default settings and key bindings.
+
+See https://tony-zorman.com/posts/emacs-potpourri.html
+
+#+begin_src emacs-lisp
+(use-package emacs
+  :preface
+  ;; Conditional/Special Logic
+  (when (eq system-type 'darwin)
+    (require 'ls-lisp)
+    (setq ls-lisp-use-insert-directory-program nil))
+
+  ;; custom-file setup and loading (MUST be early)
+  (setq custom-file (expand-file-name "custom.el" user-emacs-directory))
+  (load custom-file)
+
+  ;; Property List Modifications (put) - Not customs
+  (put 'downcase-region 'disabled nil)
+  (put 'upcase-region 'disabled nil)
+  (put 'narrow-to-region 'disabled nil)
+  (put 'dired-find-alternate-file 'disabled nil)
+  (put 'erase-buffer 'disabled nil)
+
+  ;; Function Calls / Mode Toggles / Aliases - Not customs
+  (defalias 'yes-or-no-p 'y-or-n-p)
+  (set-terminal-coding-system 'utf-8)
+  (set-keyboard-coding-system 'utf-8)
+  (set-selection-coding-system 'utf-8)
+  (prefer-coding-system 'utf-8)
+  (delete-selection-mode t)
+  (global-visual-line-mode -1)
+  (setenv "PAGER" "cat")
+  (set-frame-parameter (selected-frame) 'buffer-predicate #'buffer-file-name)
+  (when (fboundp 'menu-bar-mode) (menu-bar-mode -1))
+  (blink-cursor-mode -1)
+  (global-so-long-mode 1)
+  (windmove-default-keybindings 'meta)
+  (electric-pair-mode 1)
+  (show-paren-mode 1)
+
+  ;; Hooks / List Modifications
+  (add-to-list 'auto-mode-alist '("\\.log\\'" . auto-revert-mode))
+
+  :bind
+  ("C-z" . nil)                ;; I never want to suspend the frame
+  ("M-%" . query-replace-regexp)
+  ("C-S-s" . isearch-forward)
+  ("C-x <mouse-movement>" . ignore) ;; Ignore stray motion events after focus changes
+  ("C-x C-n" . next-error)
+  ("C-x k" . nl/kill-this-buffer)
+  ("M-f" . forward-to-word)
+  ("M-B" . backward-to-word)
+  ("<f1>" . indent-for-tab-command)
+  ("S-<f1>" . indent-region)
+  ("C-<f1>" . find-file-at-point)
+  ("<f2>" . (lambda () (interactive) (save-some-buffers t)))
+  ("S-<f2>" . (lambda () (interactive) (revert-buffer t t)))
+  ("S-<f5>" . toggle-truncate-lines)
+  ("<f8>" . window-toggle-side-windows)
+  ("S-<f11>" . eval-region)
+  ("C-S-<f11>" . align-regexp)
+
+  :custom
+  ;; User Identity
+  (user-full-name "Nelson Loyola")
+  (user-mail-address "nloyola@gmail.com")
+
+  ;; Compilation and Byte-Code
+  (comp-async-report-warnings-errors nil) ;; native-comp warnings
+  (byte-compile-warnings '(not free-vars unresolved noruntime lexical make-local))
+
+  ;; Text Handling
+  (sentence-end-double-space nil)
+  (default-major-mode 'text-mode)
+  (initial-major-mode 'text-mode)
+  (case-fold-search t)
+  (fill-column 100)
+  (locale-coding-system 'utf-8)
+  (indent-tabs-mode nil)
+  (require-final-newline t)
+  (electric-pair-pairs
+   '(
+     (?\" . ?\")
+     (?\' . ?\')
+     (?\{ . ?\})))
+
+  ;; Window/Scrolling Behavior
+  (scroll-up-aggressively 0.01)
+  (scroll-down-aggressively 0.01)
+  (redisplay-dont-pause t)
+  (scroll-step 1)
+  (scroll-margin 3)
+  (scroll-conservatively 10)
+  (scroll-preserve-screen-position t)
+  (auto-window-vscroll nil)
+  (fit-window-to-buffer-horizontally t)
+  (window-resize-pixelwise t)
+
+  ;; Appearance
+  (font-lock-maximum-decoration t)
+  (cursor-type 'box)
+  (cursor-in-non-selected-windows nil)
+  (use-dialog-box nil)
+  (visible-bell t)
+  (frame-title-format
+   '("" invocation-name ": " (:eval (replace-regexp-in-string
+                                     "^ +" "" (buffer-name)))))
+  (next-line-add-newlines nil)
+  (indicate-empty-lines t)
+  (inhibit-compacting-font-caches t)
+
+  ;; File and Buffer Management
+  (vc-follow-symlinks nil)
+  (auto-save-list-file-prefix "~/.emacs.d/autosave/")
+  (auto-save-file-name-transforms `((".*" "~/.emacs.d/autosave/" t)))
+  (backup-directory-alist `(("." . ,(concat user-emacs-directory "autosave"))))
+  (revert-without-query '(".*"))
+  (auto-save-default nil)
+  (make-backup-files nil)
+  (uniquify-buffer-name-style 'forward)
+  (bookmark-default-file "~/.emacs.d/etc/bookmarks")
+
+  ;; Search and Replace
+  (query-replace-highlight t)
+  (hi-lock-auto-select-face t)
+
+  ;; History and Kill-ring
+  (mouse-yank-at-point t)
+  (save-interprogram-paste-before-kill t)
+  (history-delete-duplicates t)
+  (kill-whole-line t)
+
+  ;; Minibuffer / Utilities
+  (enable-recursive-minibuffers t)
+  (confirm-kill-processes nil)
+  (use-short-answers t)
+
+  ;; Mode Specific
+  (eshell-history-size 100000)
+  (sh-basic-offset 4)
+  (sh-indent-after-case 'always)
+  (ispell-dictionary "canadian")
+  )
+#+end_src
+
+** =zap-up-to-char=
+
+#+begin_src emacs-lisp
+(use-package emacs
+  :preface
+  (autoload 'zap-up-to-char "misc"
+  "kill up to, but not including ARG'th occurence of CHAR.
+   \(fn arg char)"
+  'interactive)
+  :bind
+  ("M-z" . zap-up-to-char))
+#+end_src
+
+** Stealing from the Best Emacs Configs
+
+Taken from: [[https://emacsredux.com/blog/2026/04/07/stealing-from-the-best-emacs-configs/][here]]
+
+#+begin_src emacs-lisp
+(setq-default bidi-display-reordering 'left-to-right
+              bidi-paragraph-direction 'left-to-right)
+(setq bidi-inhibit-bpa t)
+(setq redisplay-skip-fontification-on-input t)
+(setq read-process-output-max (* 4 1024 1024)) ; 4MB
+(setq-default cursor-in-non-selected-windows nil)
+(setq highlight-nonselected-windows nil)
+(setq save-interprogram-paste-before-kill t)
+(setq kill-do-not-save-duplicates t)
+(setq savehist-additional-variables
+      '(search-ring regexp-search-ring kill-ring))
+
+(add-hook 'savehist-save-hook
+          (lambda ()
+            (setq kill-ring
+                  (mapcar #'substring-no-properties
+                          (cl-remove-if-not #'stringp kill-ring)))))
+
+(add-hook 'after-save-hook
+          #'executable-make-buffer-file-executable-if-script-p)
+(setq reb-re-syntax 'string)
+(setq ffap-machine-p-known 'reject)
+(setq window-combination-resize t)
+(setq set-mark-command-repeat-pop t)
+(setq help-window-select t)
+#+end_src
+
+** mouse avoidance
+Don't let mouse icon obscure cursor
+
+#+begin_src emacs-lisp :tangle no
+(mouse-avoidance-mode 'animate)
+#+end_src

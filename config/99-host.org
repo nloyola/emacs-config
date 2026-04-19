@@ -1,0 +1,23 @@
+* Computer-specific settings
+
+Load some computer-specific settings, such as the name and and email address.
+
+#+begin_src emacs-lisp
+(use-package emacs
+  :init
+  (defvar nl/user-settings-dir nil
+    "The directory with user-specific Emacs settings for this
+  user.")
+
+  ;; Settings for currently logged in user
+  (require 's)
+  (let ((user-dir (concat user-emacs-directory "users")))
+    (when (file-directory-p user-dir)
+      (setq nl/user-settings-dir
+            (concat user-dir "/" (s-trim (shell-command-to-string "hostname -s"))))
+      (add-to-list 'load-path nl/user-settings-dir)))
+
+  ;; Load settings specific for the current user
+  (when (file-exists-p nl/user-settings-dir)
+    (mapc 'load (directory-files nl/user-settings-dir nil "^[^#].*el$"))))
+#+end_src

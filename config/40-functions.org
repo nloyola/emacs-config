@@ -1,0 +1,224 @@
+* My functions
+
+#+begin_src emacs-lisp
+(use-package emacs
+  :preface
+  (defun nl/kill-this-buffer ()
+    "Kill the current buffer."
+    (interactive)
+    (kill-buffer (current-buffer)))
+
+  (defun nl/consult-compile ()
+    "Use Consult to choose a compile command."
+    (interactive)
+    (let ((selected-command
+           (completing-read "Select a compile command: " compile-history)))
+      ;; move this command to the front of the history
+      (setq compile-history (remove selected-command compile-history))
+      (add-to-list 'compile-history selected-command)
+      (compile selected-command)))
+
+  (defun nl/consult-async-shell-command ()
+    (interactive)
+    (let ((selected-command
+           (completing-read "Select a shell command: " shell-command-history)))
+      (async-shell-command selected-command)))
+
+  ;; (defun nl/counsel-git-files ()
+  ;;   (interactive)
+  ;;   (let ((counsel-fzf-cmd "git ls-files | fzf -f \"%s\""))
+  ;;     (counsel-fzf)))
+
+  (defun nl/beginning-of-line-or-indentation ()
+    "move to beginning of line, or indentation"
+    (interactive)
+    (if (bolp)
+        (back-to-indentation)
+      (beginning-of-line)))
+
+  (defun my/consult-projectile-compile-with-history ()
+    "Prompt for a compile command using Consult and Projectile's default."
+    (interactive)
+    (require 'projectile)
+    (let* ((project-root (projectile-project-root))
+           (default (projectile-compilation-command project-root))
+           (command (consult--read
+                     (delete-dups (cons default compile-history))
+                     :prompt "Compile command: "
+                     :default default)))
+      (add-to-history 'compile-history command)
+      (let ((default-directory project-root))
+        (compile command))))
+
+  ;; https://www.emacs.dyerdwelling.family/emacs/20240804075952-emacs--finding-files-using-completing-read/
+  (defun nl/find-file ()
+    "Find file from current directory in many different ways."
+    (interactive)
+    (let* ((find-options '(("find -type f -printf \"$PWD/%p\\0\"" . :string)
+                           ("fdfind --absolute-path --type f -0" . :string)
+                           ("rg --follow --files --null" . :string)
+                           ("find-name-dired" . :command)))
+           (selection (completing-read "Select : " find-options))
+           (metadata '((category . file)))
+           (file-list)
+           (file))
+      (pcase (alist-get selection find-options nil nil #'string=)
+        (:command
+         (call-interactively (intern selection)))
+        (:string
+         (setq file-list (split-string (shell-command-to-string selection) "\0" t))
+         (setq file (completing-read (format "Find file in %s: " (abbreviate-file-name default-directory))
+                                     (lambda (str pred action)
+                                       (if (eq action 'metadata)
+                                           `(metadata . ,metadata)
+                                         (complete-with-action action file-list str pred)))
+                                     nil t nil 'file-name-history)))
+        (when file (find-file (expand-file-name file))))))
+
+  :bind
+  ("<home>" . nl/beginning-of-line-or-indentation)
+  ("<f5>" . my/consult-projectile-compile-with-history)
+  ("<C-f5>" . compile)
+  )
+#+end_src
+
+** Windows
+
+#+begin_src emacs-lisp
+(use-package emacs
+  :preface
+  (setq split-height-threshold 160
+        split-width-threshold nil)
+
+  (defun nl/frame-grow-horizontally ()
+    "Set the size and position of the Emacs window."
+    (interactive)
+    (windmove-right)
+    (delete-window))
+
+  ;; (let ((win (selected-window)))
+  ;;   (set-frame-size frame (* 2 (frame-width)) (frame-height)))
+  ;; (split-window-right))
+
+  (defun nl/frame-shrink-horizontally ()
+    "Set the size and position of the Emacs window."
+    (interactive)
+    (when (> (length (window-list)) 1)
+      (delete-other-windows))
+    (split-window-right)
+    ;; show the compilation buffer if there is one
+    (let ((win (selected-window))
+          (compile-buf (get-compilation-buffer)))
+      (when compile-buf
+        (switch-to-buffer-other-window compile-buf)
+        (select-window win))))
+
+  (defun nl/frame-resize ()
+    "Resizes the frame based on its current width."
+    (interactive)
+    (if (<= (qwindow-total-width) 150)
+        (nl/frame-grow-horizontally)
+      (nl/frame-shrink-horizontally)))
+
+  (defun nl/split-window-same-file ()
+    "Splits the frame into two windows, with the buffer on the rightmost window in left and right windows."
+    (interactive)
+    (windmove-right)
+    (delete-window)
+    (split-window-right)
+    (windmove-right))
+  :bind
+  ("<f9>" . nl/frame-resize)
+  ("<S-f9>" . nl/split-window-same-file)
+  :config
+  (setq switch-to-buffer-obey-display-actions t)
+  )
+#+end_src
+
+#+begin_src emacs-lisp
+(use-package repeat
+  :ensure nil
+  :init
+  (repeat-mode 1))
+#+end_src
+
+The following was borrowed from:
+https://www.reddit.com/r/emacs/comments/1rhi075/elegant_implementation_of_otherwindowmru/?share_id=AoEb3bVezA9LRJXrLMlv_&utm_content=2&utm_medium=android_app&utm_name=androidcss&utm_source=share&utm_term=2
+
+#+begin_src emacs-lisp
+(use-package window
+  :ensure nil
+  :preface
+  (let ((windows nil)
+        (index 0))
+    (defun my/other-window-mru ()
+      "Cycle windows in most-recently-used order."
+      (interactive)
+      (if (one-window-p t)
+          (message "No other window to select")
+        (if (eq last-command this-command)
+            (setq index (mod (1+ index) (length windows)))
+          (select-window (selected-window))
+          (setq windows (sort (window-list nil 'nomini)
+                              :key #'window-use-time :reverse t)
+                index 1))
+        (select-window (nth index windows) 'norecord))))
+  :bind
+  (("C-x o" . my/other-window-mru)
+   :map other-window-repeat-map
+   ("o" . my/other-window-mru))
+  :config
+  (put 'my/other-window-mru 'repeat-map 'other-window-repeat-map))
+#+end_src
+
+** Side windows
+
+#+begin_src emacs-lisp
+(defvar nl/side-window-parameters
+  '(window-parameters . ((no-other-window . nil)
+                         (no-delete-other-windows . t))))
+
+;; (setq display-buffer-alist '())
+
+;; left, top, right, bottom
+(setq window-sides-slots '(1 0 1 1))
+
+(add-to-list 'display-buffer-alist
+             `("\\(?:\\*\\(?:[Hh]elp\\|[Hh]elpful.*\\|shell\\|info\\)\\*\\)"
+               (display-buffer-in-side-window)
+               (window-width . 100)
+               (side . left)
+               (slot . 0)
+               ,nl/side-window-parameters))
+
+(add-to-list 'display-buffer-alist
+             '("\\(?:\\*\\(?:Warnings\\)\\*\\)"
+               display-buffer-in-side-window
+               ;;(window-height . 0.18)
+               (side . bottom)
+               (slot . -1) ;; left side
+               (preserve-size . (nil . nil))
+               ,nl/side-window-parameters))
+
+(add-to-list 'display-buffer-alist
+             '("\\*\\(?:compilation\\|Backtrace\\|Warnings\\|Completions\\|Compile-Log\\|cargo-run\\|\\Flycheck.*\\|Go Test\\)\\*"
+               display-buffer-in-side-window
+               (side . bottom)
+               (slot . 1)
+               (preserve-size . (nil . nil))
+               ,nl/side-window-parameters))
+
+(add-to-list 'display-buffer-alist
+          `(,(rx (| "*xref*"
+                    "*grep*"
+                    "*Occur*"))
+            display-buffer-reuse-window
+            (inhibit-same-window . nil)))
+
+(add-to-list 'display-buffer-alist
+  '("\\*eat\\*" display-buffer-in-direction
+    (direction . bottom)
+    (window . root)
+    (window-height . 0.3)))
+
+#+end_src

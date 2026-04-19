@@ -1,0 +1,23 @@
+* Before save hook
+Remove trailing whitespace.
+
+#+begin_src emacs-lisp
+(use-package emacs
+  :hook
+  (before-save . delete-trailing-whitespace)
+  )
+#+end_src
+
+* Transparency
+
+See: https://kristofferbalintona.me/posts/202206071000/
+
+#+begin_src emacs-lisp
+(defun kb/toggle-window-transparency ()
+  "Toggle transparency."
+  (interactive)
+  (let ((alpha-transparency 55))
+    (pcase (frame-parameter nil 'alpha-background)
+      (alpha-transparency (set-frame-parameter nil 'alpha-background 100))
+      (t (set-frame-parameter nil 'alpha-background alpha-transparency)))))
+#+end_src

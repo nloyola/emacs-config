@@ -169,51 +169,56 @@
 
 
 
-(defun load-config-org()
-  "Parse the config.org file to process each emacs-lisp block.
+(defun nl/eval-config-org-file (path errors)
+  "Evaluate emacs-lisp src blocks in PATH, pushing failures onto ERRORS.
+Returns the updated ERRORS list. Blocks tagged `:tangle no' are skipped.
+Errors are accumulated rather than raised, matching the original behavior
+documented at http://emacsninja.com/posts/failing-gracefully.html"
+  (with-temp-buffer
+    ;; Pad with a leading newline so the loop's initial `forward-line 1'
+    ;; lands on the file's real line 1. Without this, line 1 — which in
+    ;; split files is typically the top-level heading — gets skipped.
+    (insert "\n")
+    (insert-file-contents path)
+    (goto-char (point-min))
+    (let (heading section-decl src-beg src-end)
+      (while (not (eobp))
+	(forward-line 1)
+	(pl-parse
+	 (pl-re "^\\*\\{1,5\\} +.*$" :beg)
+	 (setq heading (match-string 0)))
+	(pl-parse
+	 (pl-re "^#\\+BEGIN_SRC +emacs-lisp.*$" :beg)
+	 (setq src-beg (match-end 0))
+	 (setq section-decl (match-string 0))
+	 (pl-until
+	  (pl-re "\n#\\+END_SRC$" :end))
+	 (setq src-end (match-beginning 0))
+	 (unless (string-match ":tangle +no" section-decl)
+	   (condition-case error
+	       (progn
+		 (message "%s" heading)
+		 (with-timer (eval-region src-beg src-end)))
+	     (error
+	      (push (format "[%s] %s for:\n%s\n\n---\n"
+			    (file-name-nondirectory path)
+			    (error-message-string error)
+			    (buffer-substring src-beg src-end))
+		    errors))))))))
+  errors)
 
-If any of the blocks generates an error, Emacs will not
-halt, instead it will continue and accumulate the errors.
-If any errors were encountered, they will be reported in
-the *init errors* buffer.
-
-See http://emacsninja.com/posts/failing-gracefully.html"
-  (let (errors)
-    (with-temp-buffer
-      (insert-file-contents "~/.emacs.d/config.org")
-      (goto-char (point-min))
-      (let (heading section-decl src-beg src-end)
-	(while (not (eobp))
-	  (forward-line 1)
-	  (pl-parse
-	   (pl-re "^\\*\\{1,5\\} +.*$" :beg)
-	   (setq heading (match-string 0)))
-	  (pl-parse
-	   (pl-re "^#\\+BEGIN_SRC +emacs-lisp.*$" :beg)
-	   (setq src-beg (match-end 0))
-	   (setq section-decl (match-string 0))
-	   (pl-until
-	    (pl-re "\n#\\+END_SRC$" :end))
-	   (setq src-end (match-beginning 0))
-
-	   (if (string-match ":tangle +no" section-decl)
-	       ;;(message "Skipped: %s" heading)
-               (ignore)
-	     (condition-case error
-		 (progn
-		   (message "%s" heading)
-		   (with-timer (eval-region src-beg src-end)))
-	       (error
-		(push (format "%s for:\n%s\n\n---\n"
-			      (error-message-string error)
-			      (buffer-substring src-beg src-end))
-		      errors)))
-             )))))
+(defun load-config-org ()
+  "Evaluate every `config/*.org' file in lexicographic order.
+Errors are accumulated and reported in the *init errors* buffer."
+  (let ((errors '())
+	(dir (expand-file-name "config" user-emacs-directory)))
+    (dolist (file (directory-files dir t "\\.org\\'"))
+      (setq errors (nl/eval-config-org-file file errors)))
     (when errors
       (with-current-buffer (get-buffer-create "*init errors*")
 	(insert (format "%i error(s) found\n\n" (length errors)))
-	(dolist (error (nreverse errors))
-	  (insert error "\n"))
+	(dolist (err (nreverse errors))
+	  (insert err "\n"))
 	(goto-char (point-min))
 	(special-mode))
       (setq initial-buffer-choice (lambda () (get-buffer "*init errors*"))))))

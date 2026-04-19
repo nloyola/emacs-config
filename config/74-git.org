@@ -1,0 +1,237 @@
+* Git
+
+** Git
+*** [[https://github.com/magit/magit][magit]]
+
+A great interface for git projects. It's much more pleasant to use than the git interface on the
+command line. Use an easy keybinding to access magit.
+
+#+begin_src emacs-lisp
+(use-package magit
+  ;;:pin melpa
+  :bind (("C-x g" . magit-status))
+  ;;:hook (magit-mode . magit-todos-mode)
+  :config
+  (defun nl/git-commit-fill-paragraph (&optional justify region)
+    "Fill bullet lists normally in commit messages.
+
+`git-commit-setup-changelog-support' installs `log-edit-fill-entry',
+which treats leading `*' lines as ChangeLog entries.  That is useful
+for actual ChangeLog-style paragraphs, but it makes ordinary bullet
+lists wrap under the bullet instead of under the text."
+    (save-excursion
+      (back-to-indentation)
+      (if (looking-at "\\(?:[-+*]\\|[0-9]+[.)]\\)[[:blank:]]+")
+          (let ((fill-paragraph-function nil))
+            (fill-paragraph justify region))
+        (log-edit-fill-entry justify))))
+
+  (defun nl/git-commit-setup-fill-paragraph ()
+    "Use better paragraph filling for bullet lists in commit buffers."
+    (setq-local fill-paragraph-function #'nl/git-commit-fill-paragraph))
+
+  (add-hook 'git-commit-setup-hook #'nl/git-commit-setup-fill-paragraph)
+  (define-key magit-status-mode-map (kbd "q") 'magit-quit-session)
+  (setq-default vc-handled-backends '(Git))
+  (setq magit-push-always-verify nil
+        git-commit-summary-window nil
+        git-commit-show-diff nil
+        ;; only use A and B in Ediff
+        magit-ediff-dwim-show-on-hunks t)
+  (magit-add-section-hook 'magit-status-sections-hook
+                          'magit-insert-modules
+                          'magit-insert-stashes
+                          'append))
+#+end_src
+
+**** Full-screen magit
+
+The following code makes magit-status run alone in the frame, and then restores the old window configuration when you quit out of magit.
+
+#+begin_src emacs-lisp
+(defadvice magit-status (around magit-fullscreen activate)
+  ;;(window-configuration-to-register ?magit-fullscreen)
+  (window-configuration-to-register ?z)
+  ad-do-it
+  (delete-other-windows))
+
+(defun magit-quit-session ()
+  "Restores the previous window configuration and kills the magit buffer"
+  (interactive)
+  (kill-buffer)
+  ;;(jump-to-register ?magit-fullscreen))
+  (jump-to-register ?z))
+#+end_src
+
+**** File log
+
+=M-x magit-log-buffer-file=
+
+*** [[https://github.com/alphapapa/magit-todos][magit-todos]]
+
+#+begin_src emacs-lisp :tangle no
+(use-package magit-todos
+  :diminish
+  :after magit
+  :custom
+  (magit-todos-auto-group-items 'always)
+  (magit-todos-group-by '(magit-todos-item-keyword magit-todos-item-filename))
+  :config
+  (magit-todos-mode))
+#+end_src
+
+*** [[https://gitlab.com/pidu/git-timemachine][git-timemachine]]
+
+#+begin_src emacs-lisp
+(use-package git-timemachine
+  :commands git-timemachine)
+#+end_src
+
+*** [[https://github.com/syohex/emacs-git-gutter][emacs-git-gutter]]
+
+Uses gutter icons to show extra information about files in a git repository. Gutter Icons indicate inserted, modified or deleted lines.
+
+#+begin_src emacs-lisp
+(use-package git-gutter
+  :diminish git-gutter-mode
+  :hook (prog-mode . git-gutter-mode))
+#+end_src
+
+*** [[https://github.com/10sr/git-walktree-el][git-walktree.el]]
+
+Browse Git tree and blob objects
+
+=M-x git-walktree= to open ~git-walktree~ buffer. Prompt user for revision to show.
+
+When current buffer is visiting a file and it exists in the revision, open blob buffer for that file
+Otherwise, open tree buffer for default-directory In ~git-walktree~ buffers, following keybinds are defined:
+
+- ~^~ Go up to parent tree object
+- ~P~ Move to parent revision
+- ~N~ Move to child revision
+- ~C~ Checkout current blob or tree object to working directory
+- ~G~ Move to another revision (ask user)
+
+Additionally, in tree object buffer:
+
+- ~ENTER~ Visit tree or blob object at point
+
+#+begin_src emacs-lisp
+(use-package git-walktree)
+#+end_src
+
+*** difftastic
+
+See https://tsdh.org/posts/2022-08-01-difftastic-diffing-with-magit.html
+
+#+begin_src emacs-lisp :tangle no
+(defun th/magit--with-difftastic (buffer command)
+  "Run COMMAND with GIT_EXTERNAL_DIFF=difft then show result in BUFFER."
+  (let ((process-environment
+         (cons (concat "GIT_EXTERNAL_DIFF=difft --width="
+                       (number-to-string (frame-width)))
+               process-environment)))
+    ;; Clear the result buffer (we might regenerate a diff, e.g., for
+    ;; the current changes in our working directory).
+    (with-current-buffer buffer
+      (setq buffer-read-only nil)
+      (erase-buffer))
+    ;; Now spawn a process calling the git COMMAND.
+    (make-process
+     :name (buffer-name buffer)
+     :buffer buffer
+     :command command
+     ;; Don't query for running processes when emacs is quit.
+     :noquery t
+     ;; Show the result buffer once the process has finished.
+     :sentinel (lambda (proc event)
+                 (when (eq (process-status proc) 'exit)
+                   (with-current-buffer (process-buffer proc)
+                     (goto-char (point-min))
+                     (ansi-color-apply-on-region (point-min) (point-max))
+                     (setq buffer-read-only t)
+                     (view-mode)
+                     (end-of-line)
+                     ;; difftastic diffs are usually 2-column side-by-side,
+                     ;; so ensure our window is wide enough.
+                     (let ((width (current-column)))
+                       (while (zerop (forward-line 1))
+                         (end-of-line)
+                         (setq width (max (current-column) width)))
+                       ;; Add column size of fringes
+                       (setq width (+ width
+                                      (fringe-columns 'left)
+                                      (fringe-columns 'right)))
+                       (goto-char (point-min))
+                       (pop-to-buffer
+                        (current-buffer)
+                        `(;; If the buffer is that wide that splitting the frame in
+                          ;; two side-by-side windows would result in less than
+                          ;; 80 columns left, ensure it's shown at the bottom.
+                          ,(when (> 80 (- (frame-width) width))
+                             #'display-buffer-at-bottom)
+                          (window-width
+                           . ,(min width (frame-width))))))))))))
+
+(defun th/magit-show-with-difftastic (rev)
+  "Show the result of \"git show REV\" with GIT_EXTERNAL_DIFF=difft."
+  (interactive
+   (list (or
+          ;; If REV is given, just use it.
+          (when (boundp 'rev) rev)
+          ;; If not invoked with prefix arg, try to guess the REV from
+          ;; point's position.
+          (and (not current-prefix-arg)
+               (or (magit-thing-at-point 'git-revision t)
+                   (magit-branch-or-commit-at-point)))
+          ;; Otherwise, query the user.
+          (magit-read-branch-or-commit "Revision"))))
+  (if (not rev)
+      (error "No revision specified")
+    (th/magit--with-difftastic
+     (get-buffer-create (concat "*git show difftastic " rev "*"))
+     (list "git" "--no-pager" "show" "--ext-diff" rev))))
+
+(defun th/magit-diff-with-difftastic (arg)
+  "Show the result of \"git diff ARG\" with GIT_EXTERNAL_DIFF=difft."
+  (interactive
+   (list (or
+          ;; If RANGE is given, just use it.
+          (when (boundp 'range) range)
+          ;; If prefix arg is given, query the user.
+          (and current-prefix-arg
+               (magit-diff-read-range-or-commit "Range"))
+          ;; Otherwise, auto-guess based on position of point, e.g., based on
+          ;; if we are in the Staged or Unstaged section.
+          (pcase (magit-diff--dwim)
+            ('unmerged (error "unmerged is not yet implemented"))
+            ('unstaged nil)
+            ('staged "--cached")
+            (`(stash . ,value) (error "stash is not yet implemented"))
+            (`(commit . ,value) (format "%s^..%s" value value))
+            ((and range (pred stringp)) range)
+            (_ (magit-diff-read-range-or-commit "Range/Commit"))))))
+  (let ((name (concat "*git diff difftastic"
+                      (if arg (concat " " arg) "")
+                      "*")))
+    (th/magit--with-difftastic
+     (get-buffer-create name)
+     `("git" "--no-pager" "diff" "--ext-diff" ,@(when arg (list arg))))))
+
+(transient-define-prefix th/magit-aux-commands ()
+  "My personal auxiliary magit commands."
+  ["Auxiliary commands"
+   ("d" "Difftastic Diff (dwim)" th/magit-diff-with-difftastic)
+   ("s" "Difftastic Show" th/magit-show-with-difftastic)])
+
+(transient-append-suffix 'magit-dispatch "!"
+  '("#" "My Magit Cmds" th/magit-aux-commands))
+
+(define-key magit-status-mode-map (kbd "#") #'th/magit-aux-commands)
+#+end_src
+*** [[https://github.com/dandavison/magit-delta][magit-delta]]
+
+#+begin_src emacs-lisp :tangle no
+(use-package magit-delta
+  :hook (magit-mode . magit-delta-mode))
+#+end_src

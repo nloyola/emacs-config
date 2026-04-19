@@ -1,0 +1,416 @@
+* Web languages
+
+** JavaScript
+
+#+begin_src emacs-lisp
+(use-package js2-mode
+  :mode (("\\.js\\'" . js-ts-mode))
+  :bind
+  (:map js-ts-mode-map
+        ("M-j" . c-indent-new-comment-line))
+  :hook
+  (js-ts-mode . nl/javascript-mode)
+  :preface
+  (defun nl/javascript-mode ()
+    "Setup JavaScript mode."
+    (my/lsp-deferred-unless-remote)
+    (setq column-enforce-column 120)
+    (flycheck-mode +1)
+    (column-enforce-mode +1)
+    (subword-mode +1)
+    (when (fboundp 'nl/yas-reload-all)
+      (nl/yas-reload-all)))
+  )
+#+end_src
+
+** js-mode
+
+#+begin_src emacs-lisp :tangle no
+;; Load JS early, then create back-compat vars from the new functions.
+(use-package js
+  :ensure nil
+  :defer nil
+  :config
+  ;; If Emacs exposes a FUNCTION js--treesit-indent-rules, also define a VAR.
+  (when (and (fboundp 'js--treesit-indent-rules)
+             (not (boundp 'js--treesit-indent-rules)))
+    (defvar js--treesit-indent-rules (funcall #'js--treesit-indent-rules)))
+
+  ;; Same story for font-lock settings.
+  (when (and (fboundp 'js--treesit-font-lock-settings)
+             (not (boundp 'js--treesit-font-lock-settings)))
+    (defvar js--treesit-font-lock-settings (funcall #'js--treesit-font-lock-settings))))
+#+end_src
+
+** [[https://github.com/defunkt/markdown-mode][markdown-mode]]
+
+#+begin_src emacs-lisp
+(use-package markdown-mode
+  :commands (markdown-mode gfm-mode)
+  :mode (("README\\.md\\'" . gfm-mode)
+         ("\\.markdown\\'" . markdown-mode)
+         ("\\.md\\'"       . gfm-mode))
+  :preface
+  (defun nl/markdown-mode-setup ()
+    (auto-fill-mode -1)
+    (setq adaptive-wrap-extra-indent 1)
+    (adaptive-wrap-prefix-mode)
+    (variable-pitch-mode)
+    (visual-line-mode)
+    (local-set-key (kbd "C-c C-x m") #'markdown-toggle-markup-hiding)
+    (markdown-toggle-markup-hiding 1))
+  :hook
+  (markdown-mode . nl/markdown-mode-setup)
+  (gfm-mode . nl/markdown-mode-setup)
+  :config
+  (setq markdown-command "pandoc"
+        markdown-fontify-code-blocks-natively t
+        markdown-hide-markup t)
+  (custom-set-faces
+   `(markdown-code-face ((t (:family ,nl/gui-fixed-font-name
+                                     :foreground "#91b831"
+                                     :background "#303030"
+                                     :weight normal
+                                     :height 120))))
+   `(markdown-pre-face ((t (:family ,nl/gui-fixed-font-name
+                                     :foreground "#91b831"
+                                     :background "#303030"
+                                     :weight normal
+                                     :height 120))))
+   `(markdown-inline-code-face ((t (:family ,nl/gui-fixed-font-name
+                                            :foreground "#91b831"
+                                            :background "#303030"
+                                            :weight normal))))
+   `(markdown-bold-face ((t (:family ,nl/gui-variable-font-name :weight bold))))
+   `(markdown-italic-face ((t (:family ,nl/gui-variable-font-name :slant italic))))
+   `(markdown-list-face ((t (:family ,nl/gui-variable-font-name :height 130))))
+   `(markdown-header-face-1 ((t (:family ,nl/gui-variable-font-name :height 190 :foreground "#91b831"))))
+   `(markdown-header-face-2 ((t (:family ,nl/gui-variable-font-name :height 170 :foreground "#91b831"))))
+   `(markdown-header-face-3 ((t (:family ,nl/gui-variable-font-name :height 150 :foreground "#91b831"))))
+   `(markdown-header-face-4 ((t (:family ,nl/gui-variable-font-name :height 140 :foreground "#91b831"))))
+   `(markdown-header-face-5 ((t (:family ,nl/gui-variable-font-name :height 130 :foreground "#91b831"))))
+   `(markdown-header-face-6 ((t (:family ,nl/gui-variable-font-name :height 120 :foreground "#91b831"))))
+   `(markdown-header-face ((t (:family ,nl/gui-variable-font-name :height 110 :foreground "#91b831"))))
+   `(markdown-header-delimiter-face ((t (:family ,nl/gui-variable-font-name :height 80))))
+   ))
+#+end_src
+
+** [[https://github.com/ancane/markdown-preview-mode][markdown-preview-mode]]
+
+#+begin_src emacs-lisp
+(defconst nl/markdown-preview-dracula-style
+  "<style>
+  body {
+    margin: 0;
+    background: #282a36;
+    color: #f8f8f2;
+  }
+  #markdown-body.markdown-body {
+    box-sizing: border-box;
+    margin: 0 auto;
+    max-width: 52rem;
+    min-height: 100vh;
+    padding: 2rem 1.5rem 3rem;
+    background: #282a36;
+    color: #f8f8f2;
+    font-family: Georgia, serif;
+    line-height: 1.7;
+  }
+  #markdown-body.markdown-body a { color: #8be9fd; }
+  #markdown-body.markdown-body a:visited { color: #bd93f9; }
+  #markdown-body.markdown-body h1,
+  #markdown-body.markdown-body h2,
+  #markdown-body.markdown-body h3,
+  #markdown-body.markdown-body h4,
+  #markdown-body.markdown-body h5,
+  #markdown-body.markdown-body h6 {
+    color: #ff79c6;
+    line-height: 1.25;
+    margin-top: 1.6em;
+  }
+  #markdown-body.markdown-body h1,
+  #markdown-body.markdown-body h2 {
+    border-bottom: 1px solid #44475a;
+    padding-bottom: 0.2em;
+  }
+  #markdown-body.markdown-body pre,
+  #markdown-body.markdown-body code,
+  #markdown-body.markdown-body kbd {
+    font-family: \"Fira Code\", \"SFMono-Regular\", Consolas, monospace;
+  }
+  #markdown-body.markdown-body code {
+    background: #44475a;
+    color: #f1fa8c;
+    padding: 0.1em 0.3em;
+    border-radius: 4px;
+  }
+  #markdown-body.markdown-body pre {
+    background: #44475a;
+    color: #f8f8f2;
+    padding: 1em;
+    overflow-x: auto;
+    border-radius: 6px;
+  }
+  #markdown-body.markdown-body pre code {
+    background: transparent;
+    padding: 0;
+  }
+  #markdown-body.markdown-body blockquote {
+    margin: 1.5em 0;
+    padding-left: 1em;
+    border-left: 4px solid #6272a4;
+    color: #bd93f9;
+  }
+  #markdown-body.markdown-body table {
+    border-collapse: collapse;
+    width: 100%;
+  }
+  #markdown-body.markdown-body th,
+  #markdown-body.markdown-body td {
+    border: 1px solid #6272a4;
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+  }
+  #markdown-body.markdown-body th {
+    background: #44475a;
+    color: #8be9fd;
+  }
+  #markdown-body.markdown-body hr {
+    border: 0;
+    border-top: 1px solid #6272a4;
+    margin: 2rem 0;
+  }
+  #markdown-body.markdown-body img {
+    max-width: 100%;
+    height: auto;
+  }
+  </style>"
+  "Dracula stylesheet for `markdown-preview-mode'.")
+
+(use-package markdown-preview-mode
+  :custom
+  (markdown-preview-http-port 9090)
+  :config
+  (setq markdown-preview-stylesheets
+        (list
+         nl/markdown-preview-dracula-style
+         )))
+#+end_src
+
+** [[https://github.com/ajc/nginx-mode][nginx-mode]]
+
+#+begin_src emacs-lisp
+(use-package nginx-mode
+ :commands nginx-mode)
+#+end_src
+
+** typescript
+
+#+begin_src emacs-lisp
+(defun nl/tsx-comment-dwim (arg)
+  "Toggle JSX comment {/* */} on each line in region or current line."
+  (interactive "P")
+  (save-excursion
+    (let* ((use-region (use-region-p))
+           (beg (if use-region
+                    (region-beginning)
+                  (line-beginning-position)))
+           (end (if use-region
+                    (region-end)
+                  (line-end-position)))
+           (end-line (progn
+                       (goto-char end)
+                       (line-number-at-pos))))
+      (goto-char beg)
+      (let ((commented (looking-at "[ \t]*{/\\*")))
+        (while (<= (line-number-at-pos) end-line)
+          (beginning-of-line)
+          (if commented
+              (progn
+                (when (looking-at "[ \t]*{/\\* ?")
+                  (delete-region
+                   (match-beginning 0)
+                   (+ (match-beginning 0) 4)))
+                (when (search-forward " */}" (line-end-position) t)
+                  (delete-region (- (point) 4) (point))))
+            (insert "{/* ")
+            (end-of-line)
+            (insert " */}"))
+          (forward-line 1))))))
+
+(defun nl/typescript-mode ()
+  "Setup TypeScript/TSX mode."
+  ;;(setq column-enforce-column 120)
+  ;;(message "nl/typescript-mode")
+  (my/lsp-deferred-unless-remote)
+  (flycheck-mode +1)
+  (column-enforce-mode +1)
+  (subword-mode +1)
+  ;; Ensure the TS/TSX parser is used when running Prettier on save.
+  (setq-local prettier-parsers '(typescript babel-ts))
+  (prettier-mode +1)
+  ;;(eldoc-mode +1)
+  ;;(company-mode +1)
+  ;; (push '(">=" . ?≥) prettify-symbols-alist)
+  ;; (push '("<=" . ?≤) prettify-symbols-alist)
+  ;; (push '("->" . ?→) prettify-symbols-alist)
+  ;; (push '("=>" . ?↦) prettify-symbols-alist)
+  ;; (prettify-symbols-mode)
+  (when (fboundp 'nl/yas-reload-all)
+    (nl/yas-reload-all)))
+
+(use-package typescript-ts-mode
+  :mode (("\\.ts\\'" . typescript-ts-mode)
+         ("\\.tsx\\'" . tsx-ts-mode)
+         ("\\.jsx\\'" . tsx-ts-mode))
+  :hook
+  ((typescript-ts-mode . my/lsp-deferred-unless-remote)
+   (typescript-ts-mode . nl/typescript-mode)
+   (tsx-ts-mode . my/lsp-deferred-unless-remote)
+   (tsx-ts-mode . nl/typescript-mode))
+  :bind
+  (:map typescript-ts-mode-map
+        ("M-j" . c-indent-new-comment-line))
+  (:map tsx-ts-mode-map
+        ("M-;" . nl/tsx-comment-dwim))
+  :preface
+  (use-package nl-typescript :load-path "~/.emacs.d/lisp")
+  (use-package nl-react :load-path "~/.emacs.d/lisp")
+  :config
+  (setq lsp-clients-typescript-server "typescript-language-server")
+  (setq lsp-disabled-clients '(vue-semantic-server lsp-volar))
+  (setq flycheck-check-syntax-automatically '(save mode-enabled)
+        ;;company-tooltip-align-annotations t ;; aligns annotation to the right hand side
+        ;;prettify-symbols-unprettify-at-point 'right-edge
+        )
+  (setq-default typescript-indent-level 4))
+#+end_src
+
+** [[https://github.com/AdamNiederer/vue-mode][VueJS]]
+
+#+begin_src emacs-lisp
+(defun nl/vue-mode-hook ()
+  (subword-mode)
+  (my/lsp-deferred-unless-remote)
+  (display-line-numbers-mode)
+  (yas-minor-mode 1))
+
+(use-package vue-mode
+  :mode "\\.vue\\'"
+  :hook
+  (vue-mode . nl/vue-mode-hook)
+  :config
+  (setq mmm-submode-decoration-level 0))
+
+;; Register the Volar language server manually
+(with-eval-after-load 'lsp-mode
+  (add-to-list 'lsp-language-id-configuration '(vue-mode . "vue"))
+  (lsp-register-client
+   (make-lsp-client
+    :new-connection (lsp-stdio-connection '("vue-language-server" "--stdio"))
+    :activation-fn (lsp-activate-on "vue")
+    :server-id 'volar)))
+#+end_src
+
+** [[https://github.com/fxbois/web-mode][web-mode]]
+
+#+begin_src emacs-lisp
+(use-package web-mode
+  :mode (("\\.html?\\'"      . web-mode)
+         ("\\.tpl\\.php\\'"  . web-mode)
+         ("\\.tmpl\\.html\\'". web-mode))
+  :preface
+  (defun nl/web-mode-hook ()
+    (my/lsp-deferred-unless-remote)
+    (setq web-mode-auto-quote-style 1)
+    (require 'nl-colors)
+    (local-set-key (kbd "M-q") #'fill-paragraph))
+  :hook (web-mode . nl/web-mode-hook)
+  :custom
+  ;; Indentation sizes
+  (web-mode-markup-indent-offset 2) ; HTML
+  (web-mode-code-indent-offset   2) ; PHP/JS inside
+  (web-mode-css-indent-offset    2) ; CSS inside
+
+  ;; Don’t inject extra padding inside blocks
+  (web-mode-block-padding 0)
+  (web-mode-script-padding 0)
+  (web-mode-style-padding  0)
+
+  ;; Newline behavior
+  (web-mode-enable-auto-indentation t)
+  (web-mode-enable-element-content-newline nil)
+  (web-mode-enable-control-block-indentation t)
+
+  ;; Pairing/closing
+  (web-mode-enable-auto-pairing t)
+  (web-mode-enable-auto-closing t)
+  (web-mode-enable-auto-opening t)
+
+  ;; Visual helpers (fine)
+  (web-mode-enable-block-face t)
+  (web-mode-enable-part-face t)
+  (web-mode-enable-current-column-highlight t)
+  (web-mode-enable-current-element-highlight t)
+  :config
+  ;; Make sure PHP engine is used for these files
+  (add-to-list 'web-mode-engines-alist '("php" . "\\.tpl\\.php\\'"))
+  (add-to-list 'web-mode-engines-alist '("php" . "\\.php\\'"))
+  (add-to-list 'web-mode-engines-alist '("php" . "\\.phtml\\'"))
+
+  ;; Optional: RET indents
+  (define-key web-mode-map (kbd "RET") #'newline-and-indent))
+
+#+end_src
+
+** [[https://github.com/yoshiki/yaml-mode][yaml-mode]]
+
+#+begin_src emacs-lisp
+(use-package yaml-mode
+  :mode "\\.\\(yml\\|yaml\\)\\'"
+  :after hydra
+  :preface
+  (defun nl/nordita-build-page-from-yaml ()
+    "Builds the ProcessWire page for the visited YAML file."
+    (interactive)
+    (unless (buffer-file-name) (user-error "not a file buffer"))
+    (unless (string-match-p "\.yaml$" (buffer-file-name)) (user-error "not a YAML file"))
+    (unless (string-match-p "nordita" (buffer-file-name)) (user-error "file is not in a Nordita project"))
+    (let* ((default-directory (project-root (project-current)))
+           (file-name (nth 1 (split-string buffer-file-name (project-root (project-current)))))
+           (base-name (replace-regexp-in-string "\.yaml$" "" (file-name-nondirectory file-name)))
+           (cli-command (format "pw:page %s build --no-ansi -vvv -f -i ./default_pages/main_site" base-name))
+           (container-running
+            (and (executable-find "docker")
+                 (string-match-p
+                  "^nw-app-1$"
+                  (string-trim
+                   (shell-command-to-string
+                    "docker ps --filter name=^/nw-app-1$ --format '{{.Names}}'"))))))
+      (unless file-name (user-error "File not in project"))
+      (compile
+       (if container-running
+           (format "./docker-wrapper.sh cli %s" cli-command)
+         (format "php public/cli.php %s" cli-command)))
+      ))
+
+  (defun nl/yaml-mode-hook ()
+    (set-fill-column 120)
+    (display-line-numbers-mode)
+    (outline-indent-minor-mode)
+    (key-chord-define-local "jc" #'nl/yaml-command-menu))
+
+  (defun nl/yaml-command-menu ()
+    "Open the YAML command hydra."
+    (interactive)
+    (hydra-nl-yaml/body))
+
+  (with-eval-after-load 'hydra
+    (defhydra hydra-nl-yaml (:color red :hint nil)
+      "Project commands"
+      ("a" hydra-nl-align/body "align" :color blue :column "General")
+      ("y" nl/nordita-build-page-from-yaml "Build ProcessWire page from YAML file" :color blue :column "Nordita")))
+  :hook
+  (yaml-mode . nl/yaml-mode-hook)
+  (yaml-ts-mode . nl/yaml-mode-hook))
+#+end_src

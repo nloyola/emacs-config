@@ -188,6 +188,38 @@ See https://tony-zorman.com/posts/emacs-potpourri.html
   ("M-z" . zap-up-to-char))
 #+end_src
 
+** Stealing from the Best Emacs Configs
+
+Taken from: [[https://emacsredux.com/blog/2026/04/07/stealing-from-the-best-emacs-configs/][here]]
+
+#+begin_src emacs-lisp
+(setq-default bidi-display-reordering 'left-to-right
+              bidi-paragraph-direction 'left-to-right)
+(setq bidi-inhibit-bpa t)
+(setq redisplay-skip-fontification-on-input t)
+(setq read-process-output-max (* 4 1024 1024)) ; 4MB
+(setq-default cursor-in-non-selected-windows nil)
+(setq highlight-nonselected-windows nil)
+(setq save-interprogram-paste-before-kill t)
+(setq kill-do-not-save-duplicates t)
+(setq savehist-additional-variables
+      '(search-ring regexp-search-ring kill-ring))
+
+(add-hook 'savehist-save-hook
+          (lambda ()
+            (setq kill-ring
+                  (mapcar #'substring-no-properties
+                          (cl-remove-if-not #'stringp kill-ring)))))
+
+(add-hook 'after-save-hook
+          #'executable-make-buffer-file-executable-if-script-p)
+(setq reb-re-syntax 'string)
+(setq ffap-machine-p-known 'reject)
+(setq window-combination-resize t)
+(setq set-mark-command-repeat-pop t)
+(setq help-window-select t)
+#+end_src
+
 ** mouse avoidance
 Don't let mouse icon obscure cursor
 
@@ -299,6 +331,27 @@ Help from here:  https://howardabrams.com/hamacs/ha-display.html#org54a2529
    (t                                   (nl/mac-monitor-fontsize))))
 
 (nl/font-monitor-size-default)
+
+(use-package ligature
+  :demand t
+  :config
+  (ligature-set-ligatures 't '("www"))
+  (ligature-set-ligatures
+   'prog-mode
+   '("|||>" "<|||" "<==>" "<!--" "####" "~~>" "***" "||=" "||>"
+     ":::" "::=" "=:=" "===" "==>" "=!=" "=>>" "=<<" "=/=" "!=="
+     "!!." ">=>" ">>=" ">>>" ">>-" ">->" "->>" "-->" "---" "-<<"
+     "<~~" "<~>" "<*>" "<||" "<|>" "<$>" "<==" "<=>" "<=<" "<->"
+     "<--" "<-<" "<<=" "<<-" "<<<" "<+>" "</>" "###" "#_(" "..<"
+     "..." "+++" "/==" "///" "_|_" "www" "&&" "^=" "~~" "~@" "~="
+     "~>" "~-" "**" "*>" "*/" "||" "|}" "|]" "|=" "|>" "|-" "{|"
+     "[|" "]#" "::" ":=" ":>" ":<" "$>" "==" "=>" "!=" "!!" ">:"
+     ">=" ">>" ">-" "-~" "-|" "->" "--" "-<" "<~" "<*" "<|" "<:"
+     "<$" "<=" "<>" "<-" "<<" "<+" "</" "#{" "#[" "#:" "#=" "#!"
+     "##" "#(" "#?" "#_" "%%" ".=" ".-" ".." ".?" "+>" "++" "?:"
+     "?=" "?." "??" ";;" "/*" "/=" "/>" "//" "__" "(*" "*)"
+     "\\\\" "://"))
+  (global-ligature-mode t))
 
 ;; (defconst nl/gui-font-size-normal 12)
 
@@ -1942,6 +1995,25 @@ command line. Use an easy keybinding to access magit.
   :bind (("C-x g" . magit-status))
   ;;:hook (magit-mode . magit-todos-mode)
   :config
+  (defun nl/git-commit-fill-paragraph (&optional justify region)
+    "Fill bullet lists normally in commit messages.
+
+`git-commit-setup-changelog-support' installs `log-edit-fill-entry',
+which treats leading `*' lines as ChangeLog entries.  That is useful
+for actual ChangeLog-style paragraphs, but it makes ordinary bullet
+lists wrap under the bullet instead of under the text."
+    (save-excursion
+      (back-to-indentation)
+      (if (looking-at "\\(?:[-+*]\\|[0-9]+[.)]\\)[[:blank:]]+")
+          (let ((fill-paragraph-function nil))
+            (fill-paragraph justify region))
+        (log-edit-fill-entry justify))))
+
+  (defun nl/git-commit-setup-fill-paragraph ()
+    "Use better paragraph filling for bullet lists in commit buffers."
+    (setq-local fill-paragraph-function #'nl/git-commit-fill-paragraph))
+
+  (add-hook 'git-commit-setup-hook #'nl/git-commit-setup-fill-paragraph)
   (define-key magit-status-mode-map (kbd "q") 'magit-quit-session)
   (setq-default vc-handled-backends '(Git))
   (setq magit-push-always-verify nil
@@ -2669,6 +2741,22 @@ Add filler lorem ipsum text to Emacs.
   (lsp-register-custom-settings
    '(("gopls.staticcheck" t t)               ; enable staticcheck if installed
      ("gopls.gofumpt" t t)))
+  (with-eval-after-load 'lsp-headerline
+    (dolist (face '(lsp-headerline-breadcrumb-path-face
+                    lsp-headerline-breadcrumb-path-error-face
+                    lsp-headerline-breadcrumb-path-warning-face
+                    lsp-headerline-breadcrumb-path-info-face
+                    lsp-headerline-breadcrumb-path-hint-face
+                    lsp-headerline-breadcrumb-separator-face
+                    lsp-headerline-breadcrumb-project-prefix-face
+                    lsp-headerline-breadcrumb-unknown-project-prefix-face
+                    lsp-headerline-breadcrumb-symbols-face
+                    lsp-headerline-breadcrumb-symbols-error-face
+                    lsp-headerline-breadcrumb-symbols-warning-face
+                    lsp-headerline-breadcrumb-symbols-info-face
+                    lsp-headerline-breadcrumb-symbols-hint-face
+                    lsp-headerline-breadcrumb-deprecated-face))
+      (set-face-attribute face nil :height 100)))
   (setq read-process-output-max (* 1024 1024)
         lsp-prefer-capf t
         lsp-idle-delay 0.5
@@ -2742,6 +2830,14 @@ Add filler lorem ipsum text to Emacs.
                       :height 100
                       :overline nil
                       :inherit 'variable-pitch)
+  (when (facep 'header-line-inactive)
+    (set-face-attribute 'header-line-inactive nil
+                        :background "gray20"
+                        :foreground "white"
+                        :box '(:line-width 1 :color "#353644")
+                        :height 100
+                        :overline nil
+                        :inherit 'variable-pitch))
   )
 #+end_src
 
@@ -2808,14 +2904,102 @@ Add filler lorem ipsum text to Emacs.
 ** [[https://github.com/ancane/markdown-preview-mode][markdown-preview-mode]]
 
 #+begin_src emacs-lisp
+(defconst nl/markdown-preview-dracula-style
+  "<style>
+  body {
+    margin: 0;
+    background: #282a36;
+    color: #f8f8f2;
+  }
+  #markdown-body.markdown-body {
+    box-sizing: border-box;
+    margin: 0 auto;
+    max-width: 52rem;
+    min-height: 100vh;
+    padding: 2rem 1.5rem 3rem;
+    background: #282a36;
+    color: #f8f8f2;
+    font-family: Georgia, serif;
+    line-height: 1.7;
+  }
+  #markdown-body.markdown-body a { color: #8be9fd; }
+  #markdown-body.markdown-body a:visited { color: #bd93f9; }
+  #markdown-body.markdown-body h1,
+  #markdown-body.markdown-body h2,
+  #markdown-body.markdown-body h3,
+  #markdown-body.markdown-body h4,
+  #markdown-body.markdown-body h5,
+  #markdown-body.markdown-body h6 {
+    color: #ff79c6;
+    line-height: 1.25;
+    margin-top: 1.6em;
+  }
+  #markdown-body.markdown-body h1,
+  #markdown-body.markdown-body h2 {
+    border-bottom: 1px solid #44475a;
+    padding-bottom: 0.2em;
+  }
+  #markdown-body.markdown-body pre,
+  #markdown-body.markdown-body code,
+  #markdown-body.markdown-body kbd {
+    font-family: \"Fira Code\", \"SFMono-Regular\", Consolas, monospace;
+  }
+  #markdown-body.markdown-body code {
+    background: #44475a;
+    color: #f1fa8c;
+    padding: 0.1em 0.3em;
+    border-radius: 4px;
+  }
+  #markdown-body.markdown-body pre {
+    background: #44475a;
+    color: #f8f8f2;
+    padding: 1em;
+    overflow-x: auto;
+    border-radius: 6px;
+  }
+  #markdown-body.markdown-body pre code {
+    background: transparent;
+    padding: 0;
+  }
+  #markdown-body.markdown-body blockquote {
+    margin: 1.5em 0;
+    padding-left: 1em;
+    border-left: 4px solid #6272a4;
+    color: #bd93f9;
+  }
+  #markdown-body.markdown-body table {
+    border-collapse: collapse;
+    width: 100%;
+  }
+  #markdown-body.markdown-body th,
+  #markdown-body.markdown-body td {
+    border: 1px solid #6272a4;
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+  }
+  #markdown-body.markdown-body th {
+    background: #44475a;
+    color: #8be9fd;
+  }
+  #markdown-body.markdown-body hr {
+    border: 0;
+    border-top: 1px solid #6272a4;
+    margin: 2rem 0;
+  }
+  #markdown-body.markdown-body img {
+    max-width: 100%;
+    height: auto;
+  }
+  </style>"
+  "Dracula stylesheet for `markdown-preview-mode'.")
+
 (use-package markdown-preview-mode
   :custom
   (markdown-preview-http-port 9090)
   :config
   (setq markdown-preview-stylesheets
         (list
-         ;; "https://raw.githubusercontent.com/richleland/pygments-css/master/emacs.css"
-         "http://thomasf.github.io/solarized-css/solarized-light.min.css"
+         nl/markdown-preview-dracula-style
          )))
 #+end_src
 
@@ -3804,22 +3988,38 @@ To save all buffers that wgrep has changed, run =M-x wgrep-save-all-buffers=.
     (unless (string-match-p "nordita" (buffer-file-name)) (user-error "file is not in a Nordita project"))
     (let* ((default-directory (project-root (project-current)))
            (file-name (nth 1 (split-string buffer-file-name (project-root (project-current)))))
-           (base-name (replace-regexp-in-string "\.yaml$" "" (file-name-nondirectory file-name))))
+           (base-name (replace-regexp-in-string "\.yaml$" "" (file-name-nondirectory file-name)))
+           (cli-command (format "pw:page %s build --no-ansi -vvv -f -i ./default_pages/main_site" base-name))
+           (container-running
+            (and (executable-find "docker")
+                 (string-match-p
+                  "^nw-app-1$"
+                  (string-trim
+                   (shell-command-to-string
+                    "docker ps --filter name=^/nw-app-1$ --format '{{.Names}}'"))))))
       (unless file-name (user-error "File not in project"))
       (compile
-       (format "cd public && php cli.php pw:page %s build --no-ansi -vvv -f -i ../default_pages/main_site" base-name))
+       (if container-running
+           (format "./docker-wrapper.sh cli %s" cli-command)
+         (format "php public/cli.php %s" cli-command)))
       ))
 
   (defun nl/yaml-mode-hook ()
     (set-fill-column 120)
     (display-line-numbers-mode)
     (outline-indent-minor-mode)
-    (key-chord-define-local "jc" 'hydra-nl-yaml/body))
-  :config
-  (defhydra hydra-nl-yaml (:color red :hint nil)
-    "Project commands"
-    ("a" hydra-nl-align/body "align" :color blue :column "General")
-    ("y" nl/nordita-build-page-from-yaml "Build ProcessWire page from YAML file" :color blue :column "Nordita"))
+    (key-chord-define-local "jc" #'nl/yaml-command-menu))
+
+  (defun nl/yaml-command-menu ()
+    "Open the YAML command hydra."
+    (interactive)
+    (hydra-nl-yaml/body))
+
+  (with-eval-after-load 'hydra
+    (defhydra hydra-nl-yaml (:color red :hint nil)
+      "Project commands"
+      ("a" hydra-nl-align/body "align" :color blue :column "General")
+      ("y" nl/nordita-build-page-from-yaml "Build ProcessWire page from YAML file" :color blue :column "Nordita")))
   :hook
   (yaml-mode . nl/yaml-mode-hook)
   (yaml-ts-mode . nl/yaml-mode-hook))

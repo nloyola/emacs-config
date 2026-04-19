@@ -1,0 +1,173 @@
+* Theme
+See https://tinted-theming.github.io/base16-gallery/
+
+** [[https://protesilaos.com/emacs/ef-themes#h:dd9e06f2-eef0-4afe-8a12-b7af5d597108][ef-themes]]
+
+#+begin_src emacs-lisp
+(use-package ef-themes
+  :demand t
+  :config
+  (setq ef-themes-to-toggle '(ef-winter ef-night)
+        ef-themes-mixed-fonts t
+        ef-themes-variable-pitch-ui t
+        ef-themes-headings ; read the manual's entry or the doc string
+        '((0 variable-pitch 1.4)
+          (1 variable-pitch 1.3)
+          (2 variable-pitch regular 1.2)
+          (3 variable-pitch regular 1.1)
+          (4 variable-pitch regular 1.0)
+          (5 variable-pitch 1.0) ; absence of weight means `bold'
+          (6 variable-pitch 1.0)
+          (7 variable-pitch 1.0)
+          (t variable-pitch 1.0)))
+  (defun nl/fix-gnus-group-news-face-cycle (&rest _)
+    "Break the Gnus news face inheritance cycle after theme changes."
+    (custom-theme-set-faces
+     'user
+     '(gnus-group-news-low ((t (:inherit gnus-group-mail-1 :weight bold))))
+     '(gnus-group-news-low-empty ((t (:inherit gnus-group-mail-1-empty :weight normal))))
+     '(gnus-group-news-4 ((t (:inherit gnus-group-news-low))))
+     '(gnus-group-news-4-empty ((t (:inherit gnus-group-news-low-empty))))
+     '(gnus-group-news-5 ((t (:inherit gnus-group-news-low))))
+     '(gnus-group-news-5-empty ((t (:inherit gnus-group-news-low-empty))))
+     '(gnus-group-news-6 ((t (:inherit gnus-group-news-low))))
+     '(gnus-group-news-6-empty ((t (:inherit gnus-group-news-low-empty))))))
+
+  (advice-add 'load-theme :after #'nl/fix-gnus-group-news-face-cycle)
+  (mapc #'disable-theme custom-enabled-themes)
+  (load-theme 'ef-winter :no-confirm)
+  (nl/fix-gnus-group-news-face-cycle))
+#+end_src
+
+** [[https://protesilaos.com/emacs/modus-themes][modus-themes]]
+
+#+begin_src emacs-lisp :tangle no
+(use-package modus-themes
+  :init
+  (setq modus-themes-mixed-fonts t
+      modus-themes-variable-pitch-ui t
+      modus-themes-headings ; read the manual's entry or the doc string
+      '((0 variable-pitch light 1.4)
+        (1 variable-pitch light 1.3)
+        (2 variable-pitch regular 1.2)
+        (3 variable-pitch regular 1.1)
+        (4 variable-pitch regular 1.0)
+        (5 variable-pitch 1.0) ; absence of weight means `bold'
+        (6 variable-pitch 1.0)
+        (7 variable-pitch 1.0)
+        (t variable-pitch 1.0)))
+  (load-theme 'modus-vivendi-deuteranopia :no-confirm)
+  )
+#+end_src
+
+** Xresources theme (for pywal)
+
+#+begin_src emacs-lisp :tangle no
+(defun nl/xresources-theme-hook ()
+  (setq frame-background-mode 'dark)
+  (load-theme 'xresources t))
+
+(defun reload-xresources-theme ()
+  (interactive)
+  (disable-theme 'xresources)
+  (load-theme 'xresources t))
+
+(unless (string-match "-microsoft" (downcase operating-system-release))
+  (use-package xresources-theme
+    :load-path "~/src/github/elisp/xresources-theme"
+    :init
+    (add-to-list 'custom-theme-load-path "~/src/github/elisp/xresources-theme")
+    :hook (after-init . nl/xresources-theme-hook)
+    :custom-face
+    (ansi-color-red ((t (:background "#440F04"))))
+    (ansi-color-bright-red ((t (:background "#A02409"))))
+  ))
+#+end_src
+
+** Doom Themes
+
+See https://github.com/doomemacs/themes/tree/screenshots#screenshots
+
+#+begin_src emacs-lisp :tangle no
+(when (string-match "-microsoft" (downcase operating-system-release))
+  (use-package doom-themes
+    :config
+    (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
+          doom-themes-enable-italic t) ; if nil, italics is universally disabled
+
+    ;;(load-theme 'base16-brewer t)
+
+    ;; Enable flashing mode-line on errors
+    (doom-themes-visual-bell-config)
+
+    ;;treemacs
+    (setq doom-themes-treemacs-theme "doom-colors")
+    ;;(doom-themes-treemacs-config)
+
+    ;; Corrects (and improves) org-mode's native fontification.
+    (doom-themes-org-config)))
+
+(when (string-match "-microsoft" (downcase operating-system-release))
+  (load-theme 'doom-dark+))
+#+end_src
+
+Allow changing themes on the fly with the following.
+
+#+begin_src emacs-lisp :tangle no
+(use-package emacs
+  :init
+  (defun ap/load-doom-theme (theme)
+    "Disable active themes and load a Doom theme."
+    (interactive
+     (list
+      (intern
+       (completing-read
+        "Theme: "
+        (seq-filter
+         (lambda (it) (string-prefix-p "doom-" it))
+         (mapcar #'symbol-name (custom-available-themes))))))))
+
+  (defun ap/switch-theme (theme)
+    "Disable active themes and load THEME."
+    (interactive
+     (list
+      (intern
+       (completing-read
+        "Theme: "
+        (mapcar #'symbol-name (custom-available-themes))))))
+    (mapc #'disable-theme custom-enabled-themes)
+    (load-theme theme 'no-confirm)))
+#+end_src
+
+*** Doom two tone themes
+
+#+begin_src emacs-lisp :tangle no
+(let ((theme-path "~/src/github/elisp/doom-two-tone-themes/themes/"))
+  (when (file-directory-p (expand-file-name theme-path))
+    (add-to-list 'custom-theme-load-path theme-path)
+    (load-theme 'doom-navy-copper t)))
+#+end_src
+
+** Base-16
+
+#+begin_src emacs-lisp :tangle no
+(use-package base16-theme
+  :init
+  (load-theme 'base16-default-dark t))
+#+end_src
+
+** [[https://github.com/greduan/emacs-theme-gruvbox][gruvbox]]
+
+#+begin_src emacs-lisp :tangle no
+(use-package gruvbox-theme
+  :init
+  (load-theme 'gruvbox-dark-hard :no-confirm)
+  )
+#+end_src
+
+** Catppuccin
+
+#+begin_src emacs-lisp :tangle no
+(setq catppuccin-flavor 'mocha)
+(load-theme 'catppuccin t)
+#+end_src

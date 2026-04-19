@@ -1,0 +1,37 @@
+* AI
+
+** [[https://github.com/xenodium/chatgpt-shell][chatgpt-shell]]
+
+#+begin_src emacs-lisp
+(use-package chatgpt-shell
+  :ensure t
+  :custom
+  ((chatgpt-shell-openai-key
+    (lambda ()
+      (auth-source-pick-first-password :host "api.openai.com"))))
+  :config
+  (setq chatgpt-shell-model-version "chatgpt-4o-latest")
+  )
+#+end_src
+
+** [[https://github.com/karthink/gptel][gptel]]
+
+Found this packe hard to use.
+
+#+begin_src emacs-lisp :tangle no
+(use-package gptel
+  :config
+  (setq gptel-api-key #'gptel-api-key-from-auth-source)
+
+  ;; Optional: set default model
+  (setq gptel-model 'gpt-4o)
+
+  ;; Optional: customize the system prompt
+  (setq gptel-default-mode 'org-mode) ;; or 'text-mode, etc.
+  (setq gptel-system-message "You are a helpful assistant.")
+
+  ;; Optional: enable keybindings
+  (global-set-key (kbd "C-c q") #'gptel-send)
+  (global-set-key (kbd "C-c Q") #'gptel)
+)
+#+end_src

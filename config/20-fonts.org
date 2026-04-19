@@ -1,0 +1,233 @@
+* Fonts
+** Main fonts
+
+Help from here:  https://howardabrams.com/hamacs/ha-display.html#org54a2529
+
+#+begin_src emacs-lisp
+(require 's)
+(defvar nl/gui-fixed-font-name
+  (when window-system
+    (or
+     (seq-first
+      (seq-filter (lambda (font) (when (x-list-fonts font) font))
+                  '("JetBrainsMono Nerd Font"
+                    "CaskaydiaCove Nerd Font"
+                    ;; funky font with litagures and a dotted 0
+                    "Cascadia Code PL"
+                    ;; clean font, but no litagures!?
+                    "Hack Nerd Font"
+                    "FiraCode Nerd Font"       ; has litagures
+                    "Cousine Nerd Font"
+                    "Iosevka Nerd Font"
+                    "FantasqueSansMono Nerd Font"
+                    "Monoid Nerd Font"
+                    "Hasklig"
+                    "Source Code Pro"
+                    ;;
+                    "IBM Plex Mono Medium"
+                    "DejaVu Sans")))
+     "monospaced"))
+  "My fixed width font based on what I have installed.")
+
+(defvar nl/gui-variable-font-name
+  (when window-system
+    (or
+     (seq-first
+      (seq-filter (lambda (font) (when (x-list-fonts font) font))
+                  '("SN Pro"   ; https://supernotes.app/open-source/sn-pro
+                    "Atkinson Hyperlegible"
+                    "Literata" ; Clean, readable with litagures
+                    ;; Next best can be downloaded here:
+                    ;; https://fontesk.com/xcharter-typeface/
+                    "XCharter"
+                    "Charter"
+                    ;;  Interesting idea: "Iosevka Comfy Motion Duo"
+                    "Serif"
+                    ;;
+                    "Alegreya")))
+     (warn "Cannot find a Serif Font.  Install Source Sans Pro."))))
+
+(defvar ha-variable-header-font
+  (when window-system
+    (or
+     (seq-first
+      (seq-filter (lambda (font) (when (x-list-fonts font) font))
+                  '("SN Pro"
+                    "Overpass"
+                    "DejaVu Sans"
+                    "Verdana" "Overpass"
+                    "Source Sans Pro"
+                    "Lucida Grande"
+                    "Sans Serif")))
+     (warn "Cannot find a Sans Serif Font.  Install Source Sans Pro."))))
+
+(defun nl/set-favorite-font-size (size)
+  "Set the default font size as well as equalize the fixed and variable fonts."
+  (let ((fav-font (format "%s-%d" nl/gui-fixed-font-name size)))
+    (set-face-attribute 'default nil :font fav-font)
+    (set-face-attribute 'fixed-pitch nil :family nl/gui-fixed-font-name :inherit 'default :height 120)
+    (set-face-attribute 'variable-pitch nil :family nl/gui-variable-font-name :inherit 'default :height 150)))
+
+(defun nl/mac-monitor-fontsize ()
+  "Quickly set reset my font size when I connect my laptop to a monitor on a Mac."
+  (interactive)
+  (nl/set-favorite-font-size 13))
+
+(defun nl/linux-monitor-fontsize ()
+  "Quickly set reset my font size when I connect my laptop to a monitor on Linux."
+  (interactive)
+  (nl/set-favorite-font-size 11))
+
+(defun nl/mac-laptop-fontsize ()
+  "Quickly set reset my font size when I disconnect my laptop to a monitor from a Mac."
+  (interactive)
+  (nl/set-favorite-font-size 32))
+
+(defun nl/linux-laptop-fontsize ()
+  "Quickly set reset my font size when I disconnect my laptop to a monitor from Linux."
+  (interactive)
+  (nl/set-favorite-font-size 14))
+
+(defun nl/imac-fontsize ()
+  "Quickly set reset my font size when I am on my iMac."
+  (interactive)
+  (ha-set-favorite-font-size 16))
+
+(defun nl/font-monitor-size-default ()
+  "Set the default size according to my preference."
+  (interactive)
+  (cond
+   ((s-starts-with? "gudrun" system-name) (nl/linux-laptop-fontsize))
+   ((eq system-type 'gnu/linux)         (nl/linux-monitor-fontsize))
+   (t                                   (nl/mac-monitor-fontsize))))
+
+(nl/font-monitor-size-default)
+
+(use-package ligature
+  :demand t
+  :config
+  (ligature-set-ligatures 't '("www"))
+  (ligature-set-ligatures
+   'prog-mode
+   '("|||>" "<|||" "<==>" "<!--" "####" "~~>" "***" "||=" "||>"
+     ":::" "::=" "=:=" "===" "==>" "=!=" "=>>" "=<<" "=/=" "!=="
+     "!!." ">=>" ">>=" ">>>" ">>-" ">->" "->>" "-->" "---" "-<<"
+     "<~~" "<~>" "<*>" "<||" "<|>" "<$>" "<==" "<=>" "<=<" "<->"
+     "<--" "<-<" "<<=" "<<-" "<<<" "<+>" "</>" "###" "#_(" "..<"
+     "..." "+++" "/==" "///" "_|_" "www" "&&" "^=" "~~" "~@" "~="
+     "~>" "~-" "**" "*>" "*/" "||" "|}" "|]" "|=" "|>" "|-" "{|"
+     "[|" "]#" "::" ":=" ":>" ":<" "$>" "==" "=>" "!=" "!!" ">:"
+     ">=" ">>" ">-" "-~" "-|" "->" "--" "-<" "<~" "<*" "<|" "<:"
+     "<$" "<=" "<>" "<-" "<<" "<+" "</" "#{" "#[" "#:" "#=" "#!"
+     "##" "#(" "#?" "#_" "%%" ".=" ".-" ".." ".?" "+>" "++" "?:"
+     "?=" "?." "??" ";;" "/*" "/=" "/>" "//" "__" "(*" "*)"
+     "\\\\" "://"))
+  (global-ligature-mode t))
+
+;; (defconst nl/gui-font-size-normal 12)
+
+;; (use-package emacs
+;;   :preface
+;;   (set-face-attribute 'default nil :family nl/gui-fixed-font-name :height (* 10 nl/gui-font-size-normal))
+;;   (set-face-attribute 'fixed-pitch nil :family nl/gui-fixed-font-name :inherit 'default)
+;;   (set-face-attribute 'variable-pitch nil :family nl/gui-variable-font-name :height 150)
+;;   (set-face-attribute 'font-lock-comment-face nil :family nl/gui-fixed-font-name :weight 'bold :slant 'italic :inherit 'default)
+;;   (set-face-attribute 'italic nil :family nl/gui-fixed-font-name :weight 'normal :slant 'italic)
+;;   (set-face-attribute 'bold nil :family nl/gui-fixed-font-name :weight 'bold :weight 'normal)
+;;   (set-face-attribute 'bold-italic nil :family nl/gui-fixed-font-name :weight 'bold :slant 'italic)
+;;   :config
+;;   (when (string-match "-[Mm]icrosoft" operating-system-release)
+;;     ;; WSL: WSL1 has "-Microsoft", WSL2 has "-microsoft-standard"
+;;     (setq nl/gui-font-size-normal 12))
+;;   )
+#+end_src
+
+** [[https://gitlab.com/jabranham/mixed-pitch][Mixed Pitch]]
+
+Mixed pitch is a minor mode that enables mixing fixed-pitch (also known as fixed-width or monospace)
+and variable-pitch (AKA “proportional”) fonts. It tries to be smart about which fonts get which
+face.
+
+#+begin_src emacs-lisp :tangle no
+(use-package mixed-pitch
+  :config
+  (add-to-list 'mixed-pitch-fixed-pitch-faces 'org-property-value)
+  (add-to-list 'mixed-pitch-fixed-pitch-faces 'font-lock-comment-face)
+  :hook (text-mode . mixed-pitch-mode))
+#+end_src
+
+** Mode Line
+
+Customize the mode line. This code has to run after init since setting a theme customize the mode line also.
+
+See https://www.gonsie.com/blorg/modeline.html for additional details.
+
+#+begin_src emacs-lisp
+(use-package emacs
+  :preface
+  (defun nl/mode-line-theme ()
+    (set-face-attribute 'mode-line nil
+                        :background "#565063"
+                        :foreground "white"
+                        :box '(:line-width 2 :color "#3d3947")
+                        :height 130
+                        :overline nil
+                        :underline nil
+                        :family "SN Pro"
+                        :inherit 'variable-pitch)
+
+    (set-face-attribute 'mode-line-inactive nil
+                        :background "#353644"
+                        :foreground "white"
+                        :box '(:line-width 2 :color "#353644")
+                        :height 130
+                        :overline nil
+                        :family "SN Pro"
+                        :inherit 'variable-pitch)
+
+    (set-face-attribute 'mode-line-buffer-id nil :foreground "goldenrod" :background "#565063" :height 120)
+    (set-face-attribute 'mode-line-emphasis nil :background "#565063" :inherit 'fixed-pitch)
+    (set-face-attribute 'mode-line-highlight nil :slant 'italic :background "#565063" :inherit 'fixed-pitch)
+    )
+  :init
+  (setq-default
+   mode-line-format
+   (list
+    ;; the buffer name; the file name as a tool tip
+    '(:eval (propertize " %b "
+                        'face
+                        (let ((face (buffer-modified-p)))
+                          (if face 'mode-line-highlight
+                            'mode-line-buffer-id))
+                        'help-echo (buffer-file-name)))
+
+    ;; line and column
+    " ["
+    (propertize "%l" 'face '(:foreground "light sky blue")) ","
+    (propertize "%c" 'face '(:foreground "light green"))
+    "] "
+
+    ;; relative position, size of file
+    " ("
+    (propertize "%p" 'face '(:foreground "salmon")) ;; % above top
+    "/"
+    (propertize "%I" 'face '(:foreground "sandy brown")) ;; size
+    ") "
+
+    ;; ansi-term's line or char mode
+    ":"
+    'mode-line-process
+    ":"
+
+    ;; spaces to align right
+    '(:eval (propertize
+             " " 'display
+             `((space :align-to (- (+ right right-fringe right-margin)
+                                   ,(+ 50 (string-width (if (listp mode-name) (car mode-name) mode-name))))))))
+
+    ;; the current major mode
+    (propertize " %m " 'face '(:foreground "light sky blue"))
+    minor-mode-alist
+    ))
+  :hook (after-init .  nl/mode-line-theme))
+#+end_src

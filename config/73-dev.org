@@ -1,0 +1,326 @@
+* Development
+
+** [[https://github.com/editorconfig/editorconfig-emacs][editorconfig-emacs]]
+
+#+begin_src emacs-lisp
+(use-package editorconfig
+  :demand t
+  :config
+  (editorconfig-mode 1))
+#+end_src
+
+** [[https://github.com/emacs-lsp/dap-mode][dap-mode]]
+
+#+begin_src emacs-lisp :tangle no
+(use-package dap-mode
+  :after lsp-mode
+  ;;:hook ((dap-stopped . (call-interactively #'dap-hydra)))
+  :commands (dap-debug)
+  :config
+  (dap-mode t)
+  (dap-ui-mode t)
+  ;;(require 'dap-node)
+  ;;(require 'dap-java)
+  (require 'dap-php)
+  (require 'dap-python)
+  ;;(require 'dap-lldb)
+  (add-hook 'dap-stopped-hook
+            (lambda (arg) (call-interactively #'dap-hydra)))
+  )
+#+end_src
+
+** [[https://github.com/flycheck/flycheck][flycheck]]
+
+Modern on-the-fly syntax checking extension for GNU Emacs.
+
+#+begin_src emacs-lisp
+(use-package flycheck
+  :commands global-flycheck-mode
+  :diminish flycheck-mode
+  :commands flycheck-define-checker
+  :init
+  (global-flycheck-mode)
+  :config
+  (setq flycheck-standard-error-navigation nil)
+
+  (setq-default flycheck-disabled-checkers
+                (append flycheck-disabled-checkers
+                        '(javascript-jshint)))
+
+  (setq flycheck-checkers (append flycheck-checkers
+                                  '(javascript-eslint))
+        flycheck-python-flake8-executable "flake8")
+  ;; use eslint with web-mode for jsx files
+  (flycheck-add-mode 'javascript-eslint 'tsx-ts-mode)
+  (flycheck-add-mode 'javascript-eslint 'web-mode)
+  (flycheck-add-mode 'javascript-eslint 'js2-mode)
+  (flycheck-add-mode 'javascript-eslint 'js-mode))
+#+end_src
+
+** [[https://github.com/emacs-lsp/lsp-docker][lsp-docker]]
+
+#+begin_src emacs-lisp :tangle no
+(use-package lsp-docker
+  :init (setq lsp-keymap-prefix "C-c l")
+  :config
+  (add-to-list 'vertico-multiform-categories
+               '(jinx grid (vertico-grid-annotate . 20))))
+#+end_src
+
+** [[https://github.com/emacs-lsp/lsp-mode][lsp-mode]]
+
+#+begin_src emacs-lisp
+(use-package which-key
+  :demand t
+  :diminish
+  :config
+  (which-key-mode))
+
+(use-package lsp-mode
+  ;;:load-path "~/src/github/elisp/lsp-mode"
+  :pin melpa
+  :commands (lsp lsp-deferred)
+  :custom
+  (lsp-keymap-prefix "C-c l")
+  (lsp-enable-snippet t)
+  (lsp-enable-file-watchers nil)
+  (lsp-pyls-plugins-pycodestyle-max-line-length 120)
+  (lsp-intelephense-php-version "8.3")
+  (lsp-intelephense-format-enable nil)
+  ;;(setq lsp-response-timeout 25)
+  ;; what to use when checking on-save. "check" is default, I prefer clippy
+  (lsp-rust-analyzer-cargo-watch-command "clippy")
+  (lsp-eldoc-render-all t)
+  (lsp-idle-delay 0.6)
+  ;; enable / disable the hints as you prefer:
+  (lsp-rust-analyzer-server-display-inlay-hints t)
+  (lsp-rust-analyzer-display-lifetime-elision-hints-enable "skip_trivial")
+  (lsp-rust-analyzer-display-chaining-hints t)
+  (lsp-rust-analyzer-display-lifetime-elision-hints-use-parameter-names nil)
+  (lsp-rust-analyzer-display-closure-return-type-hints t)
+  (lsp-rust-analyzer-display-parameter-hints nil)
+  (lsp-rust-analyzer-display-reborrow-hints nil)
+  :config
+  (lsp-enable-which-key-integration t)
+  (lsp-register-custom-settings
+   '(("gopls.staticcheck" t t)               ; enable staticcheck if installed
+     ("gopls.gofumpt" t t)))
+  (with-eval-after-load 'lsp-headerline
+    (dolist (face '(lsp-headerline-breadcrumb-path-face
+                    lsp-headerline-breadcrumb-path-error-face
+                    lsp-headerline-breadcrumb-path-warning-face
+                    lsp-headerline-breadcrumb-path-info-face
+                    lsp-headerline-breadcrumb-path-hint-face
+                    lsp-headerline-breadcrumb-separator-face
+                    lsp-headerline-breadcrumb-project-prefix-face
+                    lsp-headerline-breadcrumb-unknown-project-prefix-face
+                    lsp-headerline-breadcrumb-symbols-face
+                    lsp-headerline-breadcrumb-symbols-error-face
+                    lsp-headerline-breadcrumb-symbols-warning-face
+                    lsp-headerline-breadcrumb-symbols-info-face
+                    lsp-headerline-breadcrumb-symbols-hint-face
+                    lsp-headerline-breadcrumb-deprecated-face))
+      (set-face-attribute face nil :height 100)))
+  (setq read-process-output-max (* 1024 1024)
+        lsp-prefer-capf t
+        lsp-idle-delay 0.5
+        lsp-pyls-plugins-flake8-enabled t
+        lsp-completion-provider :none
+        ;; lsp-log-io t
+        ;; lsp-ensabled-clients '(intelephense)
+        )
+  (setq lsp-clients-angular-language-server-command
+        '("node"
+          "/home/nelson/.nvm/versions/node/v16.16.0/lib/node_modules/@angular/language-server"
+          "--ngProbeLocations"
+          "/home/nelson/.nvm/versions/node/v16.16.0/lib/node_modules"
+          "--tsProbeLocations"
+          "/home/nelson/.nvm/versions/node/v16.16.0/lib/node_modules"
+          "--stdio"))
+  (lsp-register-custom-settings
+   '(("pyls.plugins.pyls_mypy.enabled" t t)
+     ("pyls.plugins.pyls_mypy.live_mode" nil t)
+     ("pyls.plugins.pyls_black.enabled" t t)
+     ("pyls.plugins.pyls_isort.enabled" t t)))
+  ;; Tree-sitter JS/TS modes need explicit ids so tsserver activates.
+  (add-to-list 'lsp-language-id-configuration '(typescript-ts-mode . "typescript"))
+  (add-to-list 'lsp-language-id-configuration '(tsx-ts-mode . "typescriptreact"))
+  (setq lsp-clients-typescript-server "typescript-language-server"))
+
+(use-package lsp-ui
+  ;; :load-path "~/src/github/elisp/lsp-ui"
+  :hook
+  (lsp-mode . lsp-ui-mode)
+  ;;(lsp-ui-doc-frame-hook . nl-lsp-ui-doc-hook)
+  :commands lsp-ui-mode
+  :bind (:map lsp-ui-mode-map
+              ([remap xref-find-definitions] . lsp-ui-peek-find-definitions)
+              ([remap xref-find-references] . lsp-ui-peek-find-references)
+              ([f10] . lsp-ui-sideline-toggle-symbols-info))
+  :custom-face
+  (lsp-ui-peek-peek ((t :background "gray30")))
+  (lsp-ui-peek-highlight ((t :foreground "gray60" :background "gray20")))
+  ;;(header-line ((t (:background "gray20"))))
+  (lsp-ui-doc-background ((t :background "gray30")))
+  (lsp-ui-doc-url ((t :background "gray30")))
+  :custom
+  (lsp-ui-doc-text-scale-level 2)
+  (lsp-ui-sideline-enable t)
+  (lsp-ui-sideline-show-hover nil)
+  (lsp-ui-peek-enable nil)
+  (flycheck-add-next-checker 'lsp-ui 'typescript-tslint)
+  :config
+  ;; (add-hook 'lsp-ui-doc-frame-hook
+  ;;           (lambda (frame _w)
+  ;;             (set-face-attribute 'default nil :family nl/gui-variable-font-name :height 180)))
+  (setq lsp-prefer-flymake nil
+        lsp-ui-flycheck-list-position 'bottom
+        lsp-ui-doc-enable t
+        ;;lsp-ui-doc-show-with-cursor t
+        ;;lsp-ui-doc-show-with-mouse t
+        lsp-ui-doc-use-childframe t
+        lsp-ui-doc-position 'top
+        lsp-ui-doc-include-signature t
+        lsp-ui-peek-always-show nil
+        lsp-ui-peek-list-width 60
+        lsp-ui-peek-peek-height 25
+        lsp-ui-sideline-diagnostic-max-line-length 80
+        lsp-ui-sideline-diagnostic-max-lines 20
+        lsp-eldoc-enable-hover nil)
+  (set-face-attribute 'header-line nil
+                      :background "gray20"
+                      :foreground "white"
+                      :box '(:line-width 1 :color "#353644")
+                      :height 100
+                      :overline nil
+                      :inherit 'variable-pitch)
+  (when (facep 'header-line-inactive)
+    (set-face-attribute 'header-line-inactive nil
+                        :background "gray20"
+                        :foreground "white"
+                        :box '(:line-width 1 :color "#353644")
+                        :height 100
+                        :overline nil
+                        :inherit 'variable-pitch))
+  )
+#+end_src
+
+** [[https://github.com/nex3/perspective-el][perspective.el]]
+
+The Perspective package provides multiple named workspaces (or "perspectives") in Emacs, similar to multiple desktops in window managers like Awesome and XMonad, and Spaces on the Mac.
+
+#+begin_src emacs-lisp :tangle no
+(use-package perspective
+  :after consult
+  :bind (("C-x b" . persp-switch-to-buffer*)
+         ;;("C-x k" . persp-kill-buffer*)
+         ("C-x C-b" . persp-list-buffers))         ; or use a nicer switcher, see below
+  :custom
+  (persp-show-modestring t)
+  (persp-mode-prefix-key (kbd "C-x C-x"))  ; pick your own prefix key here
+  :init
+  (persp-mode)
+  :config
+  (consult-customize consult--source-buffer :hidden t :default nil)
+  (add-to-list 'consult-buffer-sources persp-consult-source))
+#+end_src
+** prog-mode
+
+Disable LSP mode for remote buffers to save performance.
+
+#+begin_src emacs-lisp
+(defun my/lsp-deferred-unless-remote ()
+  "Enable LSP only for local files; disable for remote (TRAMP)."
+  (unless (file-remote-p (or buffer-file-name default-directory))
+    (lsp)))
+
+(use-package prog-mode
+  :ensure nil
+  :preface
+  (defun nl/prog-mode-hook ()
+    (display-line-numbers-mode)
+    (flyspell-prog-mode))
+  :hook
+  (prog-mode . nl/prog-mode-hook))
+#+end_src
+
+** [[https://github.com/bbatsov/projectile][projectile]]
+
+Project navigation and management library for Emacs.
+
+#+begin_src emacs-lisp
+(use-package projectile
+  :diminish projectile-mode
+  :bind-keymap ("C-c p" . projectile-command-map)
+  :bind (:map projectile-command-map ("f" . consult-projectile-find-file))
+  :init (projectile-mode +1)
+  :config
+  ;; tramp-fix: https://github.com/syl20bnr/spacemacs/issues/11381
+  ;; (defadvice projectile-project-root (around ignore-remote first activate)
+  ;;   (unless (file-remote-p default-directory) ad-do-it))
+
+  (setq projectile-indexing-method 'hybrid
+        projectile-remember-window-configs nil
+        projectile-switch-project-action 'projectile-dired
+        projectile-completion-system 'default
+        projectile-enable-caching nil
+        projectile-create-missing-test-files t
+        projectile-mode-line "Projectile"
+        projectile-generic-command
+        (if (executable-find "fdfind")
+            "fdfind . -0 --type f --color=never"
+          "find . -type f -print0 | cut -c3-"))
+
+  (def-projectile-commander-method ?d
+    "Open project root in dired."
+    (projectile-dired)))
+#+end_src
+
+** [[https://github.com/jscheid/prettier.el][prettier]]
+
+Reformat your code by running Prettier with minimal overhead, by request or transparently on file save.
+
+Had to disable prettier for *css-mode* because syntax highlighting when exporting to HTML in org-mode did not work.
+
+#+begin_src emacs-lisp
+(use-package prettier
+  :diminish
+  :init
+  ;; Use the correct variable so Prettier actually runs on save.
+  (setq prettier-prettify-on-save-flag t)
+  :hook (
+         (js-ts-mode . prettier-mode)
+         (json-mode . prettier-mode)
+         (vue-mode . prettier-mode)
+         (tsx-ts-mode . prettier-mode)
+         (typescript-ts-mode . prettier-mode)
+         ;;(css-mode . prettier-mode)
+         (css-mode . prettier-mode)
+         (yaml-mode . prettier-mode))
+  :config
+  ;; Teach prettier.el about the tree-sitter JS/TS modes so it can pick a parser.
+  (setf (alist-get 'typescript-ts-mode prettier-major-mode-parsers)
+        '(typescript babel-ts))
+  (setf (alist-get 'tsx-ts-mode prettier-major-mode-parsers)
+        '(typescript babel-ts))
+  (setf (alist-get 'js-ts-mode prettier-major-mode-parsers)
+        #'prettier--guess-js-ish))
+#+end_src
+
+** [[https://github.com/purcell/emacs-reformatter][reformatter]]
+
+Easily define an idiomatic command to reformat the current buffer using a command-line program, together with an optional minor mode which can apply this command automatically on save.
+
+#+begin_src emacs-lisp
+(use-package reformatter
+  :config
+  (reformatter-define java-format
+    :program "prettier"
+    :args (list "--write" "--parser" "java")
+    :lighter " JavaF")
+  (reformatter-define sql-format
+    :program "prettier"
+    :args (list "--write" "--parser" "sql")
+    :lighter " SqlF")
+  )
+#+end_src

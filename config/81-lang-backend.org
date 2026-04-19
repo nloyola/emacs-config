@@ -1,0 +1,494 @@
+* Backend languages
+
+** [[https://elpa.gnu.org/packages/csv-mode.html][csv-mode]]
+
+#+begin_src emacs-lisp
+(use-package csv-mode
+  :mode "\\.csv\\'")
+#+end_src
+
+** Go
+
+#+begin_src emacs-lisp
+(defun nl/go-before-save-hook ()
+  (when (bound-and-true-p lsp-mode)
+    (lsp-format-buffer)
+    (lsp-organize-imports)))
+
+(defun nl/go-mode-hook ()
+  (require 'nl-colors)
+  (add-hook 'before-save-hook 'nl/go-before-save-hook)
+  (my/lsp-deferred-unless-remote)
+  (subword-mode +1)
+  (setq-local go-ts-mode-indent-offset 4
+              indent-tabs-mode nil
+              tab-width 4))
+
+(use-package go-mode
+  :mode "\\.go\\'"
+  :preface
+  (use-package nl-go-project :demand :load-path "~/.emacs.d/lisp")
+  :init
+  ;; prefer gofumpt; fall back to gofmt
+  (setq gofmt-command (if (executable-find "gofumpt") "gofumpt" "gofmt"))
+  :hook
+  (;;(before-save . gofmt-before-save)
+   (go-mode . nl/go-mode-hook)
+   (go-ts-mode . nl/go-mode-hook))
+  :config
+  (lsp-register-custom-settings
+   '(("gopls.completeUnimported" t t)
+     ("gopls.staticcheck" t t)))
+  )
+#+end_src
+
+*** [[https://github.com/danderson/templ-ts-mode][templ-ts-mode]]
+
+#+begin_src emacs-lisp
+(defun nl/templ-mode-hook()
+  (message ">>> nl/templ-mode-hook")
+  (add-hook 'before-save-hook 'nl/go-before-save-hook)
+  ;; visual width of a tab character
+  (setq-local go-ts-mode-indent-offset 4
+              js-indent-level 4
+              tab-width 4
+              indent-tabs-mode nil)
+  (subword-mode +1)
+  )
+
+(use-package templ-ts-mode
+  :after js
+  :load-path "~/src/github/elisp/templ-ts-mode"
+  :mode "\\.templ\\'"
+  :hook
+  (templ-ts-mode . nl/templ-mode-hook))
+#+end_src
+
+*** [[https://github.com/nlamirault/gotest.el][gotest]]
+
+#+begin_src emacs-lisp
+(use-package gotest
+  :ensure t
+  :config
+  (setq go-test-verbose t))
+#+end_src
+
+** Java
+
+#+begin_src emacs-lisp
+(use-package cc-mode
+  :mode (("\\.h\\(h?\\|xx\\|pp\\)\\'" . c++-mode)
+         ("\\.java\\'"                . java-ts-mode)
+         )
+  :hook
+  (java-ts-mode . nl/java-mode-hook)
+  :preface
+  (use-package nl-java-project :demand :load-path "~/.emacs.d/lisp")
+  (defun nl/java-mode-hook ()
+    "My Java mode configuration."
+    (my/lsp-deferred-unless-remote)
+    (flycheck-mode t)
+    (subword-mode +1)
+    (setq indent-tabs-mode nil
+          c-basic-offset 4
+          lsp-java-format-settings-url (format "%s/eclipse-java-google-style.xml" (projectile-project-root)))
+
+    (setq projectile-find-dir-includes-top-level t
+          projectile-test-suffix-function (lambda (project-type) "" "Test")
+          projectile-create-missing-test-files t
+          )
+    )
+    :config
+    (projectile-update-project-type 'maven :test-suffix "Test"))
+#+end_src
+
+*** lsp-java
+
+#+begin_src emacs-lisp
+(use-package lsp-java
+  :hook (java-ts-mode . lsp)
+  :custom
+  (lsp-java-compile-null-analysis-mode "automatic")
+  (lsp-java-format-enabled nil)
+  ;;(lsp-java-save-actions-organize-imports t)
+  )
+#+end_src
+
+** [[https://github.com/immerrr/lua-mode][lua-mode]]
+
+#+begin_src emacs-lisp
+(use-package lua-mode
+  :mode (("\\.lua\\'" . lua-mode)))
+#+end_src
+
+** PHP
+*** [[https://github.com/ejmr/php-mode][php-mode]]
+
+#+begin_src emacs-lisp
+(use-package php-mode
+  :mode "\\.php\\'"
+  :hook
+  ((php-mode php-ts-mode) . nl/php-mode-hook)
+  :preface
+  (use-package flycheck-phpstan)
+  (use-package nl-nordita-php-project :demand :load-path "~/.emacs.d/lisp")
+
+  (defun nl/php--comment-fill-prefix (line indentation)
+    "Return fill prefix for LINE in a PHP comment with INDENTATION."
+    (cond
+     ((string-match-p (concat "^" (regexp-quote indentation) "\\* ?") line)
+      (concat indentation "* "))
+     ((string-match-p (concat "^" (regexp-quote indentation) "//+ ?") line)
+      (concat indentation "// "))
+     ((string-match-p (concat "^" (regexp-quote indentation) "# ?") line)
+      (concat indentation "# "))
+     (t indentation)))
+
+  (defun nl/php--comment-line-text (line indentation)
+    "Return comment body text from LINE with INDENTATION."
+    (let ((trimmed (string-trim-left line)))
+      (cond
+       ((string-match "\\`/\\*+\\s-*\\(.*\\)\\'" trimmed)
+        (match-string 1 trimmed))
+       ((string-match "\\`\\*+/?\\s-*\\(.*\\)\\'" trimmed)
+        (match-string 1 trimmed))
+       ((string-match "\\`//+\\s-*\\(.*\\)\\'" trimmed)
+        (match-string 1 trimmed))
+       ((string-match "\\`#\\s-*\\(.*\\)\\'" trimmed)
+        (match-string 1 trimmed))
+       ((string-prefix-p indentation line)
+        (string-remove-prefix indentation line))
+       (t trimmed))))
+
+  (defun nl/php-fill-paragraph (&optional justify)
+    "Fill the current paragraph, including multiline PHP comments."
+    (interactive "P")
+    (if (not (nth 4 (syntax-ppss)))
+        (let ((fill-paragraph-function nil))
+          (fill-paragraph justify))
+      (let* ((start (line-beginning-position))
+             (end (line-end-position))
+             (indentation (save-excursion
+                            (back-to-indentation)
+                            (buffer-substring-no-properties
+                             (line-beginning-position)
+                             (point))))
+             (prefix (nl/php--comment-fill-prefix
+                      (buffer-substring-no-properties start end)
+                      indentation))
+             (paragraph-start-line
+              (save-excursion
+                (while (and (> (line-beginning-position) (point-min))
+                            (progn
+                              (forward-line -1)
+                              (nth 4 (syntax-ppss)))
+                            (not (string-empty-p
+                                  (string-trim
+                                   (nl/php--comment-line-text
+                                    (buffer-substring-no-properties
+                                     (line-beginning-position)
+                                     (line-end-position))
+                                    indentation)))))
+                  (setq start (line-beginning-position)))
+                start))
+             (paragraph-end-line
+              (save-excursion
+                (goto-char end)
+                (while (and (= (forward-line 1) 0)
+                            (nth 4 (syntax-ppss))
+                            (not (string-empty-p
+                                  (string-trim
+                                   (nl/php--comment-line-text
+                                    (buffer-substring-no-properties
+                                     (line-beginning-position)
+                                     (line-end-position))
+                                    indentation)))))
+                  (setq end (line-end-position)))
+                end))
+             (lines (split-string
+                     (buffer-substring-no-properties paragraph-start-line paragraph-end-line)
+                     "\n"))
+             (text (string-join
+                    (mapcar (lambda (line)
+                              (string-trim
+                               (nl/php--comment-line-text line indentation)))
+                            lines)
+                    " ")))
+        (delete-region paragraph-start-line paragraph-end-line)
+        (let ((fill-prefix prefix)
+              (start-point (point)))
+          (insert prefix text)
+          (fill-region-as-paragraph start-point (point) justify))
+        t)))
+
+  (defun nl/php-mode-hook ()
+    "My PHP mode configuration."
+    (require 'flycheck-phpstan)
+    (setq php-mode-lineup-cascaded-calls t
+          php-cs-fixer-config-option (concat (projectile-project-root) ".php-cs-fixer.php"))
+    (setq-local fill-paragraph-function #'nl/php-fill-paragraph)
+    (flycheck-mode t)
+    (subword-mode +1)
+    ;;(prettier-mode)
+    (add-hook 'before-save-hook 'php-cs-fixer-before-save nil t)
+    (when buffer-file-name
+      (let ((nl-is-nordita-project (string-match-p "nordita" buffer-file-name)))
+        (when nl-is-nordita-project
+          (nl-nordita-project-settings))
+        (unless nl-is-nordita-project
+          (nl-php-project-settings))
+        )))
+
+  (defun nl-php-project-settings ()
+    ;; this style is based on the symfony2 style
+    ;;(php-set-style "nl/php")
+    (my/lsp-deferred-unless-remote))
+
+  (defun nl-nordita-project-settings ()
+    "Nordita's PHP mode configuration."
+    ;;(add-hook 'before-save-hook 'nl/php-before-save-hook)
+    (lsp)
+    ;;(php-set-style "nl/php-nordita")
+    (setq php-project-root 'auto
+          php-mode-coding-style 'nl/php-nordita
+          phpstan-config-file '(root . "phpstan.neon")
+          phpstan-memory-limit "1G"
+          phpstan-level 6
+          projectile-project-install-cmd "composer update"
+          projectile-project-test-cmd  "composer host-test"
+          create-lockfiles nil)
+    (cond ((string= (projectile-project-root) (expand-file-name "~/src/nordita/norweb-2021/"))
+           (setq lsp-intelephense-files-exclude
+                 (vconcat lsp-intelephense-files-exclude
+                          [
+                           ;;"public/wire/**" -- if uncommented, then wont be able to jump to definitions
+                           ;; "**/FieldtypeCombo/**"
+                           ;; "**/FieldtypeFieldsetGroup/**"
+                           ;; "**/FieldtypeRepeaterMatrix/**"
+                           ;; "**/FieldtypeTextareas/**"
+                           ;; "**/FileValidatorSvgSanitizer/**"
+                           ;; "**/InputfieldCKEditor/**"
+                           "public/wire.old/**"
+                           "**/AppApi/**"
+                           "**/ProcessHannaCode/**"
+                           "**/pw-fieldtype-yaml/**"
+                           "**/RockMigrations/**"
+                           "**/TracyDebugger/**"
+                           ])
+                 lsp-intelephense-rename-exclude
+                 (vconcat lsp-intelephense-rename-exclude
+                          ["public/wire/**"
+                           "public/wire.old/**"
+                           "**/AppApi/**"
+                           "**/FieldtypeCombo/**"
+                           "**/FieldtypeFieldsetGroup/**"
+                           "**/FieldtypeRepeaterMatrix/**"
+                           "**/FieldtypeTextareas/**"
+                           "**/FileValidatorSvgSanitizer/**"
+                           "**/InputfieldCKEditor/**"
+                           "**/ProcessHannaCode/**"
+                           "**/pw-fieldtype-yaml/**"
+                           "**/RockMigrations/**"
+                           "**/TracyDebugger/**"
+                           ])
+                 lsp-intelephense-php-version "8.4")
+           ))
+    )
+
+  ;; this style is based on the symfony2 style
+  (c-add-style
+   "nl/php"
+   '("php"
+     (c-basic-offset . 2)
+     (indent-tabs-mode . nil)
+     (c-offsets-alist . ((statement-cont . php-lineup-hanging-semicolon)))
+     (c-indent-comments-syntactically-p . t)
+     (fill-column . 120)
+     (require-final-newline . t)))
+
+  ;; see https://github.com/taksatou/dotfiles/blob/037e22d7a31112321b92e11bcbd871b8e2acbc9c/.emacs.d/my/my-codingstyles.el
+  (c-add-style
+   "nl/php-nordita"
+   '("php"
+     (c-set-style "k&r")
+     (c-basic-offset . 4)
+     (indent-tabs-mode . nil)
+     (c-offsets-alist . ((defun-open            . 0)
+                         (defun-close           . 0)
+                         (defun-block-intro     . +)
+                         (topmost-intro         . 0)
+                         (topmost-intro-cont    . c-lineup-topmost-intro-cont)
+                         (block-open            . 0)
+                         (block-close           . 0)
+                         (statement             . 0)
+                         (statement-cont        . +)
+                         (statement-block-intro . +)
+                         (statement-case-intro  . +)
+                         (statement-case-open   . 0)
+                         (substatement          . +)
+                         (substatement-open     . 0)
+                         (case-label            . +)
+                         (comment-intro         . (c-lineup-knr-region-comment c-lineup-comment))
+                         (arglist-intro         . +)
+                         (arglist-cont          . (c-lineup-gcc-asm-reg 0))
+                         (arglist-cont-nonempty . +)
+                         (arglist-close         . 0)
+                         ))
+     (c-indent-comments-syntactically-p . t)
+     (php-mode-lineup-cascaded-calls . nil)
+     (show-trailing-whitespace . nil)
+     (fill-column . 120)
+     (require-final-newline . t)))
+  )
+#+end_src
+
+*** [[https://github.com/nlamirault/phpunit.el][php-unit]]
+
+#+begin_src emacs-lisp
+(use-package phpunit
+  :after (php-mode)
+  :bind (:map php-mode-map
+              ("C-c , t" . phpunit-current-test)
+              ("C-c , c" . phpunit-current-class)
+              ("C-c , p" . phpunit-current-project))
+  :init
+  (push `(php-unit-error-regexp
+          ,(rx (group-n 1 "/" (one-or-more (or "/" "-" alnum)) ".php")
+               ":" (group-n 2 (one-or-more digit)))
+          1 2)
+        compilation-error-regexp-alist-alist)
+  ;; (push `(php-error-regexp
+  ;;         ,(rx line-start
+  ;;              (zero-or-more "Trace:" space)
+  ;;              "#" (one-or-more digit)
+  ;;              (zero-or-more space)
+  ;;              (group-n 1 (one-or-more (not (in space "(" "\n"))))
+  ;;              "(" (group-n 2 (one-or-more digit))
+  ;;              (zero-or-more not-newline))
+  ;;         1 2)
+  ;;       compilation-error-regexp-alist-alist)
+  (push 'php-unit-error-regexp compilation-error-regexp-alist)
+  ;; remove the following false positives
+  (assq-delete-all 'cucumber compilation-error-regexp-alist-alist)
+  (assq-delete-all 'cucumber compilation-error-regexp-alist)
+  :custom
+  (phpunit-arg "--stderr --debug"))
+#+end_src
+
+*** [[https://github.com/OVYA/php-cs-fixer][php-cs-fixer]]
+
+Allows the Emacs editor to fix most issues in PHP code when you want to follow the coding standards PSR-1 and PSR-2.
+
+#+begin_src emacs-lisp
+(use-package php-cs-fixer
+  :after php-mode
+  ;; :load-path "~/src/github/elisp/php-cs-fixer"
+  :commands (php-cs-fixer-fix php-cs-fixer-before-save))
+#+end_src
+
+** Python
+*** [[https://github.com/jorgenschaefer/pyvenv][pyvenv.el]]
+
+#+begin_src emacs-lisp
+(use-package pyvenv
+  :hook (python-base-mode . nl/auto-activate-venv)
+  :config
+  (defun nl/auto-activate-venv ()
+    "If a .venv exists at or above the project root, activate it."
+    (let ((root (or (and (fboundp 'project-root)
+                         (when-let ((pr (project-current nil)))
+                           (project-root pr)))
+                    (locate-dominating-file default-directory ".git")
+                    default-directory)))
+      (when root
+        (let ((venv (expand-file-name ".venv" root)))
+          (when (file-directory-p venv)
+            (pyvenv-activate venv))))))
+
+  ;; Optional: display current venv in mode line
+  (setq pyvenv-mode-line-indicator '(pyvenv-virtual-env-name (" venv:" pyvenv-virtual-env-name)))
+  (pyvenv-mode 1))
+#+end_src
+
+*** [[https://github.com/scop/emacs-ruff-format][ruff-format]]
+
+#+begin_src emacs-lisp
+(use-package ruff-format
+  :hook
+  ((python-mode python-ts-mode) . nl/python-ruff-hook)
+  :init
+  (defun nl/python-ruff-hook ()
+    (require 'ruff-format)
+    (ruff-format-on-save-mode))
+  :config
+  (setq ruff-format-command "ruff"))
+#+end_src
+
+*** lsp-pyright
+
+Using ruff now.
+
+#+begin_src emacs-lisp
+(use-package lsp-pyright
+  :hook ((python-mode python-ts-mode) . nl/pytjon-pyright-rook)
+  :init
+  (defun nl/pytjon-pyright-rook ()
+    (my/lsp-deferred-unless-remote)
+    (require 'lsp-pyright)))
+#+end_src
+
+*** [[https://github.com/wbolster/emacs-python-black][emacs-python-black]]
+
+Using ruff now
+
+#+begin_src emacs-lisp :tangle no
+(use-package python-black)
+#+end_src
+
+
+** rust
+
+See https://robert.kra.hn/posts/rust-emacs-setup/
+
+#+begin_src emacs-lisp
+(defun nl/rustic-mode-hook ()
+  (setq-local buffer-save-without-query t
+              ;;compilation-ask-about-save nil
+              )
+  (add-hook 'before-save-hook 'lsp-format-buffer nil t))
+
+(defun nl/toml-mode-hook ()
+  (setq-local buffer-save-without-query t
+              ;;compilation-ask-about-save nil
+              ))
+
+(use-package rustic
+  :hook ((rustic-mode . nl/rustic-mode-hook)
+         (conf-toml-mode . nl/toml-mode-hook))
+  :bind (:map rustic-mode-map
+              ("M-j" . lsp-ui-imenu)
+              ("M-?" . lsp-find-references)
+              ("C-c C-c l" . flycheck-list-errors)
+              ("C-c C-c a" . lsp-execute-code-action)
+              ("C-c C-c r" . lsp-rename)
+              ("C-c C-c q" . lsp-workspace-restart)
+              ("C-c C-c Q" . lsp-workspace-shutdown)
+              ("C-c C-c s" . lsp-rust-analyzer-status))
+  :config
+  ;; uncomment for less flashiness
+  ;; (setq lsp-eldoc-hook nil)
+  ;; (setq lsp-enable-symbol-highlighting nil)
+  ;; (setq lsp-signature-auto-activate nil)
+
+  ;; comment to disable rustfmt on save
+  (setq rustic-format-on-save t))
+#+end_src
+
+** [[https://github.com/ljos/sparql-mode/tree/15960092e8ce8ebe6a6afd82202ccf47cb306e76][sparql-mode]]
+
+A major mode for emacs that provides syntax highlighting for [[https://www.w3.org/TR/sparql11-query/][SPARQL]].
+
+#+begin_src emacs-lisp
+(use-package sparql-mode
+  :mode (("\\.rq$" . sparql-mode)))
+#+end_src
