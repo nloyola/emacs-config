@@ -3571,7 +3571,7 @@ Using ruff now
 #+end_src
 
 
-**  [][rainbow-mode]
+**  rainbow-mode
 
 #+begin_src emacs-lisp
 (use-package rainbow-mode
