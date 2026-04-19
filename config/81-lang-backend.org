@@ -179,7 +179,11 @@ Requires the =clj-kondo= binary on =PATH=.
   ((php-mode php-ts-mode) . nl/php-mode-hook)
   :preface
   (use-package flycheck-phpstan)
-  (use-package nl-nordita-php-project :demand :load-path "~/.emacs.d/lisp")
+  ;; Declare load-path for nl-nordita-php-project but do not load it at
+  ;; startup. `nl-nordita-project-settings' requires it lazily, so the
+  ;; package (and its dependency chain into php-ts-mode/projectile) only
+  ;; loads when a Nordita PHP buffer is visited.
+  (use-package nl-nordita-php-project :load-path "~/.emacs.d/lisp")
 
   (defun nl/php--comment-fill-prefix (line indentation)
     "Return fill prefix for LINE in a PHP comment with INDENTATION."
@@ -294,6 +298,7 @@ Requires the =clj-kondo= binary on =PATH=.
 
   (defun nl-nordita-project-settings ()
     "Nordita's PHP mode configuration."
+    (require 'nl-nordita-php-project)
     ;;(add-hook 'before-save-hook 'nl/php-before-save-hook)
     (lsp)
     ;;(php-set-style "nl/php-nordita")

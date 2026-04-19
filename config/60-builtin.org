@@ -295,7 +295,11 @@ since =master= has introduced breaking changes against Emacs =php-ts-mode=.
   (setq treesit-auto-fallback-alist
         '((toml-ts-mode . conf-toml-mode)
           (html-ts-mode . mhtml-mode)))
-  (global-treesit-auto-mode))
+  (global-treesit-auto-mode)
+  ;; php is not covered by treesit-auto's default remap list, so add it
+  ;; explicitly. `add-to-list' is a no-op if treesit-auto ever ships with
+  ;; php included.
+  (add-to-list 'major-mode-remap-alist '(php-mode . php-ts-mode)))
 #+end_src
 
 Bulk install all tree-sitter grammars:
