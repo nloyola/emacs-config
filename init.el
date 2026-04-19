@@ -81,9 +81,6 @@
 (unless (assoc-default "melpa" package-archives)
   (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t))
 
-(unless (assoc-default "org" package-archives)
-  (add-to-list 'package-archives '("org" . "https://orgmode.org/elpa/") t))
-
 (unless (assoc-default "gnu" package-archives)
   (add-to-list 'package-archives '("gnu" . "http://elpa.gnu.org/packages/") t))
 
@@ -94,12 +91,9 @@
       "https://www.mirrorservice.org/sites/elpa.gnu.org/packages/")
 
 (setq package-archive-priorities
-      '(;;("melpa-stable" . 10)
-        ;; ("marmalade" . 7)
-        ("gnu"       . 99)
-        ("nongnu"    . 80)
-        ("org"       . 70)
-        ("melpa"     . 0)))
+      '(("gnu"    . 99)
+        ("nongnu" . 80)
+        ("melpa"  . 0)))
 
 (unless package--initialized
   (package-initialize))
