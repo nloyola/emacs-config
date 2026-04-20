@@ -278,6 +278,7 @@ Requires the =clj-kondo= binary on =PATH=.
     (require 'flycheck-phpstan)
     (setq php-mode-lineup-cascaded-calls t
           php-cs-fixer-config-option (concat (projectile-project-root) ".php-cs-fixer.php"))
+    (setq-local fill-column 120)
     (setq-local fill-paragraph-function #'nl/php-fill-paragraph)
     (flycheck-mode t)
     (subword-mode +1)
