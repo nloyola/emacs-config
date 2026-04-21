@@ -351,6 +351,7 @@ Sometimes you end up with cursors outside of your view. You can scroll the scree
                  ("W"   . mc/mark-previous-word-like-this)))
     :config
     (setq mc/always-run-for-all t)
+    (advice-add 'mc/dump-list :after #'my/mc-lists-add-lexical-cookie)
     ))
 
 (when (string-match "-microsoft" (downcase operating-system-release))
@@ -365,7 +366,18 @@ Sometimes you end up with cursors outside of your view. You can scroll the scree
            ("C-x C-m"     . mc/mark-all-dwim))
     :config
     (setq mc/always-run-for-all t)
+    (advice-add 'mc/dump-list :after #'my/mc-lists-add-lexical-cookie)
     ))
+
+(defun my/mc-lists-add-lexical-cookie (&rest _)
+  "Ensure `mc/list-file' has a `lexical-binding' file-local variable."
+  (when (and (boundp 'mc/list-file) (file-exists-p mc/list-file))
+    (with-temp-buffer
+      (insert-file-contents mc/list-file)
+      (goto-char (point-min))
+      (unless (re-search-forward "lexical-binding:" (line-end-position) t)
+        (insert ";;; -*- lexical-binding: t; -*-\n")
+        (write-region (point-min) (point-max) mc/list-file nil 'silent)))))
 #+end_src
 
 *

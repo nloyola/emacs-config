@@ -22,13 +22,41 @@ lists wrap under the bullet instead of under the text."
     (save-excursion
       (back-to-indentation)
       (if (looking-at "\\(?:[-+*]\\|[0-9]+[.)]\\)[[:blank:]]+")
-          (let ((fill-paragraph-function nil))
-            (fill-paragraph justify region))
-        (log-edit-fill-entry justify))))
+          (let* ((text-col (save-excursion
+                             (goto-char (match-end 0))
+                             (current-column)))
+                 (fill-prefix (make-string text-col ?\s))
+                 (adaptive-fill-mode nil)
+                 (start (line-beginning-position))
+                 (end (copy-marker
+                       (save-excursion
+                         (forward-line 1)
+                         (while (and (not (eobp))
+                                     (not (looking-at
+                                           "[ \t]*\\(?:$\\|\\(?:[-+*]\\|[0-9]+[.)]\\)[ \t]+\\)")))
+                           (forward-line 1))
+                         (point)))))
+            ;; Strip continuation-line indentation so `fill-region-as-paragraph'
+            ;; can re-wrap cleanly against our explicit fill-prefix.
+            (save-excursion
+              (goto-char start)
+              (forward-line 1)
+              (while (< (point) end)
+                (delete-horizontal-space)
+                (forward-line 1)))
+            (fill-region-as-paragraph start end justify))
+        (log-edit-fill-entry justify)))
+    t))
 
   (defun nl/git-commit-setup-fill-paragraph ()
     "Use better paragraph filling for bullet lists in commit buffers."
-    (setq-local fill-paragraph-function #'nl/git-commit-fill-paragraph))
+    (setq-local fill-paragraph-function #'nl/git-commit-fill-paragraph)
+    ;; Treat each bullet line as the start of its own paragraph, so
+    ;; `M-q' on a bullet only fills that item even without blank lines
+    ;; between bullets.
+    (setq-local paragraph-start
+                "\f\\|[ \t]*$\\|[ \t]*\\(?:[-+*]\\|[0-9]+[.)]\\)[ \t]+")
+    (setq-local paragraph-separate "\f\\|[ \t]*$"))
 
   (add-hook 'git-commit-setup-hook #'nl/git-commit-setup-fill-paragraph)
   (define-key magit-status-mode-map (kbd "q") 'magit-quit-session)
