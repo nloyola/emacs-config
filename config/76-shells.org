@@ -56,88 +56,41 @@ No longer using this. Using [[https://codeberg.org/akib/emacs-eat][emacs-eat]] i
 #+end_src
 ** tramp
 
-#+begin_src emacs-lisp :tangle no
-;; TRAMP performance enhancements
+#+begin_src emacs-lisp
 (use-package tramp
+  :ensure nil
   :defer t
-  :config
-  ;; Prevent lockfile and auto-save clutter
+  :init
   (setq remote-file-name-inhibit-locks t
         remote-file-name-inhibit-auto-save-visited t
-        tramp-use-scp-direct-remote-copying t)     ;; prefer scp for file transfers
-  ;; Increase threshold for inline vs out-of-band copying (optimize for >1 MB)
-  (setq tramp-copy-size-limit (* 1024 1024)      ;; 1 MB threshold
-        tramp-verbose 2)                         ;; modest verbosity for debugging
-  ;; Re-enable SSH ControlMaster in compile to avoid password prompt per connection
+        tramp-copy-size-limit (* 1024 1024)
+        tramp-verbose 2)
+  :config
+  ;; Keep compile using the shared SSH connection for remote commands.
   (with-eval-after-load 'compile
     (remove-hook 'compilation-mode-hook
                  #'tramp-compile-disable-ssh-controlmaster-options)))
 
-;; Enable direct async processes on TRAMP (Emacs tramp 2.7+)
-(use-package tramp
-  :config
-  (connection-local-set-profile-variables
-   'remote-direct-async-process
-   '((tramp-direct-async-process . t)))
-  (connection-local-set-profiles
-   '(:application tramp :protocol "scp")
-   'remote-direct-async-process)
-  ;; Ensure magit works over async TRAMP
-  (setq magit-tramp-pipe-stty-settings 'pty))
+(defun nl/bootstrap-tramp-rpc ()
+  "Install and load `tramp-rpc' so `/rpc:user@host:/path' paths work.
 
-;; Magit optimizations for TRAMP sessions
-;; (use-package magit
-;;   :commands (magit-status magit-dispatch magit-file-dispatch)
-;;   :init
-;;   ;; Avoid status-buffer overhead; use dispatch commands when possible
-;;   :config
-;;   (setq magit-commit-show-diff nil
-;;         magit-branch-direct-configure nil
-;;         magit-refresh-status-buffer nil)
-;;   ;; Optionally, remind to use magit-dispatch or shell commands over TRAMP
-;;   )
+The Rust server binary is auto-deployed on first connection."
+  (interactive)
+  (if (version< emacs-version "30.1")
+      (message "Skipping tramp-rpc: Emacs 30.1 or newer is required")
+    (condition-case err
+        (progn
+          (require 'tramp)
+          (nl/ensure-package-installed 'msgpack)
+          (unless (package-installed-p 'tramp-rpc)
+            (package-vc-install
+             '(tramp-rpc
+               :url "https://github.com/ArthurHeymans/emacs-tramp-rpc"
+               :lisp-dir "lisp")))
+          (require 'tramp-rpc))
+      (error
+       (message "Failed to enable tramp-rpc: %s"
+                (error-message-string err))))))
 
-;; Cache remote-only operations to avoid repeated TRAMP calls
-(defmacro my/advice-memoize-remote (fn cache-var)
-  "Wrap FN to memoize remote results in CACHE-VAR."
-  `(advice-add ,fn :around
-               (lambda (orig &rest args)
-                 (let ((key (car args)))
-                   (if (and key (file-remote-p key))
-                       (let ((entry (assoc key ,cache-var)))
-                         (if entry
-                             (cdr entry)
-                           (let ((result (apply orig args)))
-                             (setq ,cache-var (cons (cons key result) ,cache-var))
-                             result)))
-                     (apply orig args))))))
-
-(defvar my/project-current-cache nil)
-(my/advice-memoize-remote project-current my/project-current-cache)
-
-(defvar my/magit-toplevel-cache nil)
-(my/advice-memoize-remote magit-toplevel my/magit-toplevel-cache)
-
-(defvar my/vc-git-root-cache nil)
-(advice-add 'vc-git-root :around
-            (lambda (orig file)
-              (let ((dir (file-name-directory file)))
-                (if (file-remote-p file)
-                    (or (cdr (assoc dir my/vc-git-root-cache))
-                        (let ((res (funcall orig file)))
-                          (setq my/vc-git-root-cache
-                                (cons (cons dir res) my/vc-git-root-cache))
-                          res))
-                  (funcall orig file)))))
-
-(defvar my/counsel-git-cands-cache nil)
-(advice-add 'counsel-git-cands :around
-            (lambda (orig dir)
-              (if (file-remote-p dir)
-                  (or (cdr (assoc dir my/counsel-git-cands-cache))
-                      (let ((res (funcall orig dir)))
-                        (setq my/counsel-git-cands-cache
-                              (cons (cons dir res) my/counsel-git-cands-cache))
-                        res))
-                (funcall orig dir))))
+(add-hook 'after-init-hook #'nl/bootstrap-tramp-rpc t)
 #+end_src

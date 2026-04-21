@@ -3,7 +3,8 @@
 ** JavaScript
 
 #+begin_src emacs-lisp
-(use-package js2-mode
+(use-package js
+  :ensure nil
   :mode (("\\.js\\'" . js-ts-mode))
   :bind
   (:map js-ts-mode-map
@@ -19,8 +20,7 @@
     (column-enforce-mode +1)
     (subword-mode +1)
     (when (fboundp 'nl/yas-reload-all)
-      (nl/yas-reload-all)))
-  )
+      (nl/yas-reload-all))))
 #+end_src
 
 ** js-mode
@@ -246,9 +246,6 @@
   (flycheck-mode +1)
   (column-enforce-mode +1)
   (subword-mode +1)
-  ;; Ensure the TS/TSX parser is used when running Prettier on save.
-  (setq-local prettier-parsers '(typescript babel-ts))
-  (prettier-mode +1)
   ;;(eldoc-mode +1)
   ;;(company-mode +1)
   ;; (push '(">=" . ?≥) prettify-symbols-alist)
@@ -264,9 +261,7 @@
          ("\\.tsx\\'" . tsx-ts-mode)
          ("\\.jsx\\'" . tsx-ts-mode))
   :hook
-  ((typescript-ts-mode . my/lsp-deferred-unless-remote)
-   (typescript-ts-mode . nl/typescript-mode)
-   (tsx-ts-mode . my/lsp-deferred-unless-remote)
+  ((typescript-ts-mode . nl/typescript-mode)
    (tsx-ts-mode . nl/typescript-mode))
   :bind
   (:map typescript-ts-mode-map

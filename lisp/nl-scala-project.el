@@ -186,7 +186,7 @@ The class name must have the postfix 'Spec' for this function to work."
             (find-file file)
             (goto-char (point-min))
             (lsp-organize-imports)
-            (lsp-format-buffer)
+            (apheleia-format-buffer)
             (save-buffer)))))
 
 

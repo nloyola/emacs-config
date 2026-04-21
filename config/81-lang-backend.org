@@ -60,12 +60,11 @@ Requires the =clj-kondo= binary on =PATH=.
 #+begin_src emacs-lisp
 (defun nl/go-before-save-hook ()
   (when (bound-and-true-p lsp-mode)
-    (lsp-format-buffer)
     (lsp-organize-imports)))
 
 (defun nl/go-mode-hook ()
   (require 'nl-colors)
-  (add-hook 'before-save-hook 'nl/go-before-save-hook)
+  (add-hook 'before-save-hook 'nl/go-before-save-hook nil t)
   (my/lsp-deferred-unless-remote)
   (subword-mode +1)
   (setq-local go-ts-mode-indent-offset 4
@@ -95,7 +94,7 @@ Requires the =clj-kondo= binary on =PATH=.
 #+begin_src emacs-lisp
 (defun nl/templ-mode-hook()
   (message ">>> nl/templ-mode-hook")
-  (add-hook 'before-save-hook 'nl/go-before-save-hook)
+  (add-hook 'before-save-hook 'nl/go-before-save-hook nil t)
   ;; visual width of a tab character
   (setq-local go-ts-mode-indent-offset 4
               js-indent-level 4
@@ -282,8 +281,6 @@ Requires the =clj-kondo= binary on =PATH=.
     (setq-local fill-paragraph-function #'nl/php-fill-paragraph)
     (flycheck-mode t)
     (subword-mode +1)
-    ;;(prettier-mode)
-    (add-hook 'before-save-hook 'php-cs-fixer-before-save nil t)
     (when buffer-file-name
       (let ((nl-is-nordita-project (string-match-p "nordita" buffer-file-name)))
         (when nl-is-nordita-project
@@ -429,17 +426,6 @@ Requires the =clj-kondo= binary on =PATH=.
   (phpunit-arg "--stderr --debug"))
 #+end_src
 
-*** [[https://github.com/OVYA/php-cs-fixer][php-cs-fixer]]
-
-Allows the Emacs editor to fix most issues in PHP code when you want to follow the coding standards PSR-1 and PSR-2.
-
-#+begin_src emacs-lisp
-(use-package php-cs-fixer
-  :after php-mode
-  ;; :load-path "~/src/github/elisp/php-cs-fixer"
-  :commands (php-cs-fixer-fix php-cs-fixer-before-save))
-#+end_src
-
 ** Python
 *** [[https://github.com/jorgenschaefer/pyvenv][pyvenv.el]]
 
@@ -462,20 +448,6 @@ Allows the Emacs editor to fix most issues in PHP code when you want to follow t
   ;; Optional: display current venv in mode line
   (setq pyvenv-mode-line-indicator '(pyvenv-virtual-env-name (" venv:" pyvenv-virtual-env-name)))
   (pyvenv-mode 1))
-#+end_src
-
-*** [[https://github.com/scop/emacs-ruff-format][ruff-format]]
-
-#+begin_src emacs-lisp
-(use-package ruff-format
-  :hook
-  ((python-mode python-ts-mode) . nl/python-ruff-hook)
-  :init
-  (defun nl/python-ruff-hook ()
-    (require 'ruff-format)
-    (ruff-format-on-save-mode))
-  :config
-  (setq ruff-format-command "ruff"))
 #+end_src
 
 *** lsp-pyright
@@ -508,8 +480,7 @@ See https://robert.kra.hn/posts/rust-emacs-setup/
 (defun nl/rustic-mode-hook ()
   (setq-local buffer-save-without-query t
               ;;compilation-ask-about-save nil
-              )
-  (add-hook 'before-save-hook 'lsp-format-buffer nil t))
+              ))
 
 (defun nl/toml-mode-hook ()
   (setq-local buffer-save-without-query t
@@ -533,9 +504,7 @@ See https://robert.kra.hn/posts/rust-emacs-setup/
   ;; (setq lsp-eldoc-hook nil)
   ;; (setq lsp-enable-symbol-highlighting nil)
   ;; (setq lsp-signature-auto-activate nil)
-
-  ;; comment to disable rustfmt on save
-  (setq rustic-format-on-save t))
+  )
 #+end_src
 
 ** [[https://github.com/ljos/sparql-mode/tree/15960092e8ce8ebe6a6afd82202ccf47cb306e76][sparql-mode]]

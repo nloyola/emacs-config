@@ -51,6 +51,7 @@ Modern on-the-fly syntax checking extension for GNU Emacs.
                                   '(javascript-eslint))
         flycheck-python-flake8-executable "flake8")
   ;; use eslint with web-mode for jsx files
+  (flycheck-add-mode 'javascript-eslint 'js-ts-mode)
   (flycheck-add-mode 'javascript-eslint 'tsx-ts-mode)
   (flycheck-add-mode 'javascript-eslint 'web-mode)
   (flycheck-add-mode 'javascript-eslint 'js2-mode)
@@ -224,6 +225,42 @@ The Perspective package provides multiple named workspaces (or "perspectives") i
   (consult-customize consult--source-buffer :hidden t :default nil)
   (add-to-list 'consult-buffer-sources persp-consult-source))
 #+end_src
+
+** [[https://github.com/alphapapa/prism.el][prism]]
+
+#+begin_src emacs-lisp
+(use-package prism
+  :preface
+  (defun nl/prism-colors ()
+    "Build a Prism palette from the current theme's font-lock faces."
+    (delq nil
+          (mapcar (lambda (face)
+                    (face-foreground face nil t))
+                  '(default
+                    font-lock-keyword-face
+                    font-lock-type-face
+                    font-lock-function-name-face
+                    font-lock-string-face
+                    font-lock-constant-face
+                    font-lock-builtin-face
+                    font-lock-variable-name-face
+                    font-lock-comment-face))))
+
+  (defun nl/configure-prism (&rest _)
+    "Refresh Prism faces to match the active theme."
+    (when (fboundp 'prism-set-colors)
+      (setq prism-num-faces 16)
+      (prism-set-colors
+       :desaturations '(0)
+       :lightens '(0)
+       :colors (nl/prism-colors))))
+  :hook
+  (prog-mode . prism-mode)
+  :config
+  (nl/configure-prism)
+  (advice-add 'load-theme :after #'nl/configure-prism))
+#+end_src
+
 ** prog-mode
 
 Disable LSP mode for remote buffers to save performance.
@@ -276,51 +313,50 @@ Project navigation and management library for Emacs.
     (projectile-dired)))
 #+end_src
 
-** [[https://github.com/jscheid/prettier.el][prettier]]
+** [[https://github.com/radian-software/apheleia][apheleia]]
 
-Reformat your code by running Prettier with minimal overhead, by request or transparently on file save.
-
-Had to disable prettier for *css-mode* because syntax highlighting when exporting to HTML in org-mode did not work.
+Run code formatters asynchronously on save without moving point around.
 
 #+begin_src emacs-lisp
-(use-package prettier
-  :diminish
+(use-package apheleia
+  :commands (apheleia-format-buffer apheleia-global-mode)
   :init
-  ;; Use the correct variable so Prettier actually runs on save.
-  (setq prettier-prettify-on-save-flag t)
-  :hook (
-         (js-ts-mode . prettier-mode)
-         (json-mode . prettier-mode)
-         (vue-mode . prettier-mode)
-         (tsx-ts-mode . prettier-mode)
-         (typescript-ts-mode . prettier-mode)
-         ;;(css-mode . prettier-mode)
-         (css-mode . prettier-mode)
-         (yaml-mode . prettier-mode))
+  (apheleia-global-mode +1)
   :config
-  ;; Teach prettier.el about the tree-sitter JS/TS modes so it can pick a parser.
-  (setf (alist-get 'typescript-ts-mode prettier-major-mode-parsers)
-        '(typescript babel-ts))
-  (setf (alist-get 'tsx-ts-mode prettier-major-mode-parsers)
-        '(typescript babel-ts))
-  (setf (alist-get 'js-ts-mode prettier-major-mode-parsers)
-        #'prettier--guess-js-ish))
-#+end_src
+  (setf (alist-get 'nl-gofmt apheleia-formatters)
+        '((if (executable-find "gofumpt") "gofumpt" "gofmt")))
+  (setf (alist-get 'ruff apheleia-formatters)
+        '("ruff" "format" "--stdin-filename" filepath "-"))
+  (setf (alist-get 'rustfmt apheleia-formatters)
+        '("rustfmt" "--emit" "stdout"))
+  (setf (alist-get 'prettier-java apheleia-formatters)
+        '(npx "prettier" "--parser" "java"))
+  (setf (alist-get 'prettier-sql apheleia-formatters)
+        '(npx "prettier" "--parser" "sql"))
+  (setf (alist-get 'php-cs-fixer apheleia-formatters)
+        '("php-cs-fixer"
+          "fix"
+          (when php-cs-fixer-config-option
+            (concat "--config=" php-cs-fixer-config-option))
+          "--using-cache=no"
+          "--quiet"
+          file))
 
-** [[https://github.com/purcell/emacs-reformatter][reformatter]]
-
-Easily define an idiomatic command to reformat the current buffer using a command-line program, together with an optional minor mode which can apply this command automatically on save.
-
-#+begin_src emacs-lisp
-(use-package reformatter
-  :config
-  (reformatter-define java-format
-    :program "prettier"
-    :args (list "--write" "--parser" "java")
-    :lighter " JavaF")
-  (reformatter-define sql-format
-    :program "prettier"
-    :args (list "--write" "--parser" "sql")
-    :lighter " SqlF")
-  )
+  (setf (alist-get 'go-mode apheleia-mode-alist) 'nl-gofmt)
+  (setf (alist-get 'go-ts-mode apheleia-mode-alist) 'nl-gofmt)
+  (setf (alist-get 'templ-ts-mode apheleia-mode-alist) 'nl-gofmt)
+  (setf (alist-get 'python-mode apheleia-mode-alist) 'ruff)
+  (setf (alist-get 'python-ts-mode apheleia-mode-alist) 'ruff)
+  (setf (alist-get 'php-mode apheleia-mode-alist) 'php-cs-fixer)
+  (setf (alist-get 'rustic-mode apheleia-mode-alist) 'rustfmt)
+  (setf (alist-get 'js-ts-mode apheleia-mode-alist) 'prettier)
+  (setf (alist-get 'typescript-ts-mode apheleia-mode-alist) 'prettier)
+  (setf (alist-get 'tsx-ts-mode apheleia-mode-alist) 'prettier)
+  (setf (alist-get 'json-mode apheleia-mode-alist) 'prettier)
+  (setf (alist-get 'vue-mode apheleia-mode-alist) 'prettier)
+  (setf (alist-get 'css-mode apheleia-mode-alist) 'prettier)
+  (setf (alist-get 'yaml-mode apheleia-mode-alist) 'prettier)
+  (setf (alist-get 'web-mode apheleia-mode-alist) 'prettier)
+  (setf (alist-get 'java-ts-mode apheleia-mode-alist) 'prettier-java)
+  (setf (alist-get 'sql-mode apheleia-mode-alist) 'prettier-sql))
 #+end_src

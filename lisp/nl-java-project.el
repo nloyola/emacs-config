@@ -132,7 +132,7 @@
 (with-eval-after-load 'hydra
   (defhydra hydra-nl/java-format (:color blue)
     "Java"
-    ("f" java-format-buffer "Format Java file with Prettier" :column "Format"))
+    ("f" apheleia-format-buffer "Format Java file" :column "Format"))
 
   (defhydra hydra-nl/java-test (:color blue)
     "Java Test"

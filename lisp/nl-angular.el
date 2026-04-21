@@ -277,10 +277,10 @@
               (when (string= file-ext "ts")
                 (lsp-organize-imports)
                 ;; (lsp-format-buffer)
-                (prettier-js))
+                (apheleia-format-buffer))
 
               (when (string-match "\\(html\\|scss\\)$" file-ext)
-                (prettier-js))
+                (apheleia-format-buffer))
               (save-buffer))
             ))))
 

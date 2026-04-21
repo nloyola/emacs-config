@@ -23,24 +23,17 @@
 
 (defconst emacs-start-time (current-time))
 
-(defvar file-name-handler-alist-old file-name-handler-alist)
+(defvar nl/file-name-handler-alist-original file-name-handler-alist)
 
 ;; from https://github.com/D4lj337/Emacs-performance
 (setenv "LSP_USE_PLISTS" "true")
 (setq lsp-use-plists t)
-;;(setq package-quickstart t)
 
-;; Disable "file-name-handler-alist" than enable it later for speed.
-(defvar startup/file-name-handler-alist file-name-handler-alist)
+;; Disable file-name-handler-alist during startup for speed; restore after init.
 (setq file-name-handler-alist nil)
-(add-hook 'emacs-startup-hook
-          (lambda ()
-            (setq file-name-handler-alist startup/file-name-handler-alist)
-            (makunbound 'startup/file-name-handler-alist)))
 
 (setq package-install-upgrade-built-in t
       package-enable-at-startup nil
-      file-name-handler-alist nil
       message-log-max 16384
       gc-cons-threshold 402653184
       gc-cons-percentage 0.6
@@ -50,12 +43,12 @@
       pixel-scroll-precision-mode t)
 
 (defun nl/after-init ()
-  (setq file-name-handler-alist file-name-handler-alist-old
+  (setq file-name-handler-alist nl/file-name-handler-alist-original
         gc-cons-threshold 200000000
         gc-cons-percentage 0.1)
   (garbage-collect))
 
-(add-hook 'after-init-hook `nl/after-init t)
+(add-hook 'emacs-startup-hook #'nl/after-init)
 
 (setq comp-deferred-compilation t)
 
