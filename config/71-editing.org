@@ -173,8 +173,6 @@ This package can be used to tie related commands into a family of short bindings
      ("m" set-mark-command "mark" :bind nil)
      ("q" nil "quit"))
 
-  (global-set-key (kbd "M-g M-g") 'hydra-goto-line/body)
-
   (defun toggle-window-split ()
     (interactive)
     (if (= (count-windows) 2)

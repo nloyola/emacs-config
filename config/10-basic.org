@@ -51,7 +51,7 @@ See https://tony-zorman.com/posts/emacs-potpourri.html
   ("C-x C-n" . next-error)
   ("C-x k" . nl/kill-this-buffer)
   ("M-f" . forward-to-word)
-  ("M-B" . backward-to-word)
+  ("M-b" . backward-to-word)
   ("<f1>" . indent-for-tab-command)
   ("S-<f1>" . indent-region)
   ("C-<f1>" . find-file-at-point)

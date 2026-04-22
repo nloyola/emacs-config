@@ -86,7 +86,7 @@ Modern on-the-fly syntax checking extension for GNU Emacs.
   (lsp-enable-snippet t)
   (lsp-enable-file-watchers nil)
   (lsp-pyls-plugins-pycodestyle-max-line-length 120)
-  (lsp-intelephense-php-version "8.3")
+  (lsp-intelephense-php-version "8.5")
   (lsp-intelephense-format-enable nil)
   ;;(setq lsp-response-timeout 25)
   ;; what to use when checking on-save. "check" is default, I prefer clippy
@@ -255,7 +255,19 @@ The Perspective package provides multiple named workspaces (or "perspectives") i
        :lightens '(0)
        :colors (nl/prism-colors))))
   :hook
-  (prog-mode . prism-mode)
+  ;; Enable only where indentation/nesting depth carries meaning.
+  ;; Skip C-family (PHP, JS/TS, Java, Go, Rust, C/C++) where braces
+  ;; delimit scope and prism fights with semantic font-lock faces.
+  ((emacs-lisp-mode
+    lisp-mode
+    lisp-interaction-mode
+    clojure-mode
+    scheme-mode
+    python-mode
+    python-ts-mode
+    yaml-mode
+    yaml-ts-mode
+    haskell-mode) . prism-mode)
   :config
   (nl/configure-prism)
   (advice-add 'load-theme :after #'nl/configure-prism))
@@ -348,6 +360,7 @@ Run code formatters asynchronously on save without moving point around.
   (setf (alist-get 'python-mode apheleia-mode-alist) 'ruff)
   (setf (alist-get 'python-ts-mode apheleia-mode-alist) 'ruff)
   (setf (alist-get 'php-mode apheleia-mode-alist) 'php-cs-fixer)
+  (setf (alist-get 'php-ts-mode apheleia-mode-alist) 'php-cs-fixer)
   (setf (alist-get 'rustic-mode apheleia-mode-alist) 'rustfmt)
   (setf (alist-get 'js-ts-mode apheleia-mode-alist) 'prettier)
   (setf (alist-get 'typescript-ts-mode apheleia-mode-alist) 'prettier)

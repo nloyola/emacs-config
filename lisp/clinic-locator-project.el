@@ -24,7 +24,8 @@
   (interactive)
   (async-shell-command-no-window "source ~/bin/locator-client-dev.sh"))
 
-(global-set-key (kbd "<f5>") 'run-angular-dev-mode)
+;; Kept unbound here to avoid overriding the main global <f5> compile binding.
+;; (global-set-key (kbd "<f5>") 'run-angular-dev-mode)
 
 ;; Local Variables:
 ;; flycheck-disabled-checkers: (emacs-lisp-checkdoc)

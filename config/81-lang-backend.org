@@ -342,7 +342,7 @@ Requires the =clj-kondo= binary on =PATH=.
                            "**/RockMigrations/**"
                            "**/TracyDebugger/**"
                            ])
-                 lsp-intelephense-php-version "8.4")
+                 lsp-intelephense-php-version "8.5")
            ))
     )
 

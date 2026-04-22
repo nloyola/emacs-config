@@ -1,4 +1,207 @@
 * Usage
+** Global Key Bindings
+
+This section documents global bindings defined across the config files. It is
+an overview for daily use, not the source of truth for implementation.
+
+*** Navigation and windows
+
+- ~M-<left>~ / ~M-<right>~ / ~M-<up>~ / ~M-<down>~ :: Move between windows with =windmove=.
+
+- ~C-x o~ :: Switch to the most recently used other window.
+
+- ~<home>~ :: Toggle between beginning of line and first non-whitespace.
+
+- ~<f8>~ :: Toggle side windows.
+
+- ~<f9>~ :: Resize frame layout depending on current width.
+
+- ~S-<f9>~ :: Split the frame and show the same buffer in both windows.
+
+- ~YY~ :: Open the window hydra.
+
+- ~zz~ :: Open the buffer hydra.
+
+- ~jv~ :: Open the common hydra.
+
+- ~C-c w~ :: Open the alternate window management hydra.
+
+*** Search, jump, and completion
+
+- ~C-S-s~ :: Start forward isearch.
+
+- ~M-z~ :: Zap up to char.
+
+- ~C-c SPC~ :: Jump with =avy-goto-char-timer=.
+
+- ~C-:~ :: Jump with =avy-goto-char=.
+
+- ~C-c M-x~ :: Run =consult-mode-command=.
+
+- ~C-c h~ :: Run =consult-history=.
+
+- ~C-c k~ :: Run =consult-kmacro=.
+
+- ~C-c m~ :: Run =consult-man=.
+
+- ~C-x M-:~ :: Run =consult-complex-command=.
+
+- ~C-x b~ :: Switch buffer with =consult-buffer=.
+
+- ~C-x 4 b~ :: Switch buffer in other window with =consult-buffer-other-window=.
+
+- ~C-x 5 b~ :: Switch buffer in other frame with =consult-buffer-other-frame=.
+
+- ~C-x r b~ :: Jump to bookmark with =consult-bookmark=.
+
+- ~C-x p b~ :: Switch to project buffer with =consult-project-buffer=.
+
+- ~M-g e~ :: Go to compile errors with =consult-compile-error=.
+
+- ~M-g f~ :: Go to Flymake diagnostics with =consult-flymake=.
+
+- ~M-g g~ :: Go to line with =consult-goto-line=.
+
+- ~M-g o~ :: Run =consult-outline=.
+
+- ~M-g m~ :: Run =consult-mark=.
+
+- ~M-g k~ :: Run =consult-global-mark=.
+
+- ~M-g i~ :: Run =consult-imenu=.
+
+- ~M-g I~ :: Run =consult-imenu-multi=.
+
+- ~M-s d~ :: Run =consult-find=.
+
+- ~M-s D~ :: Run =consult-locate=.
+
+- ~M-s g~ :: Run =consult-grep=.
+
+- ~M-s G~ :: Run =consult-git-grep=.
+
+- ~M-s r~ :: Run =consult-ripgrep=.
+
+- ~M-s l~ :: Run =consult-line=.
+
+- ~M-s L~ :: Run =consult-line-multi=.
+
+- ~M-s k~ :: Run =consult-keep-lines=.
+
+- ~M-s u~ :: Run =consult-focus-lines=.
+
+- ~M-s e~ :: Run =consult-isearch-history=.
+
+- ~C-.~ :: Run =embark-act=.
+
+- ~C-;~ :: Run =embark-dwim=.
+
+- ~C-h B~ :: Show Embark bindings.
+
+- ~M-A~ :: Cycle annotations with =marginalia-cycle=.
+
+*** Editing and text
+
+- ~C-z~ :: Disabled.
+
+- ~M-%~ :: Run =query-replace-regexp=.
+
+- ~C-x C-n~ :: Run =next-error=.
+
+- ~C-x k~ :: Kill the current buffer.
+
+- ~M-f~ :: Move forward to next word boundary.
+
+- ~M-b~ :: Move backward to previous word boundary.
+
+- ~<f1>~ :: Indent at point.
+
+- ~S-<f1>~ :: Indent region.
+
+- ~C-<f1>~ :: Find file at point.
+
+- ~<f2>~ :: Save modified buffers.
+
+- ~S-<f2>~ :: Revert current buffer without confirmation.
+
+- ~S-<f5>~ :: Toggle truncated lines.
+
+- ~S-<f11>~ :: Evaluate region.
+
+- ~C-S-<f11>~ :: Run =align-regexp=.
+
+- ~C-=~ :: Expand region with =expreg=.
+
+- ~C--~ :: Contract region with =expreg=.
+
+- ~C-c >~ :: Open the indent-tools hydra.
+
+- ~M-S-<up>~ :: Move current line or region up.
+
+- ~M-S-<down>~ :: Move current line or region down.
+
+- ~C-S-c C-S-c~ :: Edit multiple lines.
+
+- ~C-c s~ :: Open the =substitute= prefix map.
+
+- ~M-$~ :: Correct spelling with =jinx=.
+
+- ~C-M-$~ :: Switch =jinx= languages.
+
+- ~C-c i~ :: Cycle string inflection styles.
+
+- ~C-c C~ :: Force CamelCase inflection.
+
+- ~C-c L~ :: Force lowerCamelCase inflection.
+
+- ~C-c J~ :: Cycle Java-style inflection.
+
+*** Files, projects, and tools
+
+- ~<f5>~ :: Compile project with consult + projectile history.
+
+- ~C-<f5>~ :: Run =compile=.
+
+- ~C-x g~ :: Open =magit-status=.
+
+- ~C-c p~ :: Open the Projectile command map.
+
+- ~C-c c~ :: Run =org-capture=.
+
+- ~C-c n l~ :: Toggle the Org-roam buffer.
+
+- ~C-c n f~ :: Find an Org-roam node.
+
+- ~C-c n i~ :: Insert an Org-roam node.
+
+- ~C-c l p~ :: Pulse the current line.
+
+- ~C-c l h~ :: Highlight the current line.
+
+- ~C-c r~ :: Toggle =rainbow-mode=.
+
+*** Registers and help
+
+- ~M-#~ :: Load from register with =consult-register-load=.
+
+- ~M-'~ :: Store to register with =consult-register-store=.
+
+- ~C-M-#~ :: Browse registers with =consult-register=.
+
+- ~C-h f~ :: Describe callable with =helpful-callable=.
+
+- ~C-h v~ :: Describe variable with =helpful-variable=.
+
+- ~C-h k~ :: Describe key with =helpful-key=.
+
+- ~C-h x~ :: Describe command with =helpful-command=.
+
+- ~C-h F~ :: Describe function with =helpful-function=.
+
+- ~C-h C~ :: Describe command with =helpful-command=.
+
+- ~C-c C-d~ :: Show help at point.
+
 ** Registers
 
 - ~C-x r SPC r~ :: Record the position of point and the current buffer in register r (point-to-register).
