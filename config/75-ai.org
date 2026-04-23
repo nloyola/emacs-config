@@ -1,22 +1,22 @@
 * AI
 
-** [[https://github.com/xenodium/chatgpt-shell][chatgpt-shell]]
+** [[https://github.com/xenodium/chatgpt-shell][chatgpt-shell]] (disabled)
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 (use-package chatgpt-shell
   :ensure t
-  :custom
-  ((chatgpt-shell-openai-key
-    (lambda ()
-      (auth-source-pick-first-password :host "api.openai.com"))))
+  :commands chatgpt-shell
+  :init
+  (setq chatgpt-shell-openai-key
+        (lambda ()
+          (auth-source-pick-first-password :host "api.openai.com")))
   :config
-  (setq chatgpt-shell-model-version "chatgpt-4o-latest")
-  )
+  (setq chatgpt-shell-model-version "chatgpt-4o-latest"))
 #+end_src
 
 ** [[https://github.com/karthink/gptel][gptel]] (disabled)
 
-Found this packe hard to use.
+Found this package hard to use.
 
 #+begin_src emacs-lisp :tangle no
 (use-package gptel

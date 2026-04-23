@@ -105,7 +105,8 @@ indentation, and each resulting paragraph is refilled."
     (setq-local paragraph-separate "\f\\|[ \t]*$"))
 
   (add-hook 'git-commit-setup-hook #'nl/git-commit-setup-fill-paragraph)
-  (define-key magit-status-mode-map (kbd "q") 'magit-quit-session)
+  (with-eval-after-load 'magit-status
+    (define-key magit-status-mode-map (kbd "q") #'magit-quit-session))
   (setq-default vc-handled-backends '(Git))
   (setq magit-push-always-verify nil
         git-commit-summary-window nil

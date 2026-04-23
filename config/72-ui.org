@@ -172,7 +172,6 @@ Posframe can pop up a frame at point, this posframe is a child-frame connected t
 
 #+begin_src emacs-lisp
 (use-package posframe
-  :pin melpa
   :init
   (setq x-gtk-resize-child-frames 'resize-mode))
 #+end_src

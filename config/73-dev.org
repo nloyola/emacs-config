@@ -79,7 +79,6 @@ Modern on-the-fly syntax checking extension for GNU Emacs.
 
 (use-package lsp-mode
   ;;:load-path "~/src/github/elisp/lsp-mode"
-  :pin melpa
   :commands (lsp lsp-deferred)
   :custom
   (lsp-keymap-prefix "C-c l")

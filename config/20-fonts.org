@@ -52,7 +52,7 @@ Help from here:  https://howardabrams.com/hamacs/ha-display.html#org54a2529
   (let ((fav-font (format "%s-%d" nl/gui-fixed-font-name size)))
     (set-face-attribute 'default nil :font fav-font)
     (set-face-attribute 'fixed-pitch nil :family nl/gui-fixed-font-name :inherit 'default :height 120)
-    (set-face-attribute 'variable-pitch nil :family nl/gui-variable-font-name :inherit 'default :height 150)))
+    (set-face-attribute 'variable-pitch nil :family nl/gui-variable-font-name :inherit 'default :height 170)))
 
 (defun nl/mac-monitor-fontsize ()
   "Quickly set reset my font size when I connect my laptop to a monitor on a Mac."
