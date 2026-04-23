@@ -1,6 +1,6 @@
 * UI polish
 
-** [[https://github.com/wyuenho/all-the-icons-dired][all-the-icons-dired]]
+** [[https://github.com/wyuenho/all-the-icons-dired][all-the-icons-dired]] (disabled)
 
 Using =nerd-icons-dired= instead.
 
@@ -48,7 +48,7 @@ Using =nerd-icons= or =all-the-icons= slows down init time.
   )
 #+end_src
 
-** [[https://github.com/alexluigit/dirvish][dirvish]]
+** [[https://github.com/alexluigit/dirvish][dirvish]] (disabled)
 
 Dirvish is an improved version of the Emacs inbuilt package Dired.
 
@@ -206,7 +206,7 @@ Pulse highlight line on demand or after running select functions
   :bind ("C-c r" . rainbow-mode))
 #+end_src
 
-** [[https://github.com/protesilaos/spacious-padding][spacious-padding]]
+** [[https://github.com/protesilaos/spacious-padding][spacious-padding]] (disabled)
 
 #+begin_src emacs-lisp :tangle no
 (use-package spacious-padding

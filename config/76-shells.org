@@ -27,7 +27,7 @@
   :commands eat-mode)
 #+end_src
 
-** [[https://github.com/akermu/emacs-libvterm][emacs-libvterm]]
+** [[https://github.com/akermu/emacs-libvterm][emacs-libvterm]] (disabled)
 
 No longer using this. Using [[https://codeberg.org/akib/emacs-eat][emacs-eat]] instead.
 

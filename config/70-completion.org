@@ -1,6 +1,6 @@
 * Completion
 
-** [[https://github.com/company-mode/company-mode][company-mode]]
+** [[https://github.com/company-mode/company-mode][company-mode]] (disabled)
 
 Switched to Corfu.
 

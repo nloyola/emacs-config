@@ -39,7 +39,7 @@ See https://tinted-theming.github.io/base16-gallery/
   (nl/fix-gnus-group-news-face-cycle))
 #+end_src
 
-** [[https://protesilaos.com/emacs/modus-themes][modus-themes]]
+** [[https://protesilaos.com/emacs/modus-themes][modus-themes]] (disabled)
 
 #+begin_src emacs-lisp :tangle no
 (use-package modus-themes
@@ -60,7 +60,7 @@ See https://tinted-theming.github.io/base16-gallery/
   )
 #+end_src
 
-** Xresources theme (for pywal)
+** Xresources theme (for pywal) (disabled)
 
 #+begin_src emacs-lisp :tangle no
 (defun nl/xresources-theme-hook ()
@@ -84,7 +84,7 @@ See https://tinted-theming.github.io/base16-gallery/
   ))
 #+end_src
 
-** Doom Themes
+** Doom Themes (disabled)
 
 See https://github.com/doomemacs/themes/tree/screenshots#screenshots
 
@@ -148,7 +148,7 @@ Allow changing themes on the fly with the following.
     (load-theme 'doom-navy-copper t)))
 #+end_src
 
-** Base-16
+** Base-16 (disabled)
 
 #+begin_src emacs-lisp :tangle no
 (use-package base16-theme
@@ -156,7 +156,7 @@ Allow changing themes on the fly with the following.
   (load-theme 'base16-default-dark t))
 #+end_src
 
-** [[https://github.com/greduan/emacs-theme-gruvbox][gruvbox]]
+** [[https://github.com/greduan/emacs-theme-gruvbox][gruvbox]] (disabled)
 
 #+begin_src emacs-lisp :tangle no
 (use-package gruvbox-theme
@@ -165,7 +165,7 @@ Allow changing themes on the fly with the following.
   )
 #+end_src
 
-** Catppuccin
+** Catppuccin (disabled)
 
 #+begin_src emacs-lisp :tangle no
 (setq catppuccin-flavor 'mocha)

@@ -1,7 +1,10 @@
 * Git
 
-** Git
-*** [[https://github.com/magit/magit][magit]]
+** File log
+
+=M-x magit-log-buffer-file=
+
+** [[https://github.com/magit/magit][magit]]
 
 A great interface for git projects. It's much more pleasant to use than the git interface on the
 command line. Use an easy keybinding to access magit.
@@ -134,11 +137,7 @@ The following code makes magit-status run alone in the frame, and then restores 
   (jump-to-register ?z))
 #+end_src
 
-**** File log
-
-=M-x magit-log-buffer-file=
-
-*** [[https://github.com/alphapapa/magit-todos][magit-todos]]
+*** [[https://github.com/alphapapa/magit-todos][magit-todos]] (disabled)
 
 #+begin_src emacs-lisp :tangle no
 (use-package magit-todos
@@ -191,7 +190,7 @@ Additionally, in tree object buffer:
 (use-package git-walktree)
 #+end_src
 
-*** difftastic
+*** difftastic (disabled)
 
 See https://tsdh.org/posts/2022-08-01-difftastic-diffing-with-magit.html
 
@@ -300,7 +299,7 @@ See https://tsdh.org/posts/2022-08-01-difftastic-diffing-with-magit.html
 
 (define-key magit-status-mode-map (kbd "#") #'th/magit-aux-commands)
 #+end_src
-*** [[https://github.com/dandavison/magit-delta][magit-delta]]
+*** [[https://github.com/dandavison/magit-delta][magit-delta]] (disabled)
 
 #+begin_src emacs-lisp :tangle no
 (use-package magit-delta

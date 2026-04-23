@@ -45,21 +45,7 @@ Help from here:  https://howardabrams.com/hamacs/ha-display.html#org54a2529
                     "Serif"
                     ;;
                     "Alegreya")))
-     (warn "Cannot find a Serif Font.  Install Source Sans Pro."))))
-
-(defvar ha-variable-header-font
-  (when window-system
-    (or
-     (seq-first
-      (seq-filter (lambda (font) (when (x-list-fonts font) font))
-                  '("SN Pro"
-                    "Overpass"
-                    "DejaVu Sans"
-                    "Verdana" "Overpass"
-                    "Source Sans Pro"
-                    "Lucida Grande"
-                    "Sans Serif")))
-     (warn "Cannot find a Sans Serif Font.  Install Source Sans Pro."))))
+     (warn "Cannot find a Serif font. Install a serif font such as XCharter or Charter."))))
 
 (defun nl/set-favorite-font-size (size)
   "Set the default font size as well as equalize the fixed and variable fonts."
@@ -91,7 +77,7 @@ Help from here:  https://howardabrams.com/hamacs/ha-display.html#org54a2529
 (defun nl/imac-fontsize ()
   "Quickly set reset my font size when I am on my iMac."
   (interactive)
-  (ha-set-favorite-font-size 16))
+  (nl/set-favorite-font-size 16))
 
 (defun nl/font-monitor-size-default ()
   "Set the default size according to my preference."
@@ -101,7 +87,8 @@ Help from here:  https://howardabrams.com/hamacs/ha-display.html#org54a2529
    ((eq system-type 'gnu/linux)         (nl/linux-monitor-fontsize))
    (t                                   (nl/mac-monitor-fontsize))))
 
-(nl/font-monitor-size-default)
+(when (display-graphic-p)
+  (nl/font-monitor-size-default))
 
 (use-package ligature
   :demand t
@@ -148,7 +135,7 @@ Mixed pitch is a minor mode that enables mixing fixed-pitch (also known as fixed
 and variable-pitch (AKA “proportional”) fonts. It tries to be smart about which fonts get which
 face.
 
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp
 (use-package mixed-pitch
   :config
   (add-to-list 'mixed-pitch-fixed-pitch-faces 'org-property-value)

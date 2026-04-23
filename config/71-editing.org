@@ -40,7 +40,7 @@ A quick way to jump around text in buffers.
 
 (use-package casual-suite)
 #+end_src
-** [[https://github.com/magnars/expand-region.el][expand-region]]
+** [[https://github.com/magnars/expand-region.el][expand-region]] (disabled)
 
 Update: March 16, 2026 - switching to =expreg= since it works with =tree-sitter=.
 

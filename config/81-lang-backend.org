@@ -357,7 +357,6 @@ Requires the =clj-kondo= binary on =PATH=.
      (fill-column . 120)
      (require-final-newline . t)))
 
-  ;; see https://github.com/taksatou/dotfiles/blob/037e22d7a31112321b92e11bcbd871b8e2acbc9c/.emacs.d/my/my-codingstyles.el
   (c-add-style
    "nl/php-nordita"
    '("php"
@@ -436,14 +435,16 @@ Requires the =clj-kondo= binary on =PATH=.
   (defun nl/auto-activate-venv ()
     "If a .venv exists at or above the project root, activate it."
     (let ((root (or (and (fboundp 'project-root)
-                         (when-let ((pr (project-current nil)))
+                         (when-let* ((pr (project-current nil)))
                            (project-root pr)))
                     (locate-dominating-file default-directory ".git")
                     default-directory)))
       (when root
         (let ((venv (expand-file-name ".venv" root)))
-          (when (file-directory-p venv)
-            (pyvenv-activate venv))))))
+          (if (file-directory-p venv)
+              (pyvenv-activate venv)
+            (when pyvenv-virtual-env
+              (pyvenv-deactivate)))))))
 
   ;; Optional: display current venv in mode line
   (setq pyvenv-mode-line-indicator '(pyvenv-virtual-env-name (" venv:" pyvenv-virtual-env-name)))
@@ -456,14 +457,14 @@ Using ruff now.
 
 #+begin_src emacs-lisp
 (use-package lsp-pyright
-  :hook ((python-mode python-ts-mode) . nl/pytjon-pyright-rook)
+  :hook ((python-mode python-ts-mode) . nl/python-pyright-hook)
   :init
-  (defun nl/pytjon-pyright-rook ()
-    (my/lsp-deferred-unless-remote)
-    (require 'lsp-pyright)))
+  (defun nl/python-pyright-hook ()
+    (require 'lsp-pyright)
+    (my/lsp-deferred-unless-remote)))
 #+end_src
 
-*** [[https://github.com/wbolster/emacs-python-black][emacs-python-black]]
+*** [[https://github.com/wbolster/emacs-python-black][emacs-python-black]] (disabled)
 
 Using ruff now
 

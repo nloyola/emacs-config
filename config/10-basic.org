@@ -190,7 +190,7 @@ Taken from: [[https://emacsredux.com/blog/2026/04/07/stealing-from-the-best-emac
 (setq help-window-select t)
 #+end_src
 
-** mouse avoidance
+** mouse avoidance (disabled)
 Don't let mouse icon obscure cursor
 
 #+begin_src emacs-lisp :tangle no

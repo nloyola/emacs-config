@@ -95,7 +95,7 @@ Enable ANSI colors for compilation buffers.
 
 #+end_src
 
-*** [[https://codeberg.org/ideasman42/emacs-fancy-compilation][emacs-fancy-compilation]]
+*** [[https://codeberg.org/ideasman42/emacs-fancy-compilation][emacs-fancy-compilation]] (disabled)
 
 not required anymore.
 
@@ -126,7 +126,7 @@ A minimalist package that enhances compilation-mode.
   )
 #+end_src
 
-** =css-mode=
+** =css-mode= (disabled)
 
 #+begin_src emacs-lisp :tangle no
 (use-package css-mode

@@ -23,7 +23,7 @@
       (nl/yas-reload-all))))
 #+end_src
 
-** js-mode
+** js-mode (disabled)
 
 #+begin_src emacs-lisp :tangle no
 ;; Load JS early, then create back-compat vars from the new functions.

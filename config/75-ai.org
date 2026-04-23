@@ -14,7 +14,7 @@
   )
 #+end_src
 
-** [[https://github.com/karthink/gptel][gptel]]
+** [[https://github.com/karthink/gptel][gptel]] (disabled)
 
 Found this packe hard to use.
 
