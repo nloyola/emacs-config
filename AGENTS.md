@@ -8,7 +8,6 @@ This repository contains a personal Emacs configuration. Changes should preserve
 
 - `init.el`: startup bootstrap. It initializes packages, defines helpers, and loads every file in `config/` in lexicographic order.
 - `config/*.org`: authoritative configuration source. Emacs Lisp lives inside `#+BEGIN_SRC emacs-lisp` blocks and is executed directly at startup.
-- `config.org`: legacy monolithic Org file being phased out. Do not add new configuration there unless the task is explicitly about migration or cleanup.
 - `lisp/*.el`: custom local libraries, themes, and project helpers.
 - `snippets/`: Yasnippet definitions organized by major mode.
 - `users/`: machine or user-specific support files.
@@ -17,7 +16,6 @@ This repository contains a personal Emacs configuration. Changes should preserve
 
 - Prefer editing `config/*.org` for behavior changes that belong in the main configuration.
 - Keep new config in the most relevant numbered Org file so load order stays intentional.
-- Do not add new settings to `config.org`; move or maintain behavior in `config/` instead.
 - Put reusable Emacs Lisp in `lisp/*.el` when it would be awkward to maintain inline in an Org block.
 - Update `snippets/` only for snippet changes; do not mix snippet work into unrelated config edits.
 - Treat `users/` as local overrides. Avoid broad changes there unless the task is explicitly machine-specific.

@@ -6,7 +6,6 @@ Personal Emacs configuration. Org-driven, modular, and tuned for fast startup.
 
 - `init.el` — startup bootstrap; initializes packages and loads every file in `config/` in lexicographic order.
 - `config/*.org` — authoritative configuration. Emacs Lisp lives in `#+BEGIN_SRC emacs-lisp` blocks and is evaluated directly at startup (no tangle step).
-- `config.org` — legacy monolithic Org file, being phased out. Don't add new config here.
 - `lisp/*.el` — local libraries, themes, and per-language project helpers (`nl-*-project.el`).
 - `snippets/` — Yasnippet definitions by major mode.
 - `users/` — machine or user-specific overrides.
