@@ -42,6 +42,12 @@
     (defvar js--treesit-font-lock-settings (funcall #'js--treesit-font-lock-settings))))
 #+end_src
 
+** [[https://github.com/rnkn/visual-fill-column][visual-fill-column]]
+
+#+begin_src emacs-lisp
+(use-package visual-fill-column)
+#+end_src
+
 ** [[https://github.com/defunkt/markdown-mode][markdown-mode]]
 
 #+begin_src emacs-lisp
@@ -53,10 +59,17 @@
   :preface
   (defun nl/markdown-mode-setup ()
     (auto-fill-mode -1)
-    (setq adaptive-wrap-extra-indent 1)
+    (setq-local fill-column 100)
+    (setq-local visual-fill-column-width 100)
+    (setq-local visual-fill-column-center-text nil)
+    (setq-local truncate-lines nil)
+    (setq adaptive-wrap-extra-indent 0)
     (adaptive-wrap-prefix-mode)
     (variable-pitch-mode)
-    (visual-line-mode)
+    (face-remap-add-relative 'variable-pitch :height 0.9)
+    (visual-line-mode 1)
+    (visual-fill-column-mode 1)
+    (local-set-key (kbd "M-q") #'ignore)
     (local-set-key (kbd "C-c C-x m") #'markdown-toggle-markup-hiding)
     (markdown-toggle-markup-hiding 1))
   :hook

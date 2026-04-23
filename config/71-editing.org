@@ -2,9 +2,8 @@
 
 ** [[https://github.com/abo-abo/ace-window][ace-window]]
 
-A package that uses the same idea from ace-jump-mode for
-buffer navigation, but applies it to windows. The default keys are
-1-9, but it's faster to access the keys on the home row, so that's
+A package that uses the same idea from ace-jump-mode for buffer navigation, but applies it to
+windows. The default keys are 1-9, but it's faster to access the keys on the home row, so that's
 what I have them set to (with respect to Dvorak, of course).
 
 #+begin_src emacs-lisp
@@ -44,7 +43,8 @@ A quick way to jump around text in buffers.
 
 Update: March 16, 2026 - switching to =expreg= since it works with =tree-sitter=.
 
-Expand region increases the selected region by semantic units. Just keep pressing the key until it selects what you want.
+Expand region increases the selected region by semantic units. Just keep pressing the key until it
+selects what you want.
 
 #+begin_src emacs-lisp :tangle no
 (use-package expand-region
@@ -392,10 +392,10 @@ Sometimes you end up with cursors outside of your view. You can scroll the scree
         (write-region (point-min) (point-max) mc/list-file nil 'silent)))))
 #+end_src
 
-*
 ** [[https://github.com/Kungsgeten/selected.el][selected]]
 
-Provides the =selected-minor-mode= for Emacs. When =selected-minor-mode= is active, the keybindings in =selected-keymap= will be enabled when the region is active.
+Provides the =selected-minor-mode= for Emacs. When =selected-minor-mode= is active, the keybindings in
+=selected-keymap= will be enabled when the region is active.
 
 #+begin_src emacs-lisp
 (unless (string-match "-microsoft" (downcase operating-system-release))
@@ -416,9 +416,9 @@ Provides the =selected-minor-mode= for Emacs. When =selected-minor-mode= is acti
 
 ** [[https://protesilaos.com/emacs/substitute][substitute]]
 
-Substitute is a set of commands that perform text replacement (i) throughout the buffer, (ii) limited to the
-current definition (per narrow-to-defun), (iii) from point to the end of the buffer, and (iv) from point to
-the beginning of the buffer.
+Substitute is a set of commands that perform text replacement (i) throughout the buffer, (ii)
+limited to the current definition (per narrow-to-defun), (iii) from point to the end of the buffer,
+and (iv) from point to the beginning of the buffer.
 
 #+begin_src emacs-lisp
 (use-package substitute
