@@ -77,6 +77,21 @@ So that hungry deletion can be used in all modes.
   (global-hungry-delete-mode))
 #+end_src
 
+** [[https://github.com/bbatsov/crux][crux]]
+
+Collection of useful editing commands.
+
+#+begin_src emacs-lisp
+(use-package crux
+  :bind (([remap move-beginning-of-line] . crux-move-beginning-of-line)
+         ("C-c D" . crux-delete-file-and-buffer)
+         ("C-c R" . crux-rename-file-and-buffer)
+         ("C-c N" . crux-cleanup-buffer-or-region)
+         ("C-c e" . crux-eval-and-replace)
+         ("C-c o" . crux-open-with)
+         ("C-c u" . crux-view-url)))
+#+end_src
+
 ** [[https://github.com/abo-abo/hydra][hydra]]
 
 This package can be used to tie related commands into a family of short bindings with a common prefix - a Hydra.

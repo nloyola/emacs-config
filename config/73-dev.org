@@ -236,8 +236,7 @@ The Perspective package provides multiple named workspaces (or "perspectives") i
     (delq nil
           (mapcar (lambda (face)
                     (face-foreground face nil t))
-                  '(default
-                    font-lock-keyword-face
+                  '(font-lock-keyword-face
                     font-lock-type-face
                     font-lock-function-name-face
                     font-lock-string-face
@@ -258,16 +257,19 @@ The Perspective package provides multiple named workspaces (or "perspectives") i
   ;; Enable only where indentation/nesting depth carries meaning.
   ;; Skip C-family (PHP, JS/TS, Java, Go, Rust, C/C++) where braces
   ;; delimit scope and prism fights with semantic font-lock faces.
-  ((emacs-lisp-mode
-    lisp-mode
-    lisp-interaction-mode
-    clojure-mode
-    scheme-mode
-    python-mode
-    python-ts-mode
-    yaml-mode
-    yaml-ts-mode
-    haskell-mode) . prism-mode)
+  ;; Paren-delimited languages use `prism-mode'; indentation-based
+  ;; languages (Python, YAML, Haskell) use `prism-whitespace-mode',
+  ;; which preserves normal font-lock for keywords/strings/etc.
+  (((emacs-lisp-mode
+     lisp-mode
+     lisp-interaction-mode
+     clojure-mode
+     scheme-mode) . prism-mode)
+   ((python-mode
+     python-ts-mode
+     yaml-mode
+     yaml-ts-mode
+     haskell-mode) . prism-whitespace-mode))
   :config
   (nl/configure-prism)
   (advice-add 'load-theme :after #'nl/configure-prism))

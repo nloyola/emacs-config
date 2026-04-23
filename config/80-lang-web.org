@@ -390,7 +390,8 @@
       ))
 
   (defun nl/yaml-mode-hook ()
-    (set-fill-column 120)
+    (setq fill-column 120)
+    (auto-fill-mode 1)
     (display-line-numbers-mode)
     (outline-indent-minor-mode)
     (key-chord-define-local "jc" #'nl/yaml-command-menu))
@@ -408,4 +409,66 @@
   :hook
   (yaml-mode . nl/yaml-mode-hook)
   (yaml-ts-mode . nl/yaml-mode-hook))
+#+end_src
+
+** [[https://polymode.github.io/][polymode]] for YAML with embedded HTML
+
+Treat the block-scalar value (~|~, ~|-~, ~>~, …) of selected keys as
+HTML.  The region starts at the line after ~key: |-~ and ends at the
+first line whose indentation is less than or equal to the key's
+indent (or end of buffer).  Add keys to ~nl/poly-yaml-html-keys~ to
+extend.
+
+#+begin_src emacs-lisp
+(use-package polymode
+  :mode ("\\.\\(yml\\|yaml\\)\\'" . nl/poly-yaml-mode)
+  :init (require 'yaml-mode nil t)
+  :preface
+  (defvar nl/poly-yaml-html-keys
+    '("body" "content" "description" "html")
+    "YAML keys whose block-scalar values are edited as HTML.")
+
+  (defun nl/poly-yaml-html--head-re ()
+    (concat "^\\([ \t]*\\)\\(?:"
+            (mapconcat #'regexp-quote nl/poly-yaml-html-keys "\\|")
+            "\\):[ \t]*[|>][-+]?[ \t]*\n"))
+
+  (defun nl/poly-yaml-html-head-matcher (ahead)
+    "Find a YAML block-scalar header for an HTML key."
+    (when (if (< ahead 0)
+              (re-search-backward (nl/poly-yaml-html--head-re) nil t (- ahead))
+            (re-search-forward (nl/poly-yaml-html--head-re) nil t ahead))
+      (cons (match-beginning 0) (match-end 0))))
+
+  (defun nl/poly-yaml-html-tail-matcher (_ahead)
+    "Find the end of the block scalar opened by the preceding head."
+    (let ((indent
+           (save-excursion
+             (when (re-search-backward (nl/poly-yaml-html--head-re) nil t)
+               (length (match-string 1))))))
+      (if (not indent)
+          (cons (point-max) (point-max))
+        (let ((re (format "^[ \t]\\{0,%d\\}[^ \t\n]" indent)))
+          (if (re-search-forward re nil t)
+              (cons (match-beginning 0) (match-beginning 0))
+            (cons (point-max) (point-max)))))))
+  (defun nl/poly-yaml-inner-fill ()
+    "Match inner-chunk fill settings to the YAML host."
+    (setq fill-column 120)
+    (auto-fill-mode 1))
+  :hook
+  (polymode-init-inner-hook . nl/poly-yaml-inner-fill)
+  (nl/poly-yaml-mode . nl/poly-yaml-inner-fill)
+  :config
+  (define-hostmode nl/poly-yaml-hostmode
+    :mode 'yaml-mode)
+  (define-innermode nl/poly-yaml-html-innermode
+    :mode 'mhtml-mode
+    :head-matcher #'nl/poly-yaml-html-head-matcher
+    :tail-matcher #'nl/poly-yaml-html-tail-matcher
+    :head-mode 'host
+    :tail-mode 'host)
+  (define-polymode nl/poly-yaml-mode
+    :hostmode 'nl/poly-yaml-hostmode
+    :innermodes '(nl/poly-yaml-html-innermode)))
 #+end_src

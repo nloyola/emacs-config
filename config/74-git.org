@@ -48,9 +48,52 @@ lists wrap under the bullet instead of under the text."
         (log-edit-fill-entry justify)))
     t))
 
+  (defun nl/git-commit-cleanup-ai-message ()
+    "Unindent and refill the commit body after the summary line.
+
+This is intended for AI-generated commit messages where each body
+line is indented uniformly.  The summary line is left untouched,
+all non-blank body lines are shifted left by their shared leading
+indentation, and each resulting paragraph is refilled."
+    (interactive)
+    (let* ((body-start (save-excursion
+                         (goto-char (point-min))
+                         (forward-line 1)
+                         (point)))
+           (body-end (copy-marker
+                      (save-excursion
+                        (goto-char (point-min))
+                        (if (re-search-forward (concat "^" (regexp-quote comment-start)) nil t)
+                            (line-beginning-position)
+                          (point-max)))))
+           (min-indent nil))
+      (save-excursion
+        (goto-char body-start)
+        (while (< (point) body-end)
+          (unless (looking-at-p "[ \t]*$")
+            (back-to-indentation)
+            (setq min-indent
+                  (if min-indent
+                      (min min-indent (current-column))
+                    (current-column))))
+          (forward-line 1))
+        (when (and min-indent (> min-indent 0))
+          (indent-rigidly body-start body-end (- min-indent)))
+        (save-restriction
+          (narrow-to-region body-start body-end)
+          (goto-char (point-min))
+          (while (< (point) (point-max))
+            (if (looking-at-p "[ \t]*$")
+                (forward-line 1)
+              (fill-paragraph)
+              (forward-paragraph)))))
+      (set-marker body-end nil)
+      (message "Cleaned up commit message body")))
+
   (defun nl/git-commit-setup-fill-paragraph ()
     "Use better paragraph filling for bullet lists in commit buffers."
     (setq-local fill-paragraph-function #'nl/git-commit-fill-paragraph)
+    (local-set-key (kbd "C-c M-q") #'nl/git-commit-cleanup-ai-message)
     ;; Treat each bullet line as the start of its own paragraph, so
     ;; `M-q' on a bullet only fills that item even without blank lines
     ;; between bullets.
