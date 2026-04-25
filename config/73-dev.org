@@ -9,6 +9,27 @@
   (editorconfig-mode 1))
 #+end_src
 
+** Dockerfile
+
+Use the built-in tree-sitter mode when the Dockerfile grammar is available,
+otherwise fall back to =dockerfile-mode= so highlighting works immediately.
+
+#+begin_src emacs-lisp
+(use-package dockerfile-mode
+  :commands dockerfile-mode
+  :mode (("\\(?:Containerfile\\|Dockerfile\\)\\(?:\\.[^/]*\\)?\\'" . nl/dockerfile-mode)
+         ("\\.dockerfile\\'" . nl/dockerfile-mode))
+  :preface
+  (defun nl/dockerfile-mode ()
+    "Enable Dockerfile syntax highlighting."
+    (interactive)
+    (if (and (fboundp 'dockerfile-ts-mode)
+             (treesit-language-available-p 'dockerfile))
+        (dockerfile-ts-mode)
+      (let ((treesit-auto-install nil))
+        (dockerfile-mode)))))
+#+end_src
+
 ** [[https://github.com/emacs-lsp/dap-mode][dap-mode]] (disabled)
 
 #+begin_src emacs-lisp :tangle no
