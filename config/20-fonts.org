@@ -152,30 +152,75 @@ See https://www.gonsie.com/blorg/modeline.html for additional details.
 #+begin_src emacs-lisp
 (use-package emacs
   :preface
+  (defface nl/mode-line-fixed
+    '((t (:height 120)))
+    "Fixed-pitch text in the mode line.")
+
+  (defface nl/mode-line-variable
+    '((t (:height 120)))
+    "Variable-pitch text in the mode line.")
+
+  (defface nl/mode-line-buffer-id
+    '((t (:foreground "goldenrod" :background "#565063" :height 120)))
+    "Buffer name in the mode line.")
+
+  (defface nl/mode-line-modified
+    '((t (:slant italic :background "#565063" :height 120)))
+    "Modified buffer name in the mode line.")
+
   (defun nl/mode-line-theme ()
     (set-face-attribute 'mode-line nil
                         :background "#565063"
                         :foreground "white"
                         :box '(:line-width 2 :color "#3d3947")
-                        :height 130
+                        :height 120
                         :overline nil
                         :underline nil
-                        :family "SN Pro"
-                        :inherit 'variable-pitch)
+                        :family nl/gui-fixed-font-name
+                        :inherit 'default)
+
+    ;; Emacs 29+ uses `mode-line-active' for the selected window.  Some
+    ;; themes make it inherit a large variable-pitch UI face, so set its
+    ;; font attributes explicitly as well.
+    (when (facep 'mode-line-active)
+      (set-face-attribute 'mode-line-active nil
+                          :foreground "white"
+                          :box '(:line-width 2 :color "#3d3947")
+                          :height 120
+                          :overline nil
+                          :underline nil
+                          :family nl/gui-fixed-font-name
+                          :inherit 'default))
 
     (set-face-attribute 'mode-line-inactive nil
                         :background "#353644"
                         :foreground "white"
                         :box '(:line-width 2 :color "#353644")
-                        :height 130
+                        :height 120
                         :overline nil
-                        :family "SN Pro"
-                        :inherit 'variable-pitch)
+                        :family nl/gui-fixed-font-name
+                        :inherit 'default)
 
-    (set-face-attribute 'mode-line-buffer-id nil :foreground "goldenrod" :background "#565063" :height 120)
-    (set-face-attribute 'mode-line-emphasis nil :background "#565063" :inherit 'fixed-pitch)
-    (set-face-attribute 'mode-line-highlight nil :slant 'italic :background "#565063" :inherit 'fixed-pitch)
-    )
+    (set-face-attribute 'nl/mode-line-fixed nil
+                        :height 120
+                        :family nl/gui-fixed-font-name
+                        :inherit nil)
+    (set-face-attribute 'nl/mode-line-variable nil
+                        :height 120
+                        :family nl/gui-variable-font-name
+                        :inherit nil)
+    (set-face-attribute 'nl/mode-line-buffer-id nil
+                        :foreground "goldenrod"
+                        :background "#565063"
+                        :height 120
+                        :family nl/gui-fixed-font-name
+                        :inherit nil)
+    (set-face-attribute 'nl/mode-line-modified nil
+                        :slant 'italic
+                        :background "#565063"
+                        :height 120
+                        :family nl/gui-fixed-font-name
+                        :inherit nil))
   :init
   (setq-default
    mode-line-format
@@ -183,22 +228,22 @@ See https://www.gonsie.com/blorg/modeline.html for additional details.
     ;; the buffer name; the file name as a tool tip
     '(:eval (propertize " %b "
                         'face
-                        (let ((face (buffer-modified-p)))
-                          (if face 'mode-line-highlight
-                            'mode-line-buffer-id))
+                        (if (buffer-modified-p)
+                            'nl/mode-line-modified
+                          'nl/mode-line-buffer-id)
                         'help-echo (buffer-file-name)))
 
     ;; line and column
     " ["
-    (propertize "%l" 'face '(:foreground "light sky blue")) ","
-    (propertize "%c" 'face '(:foreground "light green"))
+    (propertize "%l" 'face '(:inherit nl/mode-line-fixed :foreground "light sky blue")) ","
+    (propertize "%c" 'face '(:inherit nl/mode-line-fixed :foreground "light green"))
     "] "
 
     ;; relative position, size of file
     " ("
-    (propertize "%p" 'face '(:foreground "salmon")) ;; % above top
+    (propertize "%p" 'face '(:inherit nl/mode-line-fixed :foreground "salmon")) ;; % above top
     "/"
-    (propertize "%I" 'face '(:foreground "sandy brown")) ;; size
+    (propertize "%I" 'face '(:inherit nl/mode-line-fixed :foreground "sandy brown")) ;; size
     ") "
 
     ;; ansi-term's line or char mode
@@ -213,8 +258,8 @@ See https://www.gonsie.com/blorg/modeline.html for additional details.
                                    ,(+ 50 (string-width (if (listp mode-name) (car mode-name) mode-name))))))))
 
     ;; the current major mode
-    (propertize " %m " 'face '(:foreground "light sky blue"))
+    (propertize " %m " 'face '(:inherit nl/mode-line-variable :foreground "light sky blue"))
     minor-mode-alist
     ))
-  :hook (after-init .  nl/mode-line-theme))
+  :hook (after-init . nl/mode-line-theme))
 #+end_src

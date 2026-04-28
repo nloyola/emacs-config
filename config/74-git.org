@@ -96,10 +96,27 @@ indentation, and each resulting paragraph is refilled."
           (narrow-to-region body-start body-end)
           (goto-char (point-min))
           (while (< (point) (point-max))
-            (if (looking-at-p "[ \t]*$")
-                (forward-line 1)
-              (fill-paragraph)
-              (forward-paragraph)))))
+            (cond
+             ((looking-at-p "[ \t]*$")
+              (forward-line 1))
+             ((looking-at "[ \t]*\\(?:[-+*]\\|[0-9]+[.)]\\)[ \t]+")
+              (nl/git-commit-fill-paragraph)
+              (forward-line 1)
+              (while (and (not (eobp))
+                          (not (looking-at-p
+                                "[ \t]*\\(?:$\\|\\(?:[-+*]\\|[0-9]+[.)]\\)[ \t]+\\)")))
+                (forward-line 1)))
+             (t
+              (let ((start (point))
+                    (end (save-excursion
+                           (forward-line 1)
+                           (while (and (not (eobp))
+                                       (not (looking-at-p
+                                             "[ \t]*\\(?:$\\|\\(?:[-+*]\\|[0-9]+[.)]\\)[ \t]+\\)")))
+                             (forward-line 1))
+                           (point))))
+                (fill-region-as-paragraph start end)
+                (goto-char end)))))))
       (set-marker body-end nil)
       (message "Cleaned up commit message body")))
 
@@ -114,6 +131,19 @@ indentation, and each resulting paragraph is refilled."
                 "\f\\|[ \t]*$\\|[ \t]*\\(?:[-+*]\\|[0-9]+[.)]\\)[ \t]+")
     (setq-local paragraph-separate "\f\\|[ \t]*$"))
 
+  (defun nl/git-commit-empty-message-on-cancel ()
+    "Make a canceled commit safe even if the editor client exits successfully."
+    (when (and buffer-file-name
+               (string-match-p "/COMMIT_EDITMSG\\'" buffer-file-name))
+      (erase-buffer)))
+
+  (defun nl/git-commit-setup-cancel-safety ()
+    "Empty COMMIT_EDITMSG before `with-editor-cancel' returns to Git."
+    ;; `git-commit-save-message' is also on this hook; append this so the
+    ;; message can still be saved to the message ring before the file is emptied.
+    (add-hook 'with-editor-pre-cancel-hook
+              #'nl/git-commit-empty-message-on-cancel t t))
+
   (defun nl/git-commit-setup-fonts ()
     "Make commit message buffers easier to read."
     (mixed-pitch-mode 1)
@@ -123,6 +153,7 @@ indentation, and each resulting paragraph is refilled."
 
   (with-eval-after-load 'git-commit
     (add-hook 'git-commit-setup-hook #'nl/git-commit-setup-fill-paragraph)
+    (add-hook 'git-commit-setup-hook #'nl/git-commit-setup-cancel-safety)
     (add-hook 'git-commit-setup-hook #'nl/git-commit-setup-fonts))
   (with-eval-after-load 'magit-status
     (define-key magit-status-mode-map (kbd "q") #'magit-quit-session))
