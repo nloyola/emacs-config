@@ -194,6 +194,7 @@ Complete anything.
 (defun nl/consult-ripgrep-project-src ()
   "Run `consult-ripgrep` in the Projectile project's src and test folders."
   (interactive)
+  (require 'consult)
   (let* ((project-root (projectile-project-root)))
     (if (not project-root)
         (message "Not in a Projectile project.")

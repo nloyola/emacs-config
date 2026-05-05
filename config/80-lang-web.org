@@ -57,8 +57,15 @@
          ("\\.markdown\\'" . markdown-mode)
          ("\\.md\\'"       . gfm-mode))
   :preface
+  (defface nl/markdown-struck-inline-code-face
+    '((t (:inherit markdown-inline-code-face
+          :strike-through "#ff5555"
+          :underline "#ff5555")))
+    "Face for inline code inside Markdown strikethrough text.")
+
   (defun nl/markdown-mode-setup ()
     (auto-fill-mode -1)
+    (auto-revert-mode 1)
     (setq-local fill-column 100)
     (setq-local visual-fill-column-width 100)
     (setq-local visual-fill-column-center-text nil)
@@ -69,6 +76,10 @@
     (face-remap-add-relative 'variable-pitch :height 0.9)
     (visual-line-mode 1)
     (visual-fill-column-mode 1)
+    (font-lock-add-keywords
+     nil
+     '(("~~[^~\n]*?\\(`[^`\n]+`\\)[^~\n]*?~~" 1 'nl/markdown-struck-inline-code-face t))
+     'append)
     (local-set-key (kbd "M-q") #'ignore)
     (local-set-key (kbd "C-c C-x m") #'markdown-toggle-markup-hiding)
     (markdown-toggle-markup-hiding 1))
@@ -94,6 +105,12 @@
                                             :foreground "#91b831"
                                             :background "#303030"
                                             :weight normal))))
+   `(markdown-strike-through-face ((t (:strike-through "#ff5555"))))
+   `(nl/markdown-struck-inline-code-face ((t (:inherit markdown-inline-code-face
+                                                :foreground "#ff5555"
+                                                :height 0.9
+                                                :strike-through "#ff5555"
+                                                :underline "#ff5555"))))
    `(markdown-bold-face ((t (:family ,nl/gui-variable-font-name :weight bold))))
    `(markdown-italic-face ((t (:family ,nl/gui-variable-font-name :slant italic))))
    `(markdown-list-face ((t (:family ,nl/gui-variable-font-name :height 130))))
@@ -328,11 +345,46 @@
          ("\\.tpl\\.php\\'"  . web-mode)
          ("\\.tmpl\\.html\\'". web-mode))
   :preface
+  (defun nl/web-mode-text-node-p ()
+    "Return non-nil when point is in plain markup text."
+    (and (not (nth 8 (syntax-ppss)))
+         (not (get-text-property (point) 'tag-type))
+         (not (get-text-property (point) 'block-side))
+         (not (get-text-property (point) 'part-side))
+         (save-excursion
+           (back-to-indentation)
+           (not (looking-at-p "[<\n]")))))
+
+  (defun nl/web-mode-prog-fill-reindent-defun (&optional justify)
+    "Fill text/comments/strings or reindent the current web-mode block/element."
+    (interactive "P")
+    (save-excursion
+      (cond
+       ((or (nth 8 (syntax-ppss))
+            (nl/web-mode-text-node-p))
+        (let ((fill-prefix (save-excursion
+                             (back-to-indentation)
+                             (buffer-substring-no-properties
+                              (line-beginning-position)
+                              (point)))))
+          (fill-paragraph justify (region-active-p))))
+       (t
+        (let* ((block-code-beg (web-mode-block-code-beginning-position))
+               (block-code-end (web-mode-block-code-end-position))
+               (block-beg (web-mode-block-beginning-position))
+               (block-end (web-mode-block-end-position))
+               (element-beg (web-mode-element-beginning-position))
+               (element-end (web-mode-element-end-position))
+               (beg (or block-code-beg block-beg element-beg (point-min)))
+               (end (or block-code-end block-end element-end (point-max))))
+          (indent-region beg end nil))))))
+
   (defun nl/web-mode-hook ()
     (my/lsp-deferred-unless-remote)
     (setq web-mode-auto-quote-style 1)
     (require 'nl-colors)
-    (local-set-key (kbd "M-q") #'fill-paragraph))
+    (setq-local prog-fill-reindent-defun-function #'nl/web-mode-prog-fill-reindent-defun)
+    (local-set-key (kbd "M-q") #'prog-fill-reindent-defun))
   :hook (web-mode . nl/web-mode-hook)
   :custom
   ;; Indentation sizes
@@ -405,6 +457,7 @@
   (defun nl/yaml-mode-hook ()
     (setq fill-column 120)
     (auto-fill-mode 1)
+    (mixed-pitch-mode -1)
     (display-line-numbers-mode)
     (outline-indent-minor-mode)
     (key-chord-define-local "jc" #'nl/yaml-command-menu))

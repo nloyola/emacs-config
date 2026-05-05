@@ -390,6 +390,17 @@ Requires the =clj-kondo= binary on =PATH=.
      (fill-column . 120)
      (require-final-newline . t)))
   )
+
+;; Keep template PHP files in `web-mode'.  This must run after the
+;; `php-mode' `:mode' rule, whose broad `\.php\'' regexp also matches
+;; `.tpl.php' files.
+(setq auto-mode-alist
+      (cons '("\\.tpl\\.php\\'" . web-mode)
+            (cl-remove-if
+             (lambda (entry)
+               (and (consp entry)
+                    (string= (car entry) "\\.tpl\\.php\\'")))
+             auto-mode-alist)))
 #+end_src
 
 *** [[https://github.com/nlamirault/phpunit.el][php-unit]]
