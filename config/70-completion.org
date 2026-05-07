@@ -35,6 +35,117 @@ Complete anything.
 
 ** Completing-Read
 
+*** [[https://github.com/zenitsu7772000/yuta.el][Yuta]]
+
+Trying Yuta as an optional command palette / fuzzy finder alongside Consult.
+Its default global bindings use the =C-c y= prefix.
+
+#+begin_src emacs-lisp
+(defun nl/ensure-yuta-installed ()
+  "Install `yuta' from GitHub unless it is already available."
+  (unless (package-installed-p 'yuta)
+    (if (fboundp 'package-vc-install)
+        (condition-case err
+            (package-vc-install
+             '(yuta
+               :url "https://github.com/zenitsu7772000/yuta.el"
+               :branch "main"))
+          (error
+           (message "Failed to install yuta: %s"
+                    (error-message-string err))))
+      (message "Skipping yuta: `package-vc-install' is not available"))))
+
+(use-package yuta
+  :ensure nil
+  :commands (yuta-mode
+             yuta-find-file
+             yuta-git-files
+             yuta-live-grep
+             yuta-switch-buffer
+             yuta-command-palette
+             yuta-recent-files
+             nl/yuta-find-file-fast)
+  :init
+  (nl/ensure-yuta-installed)
+  (add-hook 'after-init-hook
+            (lambda ()
+              (when (require 'yuta nil t)
+                (yuta-mode 1)))
+            t)
+  :custom
+  ;; Yuta's file commands currently fetch candidates into its own UI even when
+  ;; they label large result sets as "fzf" mode.  In that mode typing does not
+  ;; filter, so keep it in Emacs-mode for normal use.
+  (yuta-max-emacs-mode-candidates 50000)
+  ;; Debian/Ubuntu install `fd' as `fdfind'.
+  (yuta-fd-executable "fdfind")
+  (yuta-enable-icons nil)
+  (yuta-icon-style 'none)
+  ;; Keep Corfu/Eglot completion in charge while trying Yuta.
+  (yuta-lsp-autocomplete-default-enabled nil)
+  :config
+  ;; Use absolute executable paths so GUI Emacs does not depend on shell PATH.
+  (setq yuta-fd-executable (or (executable-find "fdfind")
+                               (executable-find "fd")
+                               yuta-fd-executable)
+        yuta-bat-executable (or (executable-find "batcat")
+                                (executable-find "bat")
+                                yuta-bat-executable))
+
+  (defun nl/yuta-bat-cmd (file &optional line)
+    "Return a bat preview command for FILE, preserving decorations and color."
+    (if (and yuta-bat-executable (executable-find yuta-bat-executable))
+        (concat (shell-quote-argument yuta-bat-executable)
+                " --color=always --decorations=always --style=numbers,header"
+                " --line-range "
+                (if line
+                    (format "%d:%d" (max 1 (- line 10))
+                            (+ line yuta-preview-lines))
+                  (format "1:%d" yuta-preview-lines))
+                (when line (format " --highlight-line %d" line))
+                " -- " (shell-quote-argument file))
+      (if line
+          (format "sed -n '%d,%dp' %s"
+                  (max 1 (- line 5))
+                  (+ line yuta-preview-lines)
+                  (shell-quote-argument file))
+        (format "head -n %d %s"
+                yuta-preview-lines
+                (shell-quote-argument file)))))
+
+  (advice-add 'yuta--bat-cmd :override #'nl/yuta-bat-cmd)
+
+  (defun nl/yuta-apply-preview-ansi (&rest _)
+    "Render ANSI color sequences in the Yuta preview buffer."
+    (when (buffer-live-p yuta--preview-buffer)
+      (with-current-buffer yuta--preview-buffer
+        (let ((inhibit-read-only t))
+          (ansi-color-apply-on-region (point-min) (point-max))))))
+
+  (advice-add 'yuta--update-preview :after #'nl/yuta-apply-preview-ansi)
+
+  (defun nl/yuta-find-file-fast ()
+    "Find project files with Yuta, avoiding expensive vendor/public scans."
+    (interactive)
+    (let* ((root (yuta--project-root))
+           (git-dir (expand-file-name ".git" root))
+           (cmd (if (file-exists-p git-dir)
+                    ;; Fast in large repos: includes tracked files and untracked
+                    ;; files that are not ignored by git.
+                    (format "git -C %s ls-files --cached --others --exclude-standard"
+                            (shell-quote-argument root))
+                  (format (concat "%s --type f --hidden "
+                                  "--exclude .git --exclude node_modules --exclude vendor "
+                                  "--exclude public --exclude database --exclude e2e "
+                                  ". %s")
+                          yuta-fd-executable
+                          (shell-quote-argument root)))))
+      (yuta--launch 'files cmd)))
+
+  (define-key yuta-command-map (kbd "f") #'nl/yuta-find-file-fast)
+  (define-key yuta-mode-map (kbd "C-c y f") #'nl/yuta-find-file-fast))
+#+end_src
+
 =consult-buffer=
 
 | Keys  | Description            |

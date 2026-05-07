@@ -454,10 +454,63 @@
          (format "php public/cli.php %s" cli-command)))
       ))
 
+  (defun nl/yaml--block-scalar-header-before-p (indent)
+    "Return non-nil when point is inside a YAML block scalar with INDENT."
+    (save-excursion
+      (let ((found nil))
+        (while (and (not found)
+                    (= (forward-line -1) 0)
+                    (or (looking-at-p "^[[:space:]]*$")
+                        (> (current-indentation) indent)
+                        (not (looking-at-p "^[[:space:]]*[^#[:space:]].*:[[:space:]]*[>|]"))))
+          nil)
+        (setq found (and (< (current-indentation) indent)
+                         (looking-at-p "^[[:space:]]*[^#[:space:]].*:[[:space:]]*[>|]")))
+        found)))
+
+  (defun nl/yaml-fill-paragraph (&optional justify)
+    "Fill text inside YAML block scalars without swallowing YAML structure."
+    (interactive "P")
+    (let ((indent (current-indentation)))
+      (if (and (> indent 0)
+               (nl/yaml--block-scalar-header-before-p indent))
+          (let* ((prefix (make-string indent ?\s))
+                 (start (save-excursion
+                          (while (and (= (forward-line -1) 0)
+                                      (not (looking-at-p "^[[:space:]]*$"))
+                                      (>= (current-indentation) indent)))
+                          (unless (and (not (bobp))
+                                       (not (looking-at-p "^[[:space:]]*$"))
+                                       (>= (current-indentation) indent))
+                            (forward-line 1))
+                          (line-beginning-position)))
+                 (end (save-excursion
+                        (while (and (= (forward-line 1) 0)
+                                    (not (looking-at-p "^[[:space:]]*$"))
+                                    (>= (current-indentation) indent)))
+                        (line-beginning-position))))
+            (save-restriction
+              (narrow-to-region start end)
+              (let ((fill-prefix prefix)
+                    (fill-paragraph-function nil)
+                    (paragraph-start "\\`")
+                    (paragraph-separate "\\`"))
+                (fill-region-as-paragraph (point-min) (point-max) justify)))
+            t)
+        (message "Not in a YAML block scalar")
+        t)))
+
   (defun nl/yaml-mode-hook ()
     (setq fill-column 120)
+    (setq-local fill-paragraph-function #'nl/yaml-fill-paragraph)
+    ;; Keep generic filling from swallowing YAML keys/list items if another
+    ;; command bypasses `nl/yaml-fill-paragraph'.
+    (setq-local paragraph-start "[[:space:]]*$\\|[[:space:]]*[-[:alnum:]_'\"]+.*:")
+    (setq-local paragraph-separate paragraph-start)
     (auto-fill-mode 1)
     (mixed-pitch-mode -1)
+    (local-set-key [remap fill-paragraph] #'nl/yaml-fill-paragraph)
+    (local-set-key (kbd "M-q") #'nl/yaml-fill-paragraph)
     (display-line-numbers-mode)
     (outline-indent-minor-mode)
     (key-chord-define-local "jc" #'nl/yaml-command-menu))
@@ -521,6 +574,12 @@ extend.
   (defun nl/poly-yaml-inner-fill ()
     "Match inner-chunk fill settings to the YAML host."
     (setq fill-column 120)
+    ;; Inner chunks use mhtml-mode for YAML body/content HTML.  Keep M-q
+    ;; YAML-aware so filling cannot escape the current block scalar and
+    ;; collapse surrounding YAML structure.
+    (setq-local fill-paragraph-function #'nl/yaml-fill-paragraph)
+    (local-set-key [remap fill-paragraph] #'nl/yaml-fill-paragraph)
+    (local-set-key (kbd "M-q") #'nl/yaml-fill-paragraph)
     (auto-fill-mode 1))
   :hook
   (polymode-init-inner-hook . nl/poly-yaml-inner-fill)

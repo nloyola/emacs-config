@@ -272,6 +272,118 @@ Requires the =clj-kondo= binary on =PATH=.
           (fill-region-as-paragraph start-point (point) justify))
         t)))
 
+  (defun nl/php--heredoc-node ()
+    "Return the heredoc/nowdoc node at point, or nil."
+    (when (and (derived-mode-p 'php-ts-mode)
+               (fboundp 'treesit-node-at))
+      (let ((node (treesit-node-at (point) 'php))
+            found)
+        (while (and node (not found))
+          (when (member (treesit-node-type node) '("heredoc" "nowdoc"))
+            (setq found node))
+          (setq node (treesit-node-parent node)))
+        found)))
+
+  (defun nl/php--heredoc-base-indentation (node)
+    "Return indentation of heredoc/NOWDOC closing marker for NODE."
+    (save-excursion
+      (goto-char (treesit-node-end node))
+      (forward-line 0)
+      (back-to-indentation)
+      (current-column)))
+
+  (defun nl/php--line-opens-html-block-p ()
+    "Return non-nil if current heredoc line opens an HTML/PHP block."
+    (save-excursion
+      (back-to-indentation)
+      (or (looking-at-p "<[^/!?][^>]*[^/]>")
+          (looking-at-p "<\\?php .*:\\s-*$"))))
+
+  (defun nl/php--line-closes-html-block-p ()
+    "Return non-nil if current heredoc line closes an HTML/PHP block."
+    (save-excursion
+      (back-to-indentation)
+      (looking-at-p "</\\|<\\?php end")))
+
+  (defun nl/php--indent-heredoc-line (node)
+    "Indent the current heredoc/NOWDOC line inside NODE."
+    (let* ((base (nl/php--heredoc-base-indentation node))
+           (offset php-ts-indent-offset)
+           (target base))
+      (save-excursion
+        (forward-line -1)
+        (while (and (> (point) (treesit-node-start node))
+                    (looking-at-p "^[[:space:]]*$"))
+          (forward-line -1))
+        (when (> (point) (treesit-node-start node))
+          (setq target (current-indentation))
+          (when (nl/php--line-opens-html-block-p)
+            (setq target (+ target offset)))))
+      (when (nl/php--line-closes-html-block-p)
+        (setq target (max base (- target offset))))
+      (indent-line-to target)))
+
+  (defun nl/php-indent-line ()
+    "Indent PHP, including simple HTML embedded in heredocs/NOWDOCs."
+    (if-let ((node (nl/php--heredoc-node)))
+        (nl/php--indent-heredoc-line node)
+      (treesit-indent)))
+
+  (defun nl/php--lsp-completion-label (candidate annotation-function)
+    "Return a readable completion label for CANDIDATE."
+    (concat (substring-no-properties candidate)
+            (when annotation-function
+              (or (funcall annotation-function candidate) ""))))
+
+  (defun nl/php--complete-lsp-symbol-at-point ()
+    "Complete the current PHP symbol and apply LSP completion edits.
+This handles the case where the symbol is already fully typed: Emacs'
+built-in completion cycling can otherwise select the same text without
+running the LSP completion exit function which inserts the matching `use'."
+    (when (and (bound-and-true-p lsp-mode)
+               (fboundp 'lsp-completion-at-point))
+      (when-let* ((capf (lsp-completion-at-point))
+                  (start (nth 0 capf))
+                  (end (nth 1 capf))
+                  (table (nth 2 capf))
+                  (props (nthcdr 4 capf)))
+        (let* ((prefix (buffer-substring-no-properties start end))
+               (annotation-function (plist-get props :annotation-function))
+               (exit-function (plist-get props :exit-function))
+               (candidates (all-completions prefix table))
+               (exact-candidates
+                (seq-filter (lambda (candidate)
+                              (string= prefix (substring-no-properties candidate)))
+                            candidates)))
+          (when (and exit-function exact-candidates)
+            (let* ((choices
+                    (mapcar (lambda (candidate)
+                              (cons (nl/php--lsp-completion-label candidate annotation-function)
+                                    candidate))
+                            exact-candidates))
+                   (choice
+                    (if (= (length choices) 1)
+                        (caar choices)
+                      (completing-read "Import/complete PHP symbol: "
+                                       (mapcar #'car choices) nil t nil nil
+                                       (caar choices))))
+                   (candidate (cdr (assoc choice choices))))
+              (funcall exit-function candidate 'finished)
+              t))))))
+
+  (defun nl/php-complete-symbol-at-point ()
+    "Complete the PHP symbol near point, applying LSP import edits when possible.
+If point is just after delimiters such as an opening parenthesis, move back
+onto the preceding symbol before completing."
+    (interactive)
+    (when (and (not (bounds-of-thing-at-point 'symbol))
+               (save-excursion
+                 (skip-chars-backward "[:space:](")
+                 (bounds-of-thing-at-point 'symbol)))
+      (skip-chars-backward "[:space:]("))
+    (unless (nl/php--complete-lsp-symbol-at-point)
+      (completion-at-point)))
+
   (defun nl/php-mode-hook ()
     "My PHP mode configuration."
     (require 'flycheck-phpstan)
@@ -279,6 +391,12 @@ Requires the =clj-kondo= binary on =PATH=.
           php-cs-fixer-config-option (concat (projectile-project-root) ".php-cs-fixer.php"))
     (setq-local fill-column 120)
     (setq-local fill-paragraph-function #'nl/php-fill-paragraph)
+    (when (derived-mode-p 'php-ts-mode)
+      (setq-local indent-line-function #'nl/php-indent-line))
+    (setq-local tab-always-indent t)
+    (local-set-key (kbd "TAB") #'indent-for-tab-command)
+    (local-set-key (kbd "<tab>") #'indent-for-tab-command)
+    (local-set-key (kbd "C-S-i") #'nl/php-complete-symbol-at-point)
     (flycheck-mode t)
     (subword-mode +1)
     (when buffer-file-name

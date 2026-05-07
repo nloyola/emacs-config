@@ -309,6 +309,7 @@ Disable LSP mode for remote buffers to save performance.
   :ensure nil
   :preface
   (defun nl/prog-mode-hook ()
+    (auto-revert-mode 1)
     (display-line-numbers-mode)
     (flyspell-prog-mode))
   :hook
@@ -374,7 +375,7 @@ Run code formatters asynchronously on save without moving point around.
             (concat "--config=" php-cs-fixer-config-option))
           "--using-cache=no"
           "--quiet"
-          file))
+          inplace))
 
   (setf (alist-get 'go-mode apheleia-mode-alist) 'nl-gofmt)
   (setf (alist-get 'go-ts-mode apheleia-mode-alist) 'nl-gofmt)
@@ -390,7 +391,11 @@ Run code formatters asynchronously on save without moving point around.
   (setf (alist-get 'json-mode apheleia-mode-alist) 'prettier)
   (setf (alist-get 'vue-mode apheleia-mode-alist) 'prettier)
   (setf (alist-get 'css-mode apheleia-mode-alist) 'prettier)
-  (setf (alist-get 'yaml-mode apheleia-mode-alist) 'prettier)
+  ;; YAML files often contain embedded HTML block scalars and project-specific
+  ;; formatting, so do not run Prettier on save.
+  (setf (alist-get 'yaml-mode apheleia-mode-alist) nil)
+  (setf (alist-get 'yaml-ts-mode apheleia-mode-alist) nil)
+  (setf (alist-get 'nl/poly-yaml-mode apheleia-mode-alist) nil)
   (setf (alist-get 'web-mode apheleia-mode-alist) 'prettier)
   (setf (alist-get 'java-ts-mode apheleia-mode-alist) 'prettier-java)
   (setf (alist-get 'sql-mode apheleia-mode-alist) 'prettier-sql))
