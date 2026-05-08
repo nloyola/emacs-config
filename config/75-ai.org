@@ -1,5 +1,22 @@
 * AI
 
+** [[https://github.com/xenodium/agent-shell][agent-shell]]
+
+#+begin_src emacs-lisp
+(use-package agent-shell
+  :ensure t
+  :commands (agent-shell
+             agent-shell-toggle
+             agent-shell-new-shell
+             agent-shell-new-temp-shell
+             agent-shell-new-downloads-shell
+             agent-shell-prompt-compose)
+  :bind (("C-c a" . agent-shell)
+         ("C-c A" . agent-shell-toggle))
+  :config
+  (setq agent-shell-session-strategy 'prompt))
+#+end_src
+
 ** [[https://github.com/xenodium/chatgpt-shell][chatgpt-shell]] (disabled)
 
 #+begin_src emacs-lisp :tangle no

@@ -39,6 +39,7 @@ See https://tony-zorman.com/posts/emacs-potpourri.html
   (windmove-default-keybindings 'meta)
   (electric-pair-mode 1)
   (show-paren-mode 1)
+  (global-auto-revert-mode 1)
 
   ;; Hooks / List Modifications
   (add-to-list 'auto-mode-alist '("\\.log\\'" . auto-revert-mode))
