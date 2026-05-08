@@ -500,6 +500,12 @@
         (message "Not in a YAML block scalar")
         t)))
 
+  (defun nl/yaml-enable-local-keys ()
+    "Enable YAML local key bindings."
+    (local-set-key [remap fill-paragraph] #'nl/yaml-fill-paragraph)
+    (local-set-key (kbd "M-q") #'nl/yaml-fill-paragraph)
+    (key-chord-define-local "jc" #'nl/yaml-command-menu))
+
   (defun nl/yaml-mode-hook ()
     (setq fill-column 120)
     (setq-local fill-paragraph-function #'nl/yaml-fill-paragraph)
@@ -509,11 +515,9 @@
     (setq-local paragraph-separate paragraph-start)
     (auto-fill-mode 1)
     (mixed-pitch-mode -1)
-    (local-set-key [remap fill-paragraph] #'nl/yaml-fill-paragraph)
-    (local-set-key (kbd "M-q") #'nl/yaml-fill-paragraph)
+    (nl/yaml-enable-local-keys)
     (display-line-numbers-mode)
-    (outline-indent-minor-mode)
-    (key-chord-define-local "jc" #'nl/yaml-command-menu))
+    (outline-indent-minor-mode))
 
   (defun nl/yaml-command-menu ()
     "Open the YAML command hydra."
@@ -578,8 +582,7 @@ extend.
     ;; YAML-aware so filling cannot escape the current block scalar and
     ;; collapse surrounding YAML structure.
     (setq-local fill-paragraph-function #'nl/yaml-fill-paragraph)
-    (local-set-key [remap fill-paragraph] #'nl/yaml-fill-paragraph)
-    (local-set-key (kbd "M-q") #'nl/yaml-fill-paragraph)
+    (nl/yaml-enable-local-keys)
     (auto-fill-mode 1))
   :hook
   (polymode-init-inner-hook . nl/poly-yaml-inner-fill)

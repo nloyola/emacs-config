@@ -384,6 +384,39 @@ onto the preceding symbol before completing."
     (unless (nl/php--complete-lsp-symbol-at-point)
       (completion-at-point)))
 
+  (defvar nl/php-snippets-loaded nil)
+
+  (defun nl/php-ensure-snippets ()
+    "Make PHP snippets available in php-mode and php-ts-mode buffers."
+    (require 'yasnippet)
+    (setq-local yas-extra-modes '(php-mode))
+    (yas-minor-mode 1)
+    (unless nl/php-snippets-loaded
+      (yas-load-directory "~/.emacs.d/snippets")
+      (setq nl/php-snippets-loaded t)))
+
+  (defun nl/php-tab ()
+    "Expand a PHP snippet at point, or indent when no snippet matches."
+    (interactive)
+    (nl/php-ensure-snippets)
+    (unless (let ((yas-fallback-behavior nil))
+              (yas-expand))
+      (indent-for-tab-command)))
+
+  (defun nl/php-snippet-debug ()
+    "Show PHP snippet state for the current buffer."
+    (interactive)
+    (nl/php-ensure-snippets)
+    (message "mode=%S yas=%S TAB=%S <tab>=%S tables=%S bd=%S"
+             major-mode
+             (bound-and-true-p yas-minor-mode)
+             (key-binding (kbd "TAB"))
+             (key-binding (kbd "<tab>"))
+             (mapcar #'yas--table-name (yas--get-snippet-tables))
+             (cl-some (lambda (template)
+                        (string= (yas--template-key template) "bd"))
+                      (yas--all-templates (yas--get-snippet-tables)))))
+
   (defun nl/php-mode-hook ()
     "My PHP mode configuration."
     (require 'flycheck-phpstan)
@@ -394,8 +427,9 @@ onto the preceding symbol before completing."
     (when (derived-mode-p 'php-ts-mode)
       (setq-local indent-line-function #'nl/php-indent-line))
     (setq-local tab-always-indent t)
-    (local-set-key (kbd "TAB") #'indent-for-tab-command)
-    (local-set-key (kbd "<tab>") #'indent-for-tab-command)
+    (nl/php-ensure-snippets)
+    (local-set-key (kbd "TAB") #'nl/php-tab)
+    (local-set-key (kbd "<tab>") #'nl/php-tab)
     (local-set-key (kbd "C-S-i") #'nl/php-complete-symbol-at-point)
     (flycheck-mode t)
     (subword-mode +1)
