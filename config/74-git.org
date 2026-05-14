@@ -59,7 +59,7 @@ lists wrap under the bullet instead of under the text."
                 (forward-line 1)))
             (fill-region-as-paragraph start end justify))
         (log-edit-fill-entry justify)))
-    t))
+    t)
 
   (defun nl/git-commit-cleanup-ai-message ()
     "Unindent and refill the commit body after the summary line.
@@ -156,17 +156,17 @@ indentation, and each resulting paragraph is refilled."
     (add-hook 'git-commit-setup-hook #'nl/git-commit-setup-cancel-safety)
     (add-hook 'git-commit-setup-hook #'nl/git-commit-setup-fonts))
   (with-eval-after-load 'magit-status
-    (define-key magit-status-mode-map (kbd "q") #'magit-quit-session))
+    (define-key magit-status-mode-map (kbd "q") #'magit-quit-session)
+    (magit-add-section-hook 'magit-status-sections-hook
+                            'magit-insert-modules
+                            'magit-insert-stashes
+                            'append))
   (setq-default vc-handled-backends '(Git))
   (setq magit-push-always-verify nil
         git-commit-summary-window nil
         git-commit-show-diff nil
         ;; only use A and B in Ediff
-        magit-ediff-dwim-show-on-hunks t)
-  (magit-add-section-hook 'magit-status-sections-hook
-                          'magit-insert-modules
-                          'magit-insert-stashes
-                          'append))
+        magit-ediff-dwim-show-on-hunks t))
 #+end_src
 
 **** Full-screen magit

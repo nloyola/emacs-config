@@ -133,7 +133,9 @@ Requires the =clj-kondo= binary on =PATH=.
   (use-package nl-java-project :demand :load-path "~/.emacs.d/lisp")
   (defun nl/java-mode-hook ()
     "My Java mode configuration."
-    (my/lsp-deferred-unless-remote)
+    (unless (file-remote-p (or buffer-file-name default-directory))
+      (require 'lsp-java)
+      (lsp))
     (flycheck-mode t)
     (subword-mode +1)
     (setq indent-tabs-mode nil
@@ -153,11 +155,11 @@ Requires the =clj-kondo= binary on =PATH=.
 
 #+begin_src emacs-lisp
 (use-package lsp-java
-  :hook (java-ts-mode . lsp)
-  :custom
-  (lsp-java-compile-null-analysis-mode "automatic")
-  (lsp-java-format-enabled nil)
-  ;;(lsp-java-save-actions-organize-imports t)
+  :defer t
+  :init
+  (setq lsp-java-compile-null-analysis-mode "automatic"
+        lsp-java-format-enabled nil)
+  ;;(setq lsp-java-save-actions-organize-imports t)
   )
 #+end_src
 
@@ -431,6 +433,9 @@ onto the preceding symbol before completing."
     (local-set-key (kbd "TAB") #'nl/php-tab)
     (local-set-key (kbd "<tab>") #'nl/php-tab)
     (local-set-key (kbd "C-S-i") #'nl/php-complete-symbol-at-point)
+    ;; PHP navigation/completion comes from phpactor through lsp-mode.  Keep
+    ;; this buffer on phpactor even if other PHP LSP clients are installed.
+    (setq-local lsp-enabled-clients '(phpactor))
     (flycheck-mode t)
     (subword-mode +1)
     (when buffer-file-name

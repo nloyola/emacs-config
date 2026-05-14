@@ -303,7 +303,8 @@
   (use-package nl-react :load-path "~/.emacs.d/lisp")
   :config
   (setq lsp-clients-typescript-server "typescript-language-server")
-  (setq lsp-disabled-clients '(vue-semantic-server lsp-volar))
+  (dolist (client '(vue-semantic-server lsp-volar))
+    (add-to-list 'lsp-disabled-clients client))
   (setq flycheck-check-syntax-automatically '(save mode-enabled)
         ;;company-tooltip-align-annotations t ;; aligns annotation to the right hand side
         ;;prettify-symbols-unprettify-at-point 'right-edge

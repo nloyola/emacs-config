@@ -108,6 +108,10 @@ Modern on-the-fly syntax checking extension for GNU Emacs.
   (lsp-pyls-plugins-pycodestyle-max-line-length 120)
   (lsp-intelephense-php-version "8.5")
   (lsp-intelephense-format-enable nil)
+  (lsp-intelephense-multi-root nil)
+  ;; Try phpactor for PHP for now; disable Intelephense (`iph`) and the old
+  ;; felixfbecker PHP language server (`php-ls`).
+  (lsp-disabled-clients '(semgrep-ls iph php-ls serenata))
   ;;(setq lsp-response-timeout 25)
   ;; what to use when checking on-save. "check" is default, I prefer clippy
   (lsp-rust-analyzer-cargo-watch-command "clippy")
@@ -148,7 +152,7 @@ Modern on-the-fly syntax checking extension for GNU Emacs.
         lsp-pyls-plugins-flake8-enabled t
         lsp-completion-provider :none
         ;; lsp-log-io t
-        ;; lsp-ensabled-clients '(intelephense)
+        ;; lsp-enabled-clients '(iph)
         )
   (setq lsp-clients-angular-language-server-command
         '("node"
