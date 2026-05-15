@@ -302,24 +302,36 @@ Its default global bindings use the =C-c y= prefix.
 (defvar nl/project-src-folder "src")
 (defvar nl/project-test-folder "test")
 
-(defun nl/consult-ripgrep-project-src ()
-  "Run `consult-ripgrep` in the Projectile project's src and test folders."
-  (interactive)
+(defun nl/consult-ripgrep-project-paths (paths)
+  "Run `consult-ripgrep` in the Projectile project's PATHS.
+PATHS are relative to the project root."
   (require 'consult)
-  (let* ((project-root (projectile-project-root)))
+  (let ((project-root (projectile-project-root)))
     (if (not project-root)
         (message "Not in a Projectile project.")
-      (let* ((src-path (expand-file-name nl/project-src-folder project-root))
-             (test-path (expand-file-name nl/project-test-folder project-root))
-             (globs (delq nil
-                          (list (when (file-directory-p src-path)
-                                  (format " --glob %s/**" nl/project-src-folder))
-                                (when (file-directory-p test-path)
-                                  (format " --glob %s/**" nl/project-test-folder))))))
-        (if (null globs)
-            (message "No src/test folder in project.")
-          (let ((consult-ripgrep-args (concat consult-ripgrep-args (apply #'concat globs))))
-            (consult-ripgrep project-root)))))))
+      (let ((existing-paths
+             (delq nil
+                   (mapcar (lambda (path)
+                             (let ((expanded-path
+                                    (expand-file-name path project-root)))
+                               (when (file-directory-p expanded-path)
+                                 expanded-path)))
+                           paths))))
+        (if (null existing-paths)
+            (message "None of these folders exist in project: %s"
+                     (mapconcat #'identity paths ", "))
+          (consult-ripgrep existing-paths))))))
+
+(defun nl/consult-ripgrep-project-src-test ()
+  "Run `consult-ripgrep` in the Projectile project's src and test folders."
+  (interactive)
+  (nl/consult-ripgrep-project-paths
+   (list nl/project-src-folder nl/project-test-folder)))
+
+(defun nl/consult-ripgrep-project-src ()
+  "Run `consult-ripgrep` in the Projectile project's src folder."
+  (interactive)
+  (nl/consult-ripgrep-project-paths (list nl/project-src-folder)))
 #+end_src
 
 *** [[https://github.com/gagbo/consult-lsp][consult-lsp]]

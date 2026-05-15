@@ -251,7 +251,8 @@ This package can be used to tie related commands into a family of short bindings
 
   (defhydra hydra-nl-search (:hint nil)
     "Search"
-    ("p" (nl/consult-ripgrep-project-src) "project's src folder" :exit t))
+    ("p" (nl/consult-ripgrep-project-src) "project's src folder" :exit t)
+    ("t" (nl/consult-ripgrep-project-src-test) "project's src/test folders" :exit t))
 
   (defhydra hydra-nl-align (:hint nil)
     (":" align-colons "colons" :color blue :column "Align things")

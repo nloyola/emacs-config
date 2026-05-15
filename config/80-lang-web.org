@@ -380,10 +380,75 @@
                (end (or block-code-end block-end element-end (point-max))))
           (indent-region beg end nil))))))
 
+  (defun nl/web-mode-php-control-line-p ()
+    "Return non-nil if the current line is a standalone PHP control line."
+    (save-excursion
+      (back-to-indentation)
+      (looking-at-p "<\\?php[[:space:]]+\\(else\\|elseif\\|endif\\)\\b")))
+
+  (defun nl/web-mode-php-control-kind ()
+    "Return the standalone PHP control keyword on the current line, or nil."
+    (save-excursion
+      (back-to-indentation)
+      (when (looking-at "<\\?php[[:space:]]+\\(if\\|else\\|elseif\\|endif\\)\\b")
+        (match-string-no-properties 1))))
+
+  (defun nl/web-mode-php-matching-if-indentation ()
+    "Return the indentation of the matching standalone PHP if line."
+    (save-excursion
+      (let ((depth 1))
+        (forward-line 0)
+        (while (and (> depth 0)
+                    (re-search-backward
+                     "^[[:space:]]*<\\?php[[:space:]]+\\(if\\|endif\\)\\b" nil t))
+          (if (string= (match-string 1) "endif")
+              (setq depth (1+ depth))
+            (setq depth (1- depth))))
+        (when (= depth 0)
+          (current-indentation)))))
+
+  (defun nl/web-mode-indent-line ()
+    "Indent web-mode lines, with better standalone PHP control indentation."
+    (web-mode-indent-line)
+    (when-let ((indentation (and (nl/web-mode-php-control-line-p)
+                                 (nl/web-mode-php-matching-if-indentation))))
+      (indent-line-to indentation)))
+
+  (defun nl/web-mode-indent-region (start end)
+    "Indent region line-by-line with PHP template control awareness."
+    (save-excursion
+      (let ((end-marker (copy-marker end))
+            (offset web-mode-code-indent-offset)
+            stack)
+        (goto-char (point-min))
+        (while (< (point) end-marker)
+          (let ((in-region (>= (point) start))
+                (kind (nl/web-mode-php-control-kind)))
+            (unless (looking-at-p "[[:space:]]*$")
+              (cond
+               ((member kind '("else" "elseif" "endif"))
+                (when in-region
+                  (web-mode-indent-line)
+                  (when stack
+                    (indent-line-to (car stack))))
+                (when (string= kind "endif")
+                  (pop stack)))
+               (t
+                (when in-region
+                  (web-mode-indent-line)
+                  (when (and stack (< (current-indentation) (+ (car stack) offset)))
+                    (indent-line-to (+ (car stack) offset)))))))
+            (when (string= kind "if")
+              (push (current-indentation) stack)))
+          (forward-line 1))
+        (set-marker end-marker nil))))
+
   (defun nl/web-mode-hook ()
     (my/lsp-deferred-unless-remote)
     (setq web-mode-auto-quote-style 1)
     (require 'nl-colors)
+    (setq-local indent-line-function #'nl/web-mode-indent-line)
+    (setq-local indent-region-function #'nl/web-mode-indent-region)
     (setq-local prog-fill-reindent-defun-function #'nl/web-mode-prog-fill-reindent-defun)
     (local-set-key (kbd "M-q") #'prog-fill-reindent-defun))
   :hook (web-mode . nl/web-mode-hook)

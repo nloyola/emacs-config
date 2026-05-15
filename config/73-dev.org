@@ -126,6 +126,9 @@ Modern on-the-fly syntax checking extension for GNU Emacs.
   (lsp-rust-analyzer-display-parameter-hints nil)
   (lsp-rust-analyzer-display-reborrow-hints nil)
   :config
+  ;; `lsp' auto-requires every package in `lsp-client-packages' before it
+  ;; selects a client.  Keep Java explicit so PHP buffers do not load lsp-java.
+  (setq lsp-client-packages (delq 'lsp-java lsp-client-packages))
   (lsp-enable-which-key-integration t)
   (lsp-register-custom-settings
    '(("gopls.staticcheck" t t)               ; enable staticcheck if installed
