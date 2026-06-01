@@ -261,6 +261,14 @@ This package can be used to tie related commands into a family of short bindings
     ("$" align-dollar-sign "dollar sign" :color blue)
     ("p" align-parameters "parameters" :color blue))
 
+  (defun nl/copy-buffer-file-name ()
+    "Copy the current buffer file name to the kill ring and clipboard."
+    (interactive)
+    (unless buffer-file-name
+      (user-error "Current buffer is not visiting a file"))
+    (kill-new buffer-file-name)
+    (message "Copied file name: %s" buffer-file-name))
+
   (defhydra hydra-nl-common (:color red :hint nil)
     ("f" hydra-nl-frames/body "frames" :color blue :column "Frames")
     ("w" hydra-window/body "windows" :color blue :column "Windows")
@@ -268,6 +276,7 @@ This package can be used to tie related commands into a family of short bindings
     ("b" hydra-buffer/body "buffer" :color blue :column "Buffers")
     ("s" hydra-nl-search/body "search" :color blue :column "Search")
     ("a" hydra-nl-align/body "align" :color blue :column "Align")
+    ("y" nl/copy-buffer-file-name "copy file path" :color blue :column "Copy")
     ("c" nl/open-alacritty-project-root "alacritty project root" :color blue :column "Shell")
     ("C" nl/open-alacritty-here "alacritty here" :color blue)
     ("g" hydra-git-gutter/body "git" :color blue :column "Git"))

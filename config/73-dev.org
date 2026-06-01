@@ -111,7 +111,7 @@ Modern on-the-fly syntax checking extension for GNU Emacs.
   (lsp-intelephense-multi-root nil)
   ;; Try phpactor for PHP for now; disable Intelephense (`iph`) and the old
   ;; felixfbecker PHP language server (`php-ls`).
-  (lsp-disabled-clients '(semgrep-ls iph php-ls serenata))
+  (lsp-disabled-clients '(semgrep-ls iph php-ls serenata tailwindcss))
   ;;(setq lsp-response-timeout 25)
   ;; what to use when checking on-save. "check" is default, I prefer clippy
   (lsp-rust-analyzer-cargo-watch-command "clippy")
@@ -403,6 +403,8 @@ Run code formatters asynchronously on save without moving point around.
   (setf (alist-get 'yaml-mode apheleia-mode-alist) nil)
   (setf (alist-get 'yaml-ts-mode apheleia-mode-alist) nil)
   (setf (alist-get 'nl/poly-yaml-mode apheleia-mode-alist) nil)
+  ;; Prettier's PHP support corrupts mixed PHP/HTML templates.
+  (add-to-list 'apheleia-mode-alist '("\\.tpl\\.php\\'" . nil))
   (setf (alist-get 'web-mode apheleia-mode-alist) 'prettier)
   (setf (alist-get 'java-ts-mode apheleia-mode-alist) 'prettier-java)
   (setf (alist-get 'sql-mode apheleia-mode-alist) 'prettier-sql))

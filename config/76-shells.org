@@ -92,5 +92,8 @@ The Rust server binary is auto-deployed on first connection."
        (message "Failed to enable tramp-rpc: %s"
                 (error-message-string err))))))
 
-(add-hook 'after-init-hook #'nl/bootstrap-tramp-rpc t)
+;; Do not load TRAMP during startup.  If TRAMP is loaded because a remote
+;; path is opened, enable the optional /rpc: method then.
+(with-eval-after-load 'tramp
+  (nl/bootstrap-tramp-rpc))
 #+end_src
