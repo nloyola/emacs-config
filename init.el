@@ -75,7 +75,7 @@
   (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t))
 
 (unless (assoc-default "gnu" package-archives)
-  (add-to-list 'package-archives '("gnu" . "http://elpa.gnu.org/packages/") t))
+  (add-to-list 'package-archives '("gnu" . "https://elpa.gnu.org/packages/") t))
 
 (unless (assoc-default "nongnu" package-archives)
   (add-to-list 'package-archives '("nongnu" . "http://elpa.nongnu.org/packages/") t))

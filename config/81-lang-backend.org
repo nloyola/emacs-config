@@ -167,6 +167,7 @@ Requires the =clj-kondo= binary on =PATH=.
 
 #+begin_src emacs-lisp
 (use-package lua-mode
+  :ensure nil
   :mode (("\\.lua\\'" . lua-mode)))
 #+end_src
 

@@ -161,7 +161,6 @@ Stopped using this package since it does not work well on Emacs 30.
   )
 
 (use-package nerd-icons-dired
- :load-path "~/src/github/elisp/nerd-icons-dired"
  :hook
  (dired-mode . nerd-icons-dired-mode))
 #+end_src

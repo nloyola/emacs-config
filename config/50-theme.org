@@ -33,11 +33,11 @@ See https://tinted-theming.github.io/base16-gallery/
      '(gnus-group-news-6 ((t (:inherit gnus-group-news-low))))
      '(gnus-group-news-6-empty ((t (:inherit gnus-group-news-low-empty))))))
 
-  (advice-add 'load-theme :after #'nl/fix-gnus-group-news-face-cycle)
-  (mapc #'disable-theme custom-enabled-themes)
-  (load-theme 'ef-winter :no-confirm)
-  (nl/fix-gnus-group-news-face-cycle))
+  (advice-add 'load-theme :after #'nl/fix-gnus-group-news-face-cycle))
 #+end_src
+
+The active theme is set in the Doom Themes section below; ef-themes is
+kept only for =ef-themes-toggle=.
 
 ** [[https://protesilaos.com/emacs/modus-themes][modus-themes]] (disabled)
 
@@ -84,31 +84,29 @@ See https://tinted-theming.github.io/base16-gallery/
   ))
 #+end_src
 
-** Doom Themes (disabled)
+** Doom Themes
 
 See https://github.com/doomemacs/themes/tree/screenshots#screenshots
 
-#+begin_src emacs-lisp :tangle no
-(when (string-match "-microsoft" (downcase operating-system-release))
-  (use-package doom-themes
-    :config
-    (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
-          doom-themes-enable-italic t) ; if nil, italics is universally disabled
+#+begin_src emacs-lisp
+(use-package doom-themes
+  :demand t
+  :config
+  (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
+        doom-themes-enable-italic t) ; if nil, italics is universally disabled
 
-    ;;(load-theme 'base16-brewer t)
+  ;; Enable flashing mode-line on errors
+  (doom-themes-visual-bell-config)
 
-    ;; Enable flashing mode-line on errors
-    (doom-themes-visual-bell-config)
+  ;;treemacs
+  (setq doom-themes-treemacs-theme "doom-colors")
+  ;;(doom-themes-treemacs-config)
 
-    ;;treemacs
-    (setq doom-themes-treemacs-theme "doom-colors")
-    ;;(doom-themes-treemacs-config)
+  ;; Corrects (and improves) org-mode's native fontification.
+  (doom-themes-org-config)
 
-    ;; Corrects (and improves) org-mode's native fontification.
-    (doom-themes-org-config)))
-
-(when (string-match "-microsoft" (downcase operating-system-release))
-  (load-theme 'doom-dark+))
+  (mapc #'disable-theme custom-enabled-themes)
+  (load-theme 'doom-one :no-confirm))
 #+end_src
 
 Allow changing themes on the fly with the following.
