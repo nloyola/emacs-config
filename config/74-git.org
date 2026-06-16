@@ -241,6 +241,21 @@ Additionally, in tree object buffer:
 (use-package git-walktree)
 #+end_src
 
+*** [[https://github.com/rschmukler/magit-difftastic][magit-difftastic]]
+
+Render diffs with difftastic inside Magit buffers while preserving Magit sections and staging commands.
+
+#+begin_src emacs-lisp
+(use-package difftastic)
+
+(use-package magit-difftastic
+  :ensure (:host github :repo "rschmukler/magit-difftastic")
+  :after magit
+  :commands (magit-difftastic-mode)
+  :bind (:map magit-mode-map
+              ("C-c d" . magit-difftastic-mode)))
+#+end_src
+
 *** difftastic (disabled)
 
 See https://tsdh.org/posts/2022-08-01-difftastic-diffing-with-magit.html

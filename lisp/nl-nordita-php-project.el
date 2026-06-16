@@ -8,7 +8,7 @@
 
 ;;; Code:
 
-(use-package nl-php-project :demand :load-path ("~/.emacs.d/lisp" "~/.emacs.d/elpa"))
+(use-package nl-php-project :ensure nil :demand :load-path "~/.emacs.d/lisp")
 (require 'nl-php-project)
 
 (projectile-register-project-type 'php-symfony '("composer.json" "src" "test" "vendor")

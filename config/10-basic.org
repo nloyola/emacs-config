@@ -6,6 +6,7 @@ See https://tony-zorman.com/posts/emacs-potpourri.html
 
 #+begin_src emacs-lisp
 (use-package emacs
+  :ensure nil
   :preface
   ;; Conditional/Special Logic
   (when (eq system-type 'darwin)
@@ -150,6 +151,7 @@ See https://tony-zorman.com/posts/emacs-potpourri.html
 
 #+begin_src emacs-lisp
 (use-package emacs
+  :ensure nil
   :preface
   (autoload 'zap-up-to-char "misc"
   "kill up to, but not including ARG'th occurence of CHAR.

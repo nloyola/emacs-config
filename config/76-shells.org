@@ -32,9 +32,8 @@
 No longer using this. Using [[https://codeberg.org/akib/emacs-eat][emacs-eat]] instead.
 
 #+begin_src emacs-lisp :tangle no
-(when (file-directory-p "~/src/github/elisp/emacs-libvterm")
-  (use-package vterm
-    :load-path "~/src/github/elisp/emacs-libvterm"
+(use-package vterm
+    :ensure (:host github :repo "akermu/emacs-libvterm")
     :bind
     (:map vterm-mode-map
           ("M-<right>" . windmove-right)
@@ -43,12 +42,13 @@ No longer using this. Using [[https://codeberg.org/akib/emacs-eat][emacs-eat]] i
           ("M-<down>" . windmove-down))
     :commands vterm vterm-other-window
     :config
-    (setq vterm-max-scrollback 10000)))
+    (setq vterm-max-scrollback 10000))
 #+end_src
 
 ** ediff
 #+begin_src emacs-lisp
 (use-package ediff
+  :ensure nil
   :custom
   (ediff-diff-options "-w")
   (ediff-split-window-function 'split-window-horizontally)
@@ -71,29 +71,13 @@ No longer using this. Using [[https://codeberg.org/akib/emacs-eat][emacs-eat]] i
     (remove-hook 'compilation-mode-hook
                  #'tramp-compile-disable-ssh-controlmaster-options)))
 
-(defun nl/bootstrap-tramp-rpc ()
-  "Install and load `tramp-rpc' so `/rpc:user@host:/path' paths work.
+(use-package msgpack)
 
-The Rust server binary is auto-deployed on first connection."
-  (interactive)
-  (if (version< emacs-version "30.1")
-      (message "Skipping tramp-rpc: Emacs 30.1 or newer is required")
-    (condition-case err
-        (progn
-          (require 'tramp)
-          (nl/ensure-package-installed 'msgpack)
-          (unless (package-installed-p 'tramp-rpc)
-            (package-vc-install
-             '(tramp-rpc
-               :url "https://github.com/ArthurHeymans/emacs-tramp-rpc"
-               :lisp-dir "lisp")))
-          (require 'tramp-rpc))
-      (error
-       (message "Failed to enable tramp-rpc: %s"
-                (error-message-string err))))))
-
-;; Do not load TRAMP during startup.  If TRAMP is loaded because a remote
-;; path is opened, enable the optional /rpc: method then.
-(with-eval-after-load 'tramp
-  (nl/bootstrap-tramp-rpc))
+(use-package tramp-rpc
+  :ensure (:host github
+           :repo "ArthurHeymans/emacs-tramp-rpc"
+           :files ("lisp/*.el"))
+  :after tramp
+  :demand t
+  :if (not (version< emacs-version "30.1")))
 #+end_src

@@ -101,8 +101,7 @@ This package can be used to tie related commands into a family of short bindings
   :demand t
   :after key-chord
   :init
-  (use-package cl-lib)
-  (use-package lv)
+  (use-package cl-lib :ensure nil)
   :custom
   (hydra-hint-display-type 'posframe)
   :config

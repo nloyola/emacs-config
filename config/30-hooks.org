@@ -3,6 +3,7 @@ Remove trailing whitespace.
 
 #+begin_src emacs-lisp
 (use-package emacs
+  :ensure nil
   :hook
   (before-save . delete-trailing-whitespace)
   )

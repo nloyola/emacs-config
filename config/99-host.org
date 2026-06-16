@@ -4,6 +4,7 @@ Load some computer-specific settings, such as the name and and email address.
 
 #+begin_src emacs-lisp
 (use-package emacs
+  :ensure nil
   :init
   (defvar nl/user-settings-dir nil
     "The directory with user-specific Emacs settings for this

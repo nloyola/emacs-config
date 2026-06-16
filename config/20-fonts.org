@@ -151,6 +151,7 @@ See https://www.gonsie.com/blorg/modeline.html for additional details.
 
 #+begin_src emacs-lisp
 (use-package emacs
+  :ensure nil
   :preface
   (defface nl/mode-line-fixed
     '((t (:height 120)))

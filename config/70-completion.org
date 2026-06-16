@@ -41,22 +41,8 @@ Trying Yuta as an optional command palette / fuzzy finder alongside Consult.
 Its default global bindings use the =C-c y= prefix.
 
 #+begin_src emacs-lisp
-(defun nl/ensure-yuta-installed ()
-  "Install `yuta' from GitHub unless it is already available."
-  (unless (package-installed-p 'yuta)
-    (if (fboundp 'package-vc-install)
-        (condition-case err
-            (package-vc-install
-             '(yuta
-               :url "https://github.com/zenitsu7772000/yuta.el"
-               :branch "main"))
-          (error
-           (message "Failed to install yuta: %s"
-                    (error-message-string err))))
-      (message "Skipping yuta: `package-vc-install' is not available"))))
-
 (use-package yuta
-  :ensure nil
+  :ensure (:host github :repo "zenitsu7772000/yuta.el" :branch "main")
   :commands (yuta-mode
              yuta-find-file
              yuta-git-files
@@ -66,7 +52,6 @@ Its default global bindings use the =C-c y= prefix.
              yuta-recent-files
              nl/yuta-find-file-fast)
   :init
-  (nl/ensure-yuta-installed)
   (add-hook 'after-init-hook
             (lambda ()
               (when (require 'yuta nil t)
@@ -468,11 +453,13 @@ PATHS are relative to the project root."
 
 ;; Persist history over Emacs restarts. Vertico sorts by history position.
 (use-package savehist
+  :ensure nil
   :init
   (savehist-mode))
 
 ;; A few more useful configurations...
 (use-package emacs
+  :ensure nil
   :init
   ;; Add prompt indicator to `completing-read-multiple'.
   ;; Alternatively try `consult-completing-read-multiple'.
@@ -553,6 +540,7 @@ PATHS are relative to the project root."
 
 ;; A few more useful configurations...
 (use-package emacs
+  :ensure nil
   :init
   ;; TAB cycle if there are only few candidates
   (setq completion-cycle-threshold 3)

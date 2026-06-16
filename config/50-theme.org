@@ -33,11 +33,14 @@ See https://tinted-theming.github.io/base16-gallery/
      '(gnus-group-news-6 ((t (:inherit gnus-group-news-low))))
      '(gnus-group-news-6-empty ((t (:inherit gnus-group-news-low-empty))))))
 
-  (advice-add 'load-theme :after #'nl/fix-gnus-group-news-face-cycle))
+  (advice-add 'load-theme :after #'nl/fix-gnus-group-news-face-cycle)
+
+  (mapc #'disable-theme custom-enabled-themes)
+  (load-theme 'ef-winter :no-confirm))
 #+end_src
 
-The active theme is set in the Doom Themes section below; ef-themes is
-kept only for =ef-themes-toggle=.
+The active theme is =ef-winter=; =ef-themes-toggle= switches between
+=ef-winter= and =ef-night=.
 
 ** [[https://protesilaos.com/emacs/modus-themes][modus-themes]] (disabled)
 
@@ -74,9 +77,7 @@ kept only for =ef-themes-toggle=.
 
 (unless (string-match "-microsoft" (downcase operating-system-release))
   (use-package xresources-theme
-    :load-path "~/src/github/elisp/xresources-theme"
-    :init
-    (add-to-list 'custom-theme-load-path "~/src/github/elisp/xresources-theme")
+    :ensure (:host github :repo "martenlienen/xresources-theme")
     :hook (after-init . nl/xresources-theme-hook)
     :custom-face
     (ansi-color-red ((t (:background "#440F04"))))
@@ -88,7 +89,7 @@ kept only for =ef-themes-toggle=.
 
 See https://github.com/doomemacs/themes/tree/screenshots#screenshots
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 (use-package doom-themes
   :demand t
   :config
@@ -113,6 +114,7 @@ Allow changing themes on the fly with the following.
 
 #+begin_src emacs-lisp :tangle no
 (use-package emacs
+  :ensure nil
   :init
   (defun ap/load-doom-theme (theme)
     "Disable active themes and load a Doom theme."
@@ -140,10 +142,12 @@ Allow changing themes on the fly with the following.
 *** Doom two tone themes
 
 #+begin_src emacs-lisp :tangle no
-(let ((theme-path "~/src/github/elisp/doom-two-tone-themes/themes/"))
-  (when (file-directory-p (expand-file-name theme-path))
-    (add-to-list 'custom-theme-load-path theme-path)
-    (load-theme 'doom-navy-copper t)))
+(use-package doom-two-tone-themes
+  :ensure (:host github
+           :repo "eliraz-refael/doom-two-tone-themes"
+           :files ("themes/*.el"))
+  :config
+  (load-theme 'doom-navy-copper t))
 #+end_src
 
 ** Base-16 (disabled)

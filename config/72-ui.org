@@ -199,7 +199,7 @@ Pulse highlight line on demand or after running select functions
 #+begin_src emacs-lisp
 (use-package rainbow-mode
   :defer t
-  :load-path "~/src/github/elisp/rainbow-mode"
+  :ensure t
   :hook ((prog-mode text-mode conf-mode) . rainbow-mode)
   :bind ("C-c r" . rainbow-mode))
 #+end_src

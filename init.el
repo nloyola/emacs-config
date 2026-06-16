@@ -32,15 +32,17 @@
 ;; Disable file-name-handler-alist during startup for speed; restore after init.
 (setq file-name-handler-alist nil)
 
-(setq package-install-upgrade-built-in t
-      package-enable-at-startup nil
+(setq package-enable-at-startup nil
       message-log-max 16384
       gc-cons-threshold 402653184
       gc-cons-percentage 0.6
       read-process-output-max (* 1024 1024)
       auto-window-vscroll nil
       frame-inhibit-implied-resize t
-      pixel-scroll-precision-mode t)
+      pixel-scroll-precision-mode t
+      byte-compile-warnings '(not obsolete)
+      warning-suppress-log-types '((comp) (bytecomp))
+      native-comp-async-report-warnings-errors 'silent)
 
 (defun nl/after-init ()
   (setq file-name-handler-alist nl/file-name-handler-alist-original
@@ -68,34 +70,61 @@
 ;; - not working really
 ;;(setq projectile-mode-line "Projectile")
 
-;;; Set up package
-(require 'package)
+;;; Bootstrap Elpaca and use-package
+(setq package-enable-at-startup nil)
 
-(unless (assoc-default "melpa" package-archives)
-  (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t))
+(defvar elpaca-installer-version 0.12)
+(defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
+(defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
+(defvar elpaca-sources-directory (expand-file-name "sources/" elpaca-directory))
+(defvar elpaca-order
+  '(elpaca :repo "https://github.com/progfolio/elpaca.git"
+           :ref nil
+           :depth 1
+           :inherit ignore
+           :files (:defaults "elpaca-test.el" (:exclude "extensions"))
+           :build (:not elpaca-activate)))
+(let* ((repo (expand-file-name "elpaca/" elpaca-sources-directory))
+       (build (expand-file-name "elpaca/" elpaca-builds-directory))
+       (order (cdr elpaca-order))
+       (default-directory repo))
+  (add-to-list 'load-path (if (file-exists-p build) build repo))
+  (unless (file-exists-p repo)
+    (make-directory repo t)
+    (when (<= emacs-major-version 28)
+      (require 'subr-x))
+    (condition-case-unless-debug err
+        (if-let* ((buffer (pop-to-buffer-same-window "*elpaca-bootstrap*"))
+                  ((zerop (apply #'call-process `("git" nil ,buffer t "clone"
+                                                   ,@(when-let* ((depth (plist-get order :depth)))
+                                                       (list (format "--depth=%d" depth) "--no-single-branch"))
+                                                   ,(plist-get order :repo) ,repo))))
+                  ((zerop (call-process "git" nil buffer t "checkout"
+                                        (or (plist-get order :ref) "--"))))
+                  (emacs (concat invocation-directory invocation-name))
+                  ((zerop (call-process emacs nil buffer nil "-Q" "-L" "." "--batch"
+                                        "--eval" "(byte-recompile-directory \".\" 0 'force)")))
+                  ((require 'elpaca))
+                  ((elpaca-generate-autoloads "elpaca" repo)))
+            (progn
+              (message "%s" (buffer-string))
+              (kill-buffer buffer))
+          (error "%s" (with-current-buffer buffer (buffer-string))))
+      ((error)
+       (warn "%s" err)
+       (delete-directory repo 'recursive))))
+  (unless (require 'elpaca-autoloads nil t)
+    (require 'elpaca)
+    (elpaca-generate-autoloads "elpaca" repo)
+    (let ((load-source-file-function nil))
+      (load "./elpaca-autoloads"))))
+(add-hook 'after-init-hook #'elpaca-process-queues)
+(elpaca `(,@elpaca-order))
 
-(unless (assoc-default "gnu" package-archives)
-  (add-to-list 'package-archives '("gnu" . "https://elpa.gnu.org/packages/") t))
+(elpaca elpaca-use-package
+  (elpaca-use-package-mode)
+  (setq elpaca-use-package-by-default t))
 
-(unless (assoc-default "nongnu" package-archives)
-  (add-to-list 'package-archives '("nongnu" . "http://elpa.nongnu.org/packages/") t))
-
-(setf (alist-get "gnu" package-archives nil nil #'string=)
-      "https://www.mirrorservice.org/sites/elpa.gnu.org/packages/")
-
-(setq package-archive-priorities
-      '(("gnu"    . 99)
-        ("nongnu" . 80)
-        ("melpa"  . 0)))
-
-(unless package--initialized
-  (package-initialize))
-
-;; Using HTTPS for downloading packages, make sure HTTPS is not going through a proxy.
-;; (setenv "https_proxy" "")
-;; (setenv "http_proxy" "")
-
-;;; Bootstrap use-package
 (setq-default use-package-compute-statistics nil  ; to check if config is ok
               use-package-always-ensure t         ; Auto-download package if not exists
               use-package-always-defer t          ; Always defer load package to speed up startup time
@@ -103,40 +132,30 @@
               use-package-enable-imenu-support t) ; Let imenu finds use-package definitions
 
 ;; use only for debugging startup time
-(setq use-package-verbose t)               ; report loading details)
-
-(defun nl/ensure-package-installed (package)
-  "Install PACKAGE unless it is already installed."
-  (unless (package-installed-p package)
-    (unless package-archive-contents
-      (package-refresh-contents))
-    (package-install package)))
+;;(setq use-package-verbose nil)
+(setq use-package-verbose t)               ; report loading details
 
 ;; `use-package` and its helpers need to be available before any
 ;; `use-package` forms are expanded or loaded.
-(dolist (package '(use-package diminish bind-key htmlize key-chord use-package-chords))
-  (nl/ensure-package-installed package))
-
-(require 'use-package)
-(require 'diminish)
-(require 'bind-key)
-;;(setq use-package-verbose nil)
-(setq use-package-verbose t)
-
-(use-package pl
-  :load-path "~/.emacs.d/lisp"
-  :commands pl-parse
-  )
-
+(use-package diminish :demand t)
+(use-package bind-key :ensure nil :demand t)
+(use-package s :demand t)
+(use-package htmlize :defer t)
 (use-package key-chord
   :demand t
   :commands key-chord-define-global
   :config
   (key-chord-mode 1))
-
 (use-package use-package-chords
   :demand t
+  :after key-chord
   :config (key-chord-mode 1))
+(elpaca-wait)
+
+(use-package pl
+  :ensure nil
+  :load-path "~/.emacs.d/lisp"
+  :commands pl-parse)
 
 ;; see http://emacs.stackexchange.com/questions/539/how-do-i-measure-performance-of-elisp-code
 (defmacro with-timer (&rest forms)

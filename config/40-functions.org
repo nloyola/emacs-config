@@ -2,6 +2,7 @@
 
 #+begin_src emacs-lisp
 (use-package emacs
+  :ensure nil
   :preface
   (defun nl/kill-this-buffer ()
     "Kill the current buffer."
@@ -86,6 +87,7 @@
 
 #+begin_src emacs-lisp
 (use-package emacs
+  :ensure nil
   :preface
   (setq split-height-threshold 160
         split-width-threshold nil)

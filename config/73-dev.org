@@ -99,7 +99,6 @@ Modern on-the-fly syntax checking extension for GNU Emacs.
   (which-key-mode))
 
 (use-package lsp-mode
-  ;;:load-path "~/src/github/elisp/lsp-mode"
   :commands (lsp lsp-deferred)
   :custom
   (lsp-keymap-prefix "C-c l")
@@ -176,7 +175,6 @@ Modern on-the-fly syntax checking extension for GNU Emacs.
   (setq lsp-clients-typescript-server "typescript-language-server"))
 
 (use-package lsp-ui
-  ;; :load-path "~/src/github/elisp/lsp-ui"
   :hook
   (lsp-mode . lsp-ui-mode)
   ;;(lsp-ui-doc-frame-hook . nl-lsp-ui-doc-hook)

@@ -74,7 +74,7 @@ Requires the =clj-kondo= binary on =PATH=.
 (use-package go-mode
   :mode "\\.go\\'"
   :preface
-  (use-package nl-go-project :demand :load-path "~/.emacs.d/lisp")
+  (use-package nl-go-project :ensure nil :demand :load-path "~/.emacs.d/lisp")
   :init
   ;; prefer gofumpt; fall back to gofmt
   (setq gofmt-command (if (executable-find "gofumpt") "gofumpt" "gofmt"))
@@ -83,10 +83,10 @@ Requires the =clj-kondo= binary on =PATH=.
    (go-mode . nl/go-mode-hook)
    (go-ts-mode . nl/go-mode-hook))
   :config
-  (lsp-register-custom-settings
-   '(("gopls.completeUnimported" t t)
-     ("gopls.staticcheck" t t)))
-  )
+  (with-eval-after-load 'lsp-mode
+    (lsp-register-custom-settings
+     '(("gopls.completeUnimported" t t)
+       ("gopls.staticcheck" t t)))))
 #+end_src
 
 *** [[https://github.com/danderson/templ-ts-mode][templ-ts-mode]]
@@ -105,7 +105,7 @@ Requires the =clj-kondo= binary on =PATH=.
 
 (use-package templ-ts-mode
   :after js
-  :load-path "~/src/github/elisp/templ-ts-mode"
+  :ensure (:host github :repo "danderson/templ-ts-mode")
   :mode "\\.templ\\'"
   :hook
   (templ-ts-mode . nl/templ-mode-hook))
@@ -124,13 +124,17 @@ Requires the =clj-kondo= binary on =PATH=.
 
 #+begin_src emacs-lisp
 (use-package cc-mode
+  :ensure nil
   :mode (("\\.h\\(h?\\|xx\\|pp\\)\\'" . c++-mode)
          ("\\.java\\'"                . java-ts-mode)
          )
   :hook
   (java-ts-mode . nl/java-mode-hook)
   :preface
-  (use-package nl-java-project :demand :load-path "~/.emacs.d/lisp")
+  (use-package nl-java-project
+    :ensure nil
+    :after projectile
+    :load-path "~/.emacs.d/lisp")
   (defun nl/java-mode-hook ()
     "My Java mode configuration."
     (unless (file-remote-p (or buffer-file-name default-directory))
@@ -180,12 +184,14 @@ Requires the =clj-kondo= binary on =PATH=.
   :hook
   ((php-mode php-ts-mode) . nl/php-mode-hook)
   :preface
-  (use-package flycheck-phpstan)
+  (use-package flycheck-phpstan
+    :ensure (:wait t)
+    :after flycheck)
   ;; Declare load-path for nl-nordita-php-project but do not load it at
   ;; startup. `nl-nordita-project-settings' requires it lazily, so the
   ;; package (and its dependency chain into php-ts-mode/projectile) only
   ;; loads when a Nordita PHP buffer is visited.
-  (use-package nl-nordita-php-project :load-path "~/.emacs.d/lisp")
+  (use-package nl-nordita-php-project :ensure nil :load-path "~/.emacs.d/lisp")
 
   (defun nl/php--comment-fill-prefix (line indentation)
     "Return fill prefix for LINE in a PHP comment with INDENTATION."
@@ -422,7 +428,7 @@ onto the preceding symbol before completing."
 
   (defun nl/php-mode-hook ()
     "My PHP mode configuration."
-    (require 'flycheck-phpstan)
+    (require 'flycheck-phpstan nil t)
     (setq php-mode-lineup-cascaded-calls t
           php-cs-fixer-config-option (concat (projectile-project-root) ".php-cs-fixer.php"))
     (setq-local fill-column 120)

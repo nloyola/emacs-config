@@ -28,6 +28,7 @@ Enable ANSI colors for compilation buffers.
 
 #+begin_src emacs-lisp
 (use-package compile
+  :ensure nil
   :preface
   (defun eat-compilation-start (command &optional mode name-function highlight-regexp continue)
     (let ((name-of-mode "compilation")
@@ -130,6 +131,7 @@ A minimalist package that enhances compilation-mode.
 
 #+begin_src emacs-lisp :tangle no
 (use-package css-mode
+  :ensure nil
   :preface
   (defun nl/css-mode-hook ()
     (my/lsp-deferred-unless-remote))
@@ -146,6 +148,7 @@ A minimalist package that enhances compilation-mode.
 
 #+begin_src emacs-lisp
 (use-package scss-mode
+  :ensure nil
   :mode "\\.scss\\'"
   :preface
   (require 'flymake-proc)
@@ -163,6 +166,7 @@ Make =dired= show directories first.
 
 #+begin_src emacs-lisp
 (use-package emacs
+  :ensure nil
   :custom
   (dired-recursive-copies 'always)
   ;; Auto refresh Dired, but be quiet about it
@@ -186,6 +190,15 @@ Make =dired= show directories first.
   :if (display-graphic-p)
   :commands edit-server-start
   :preface
+  (defun nl/process-status-string-name-advice (orig-fun process)
+    "Let `process-status' handle PROCESS names even after TRAMP is loaded."
+    (if (stringp process)
+        (when-let ((proc (get-process process)))
+          (funcall orig-fun proc))
+      (funcall orig-fun process)))
+
+  (advice-add 'process-status :around #'nl/process-status-string-name-advice '((depth . -100)))
+
   (defun nl/after-init-hook ()
     (server-start t)
     (edit-server-start t)
@@ -200,6 +213,7 @@ Make =dired= show directories first.
 
 #+begin_src emacs-lisp
 (use-package hl-line
+  :ensure nil
   :commands hl-line-mode)
 #+end_src
 
@@ -211,6 +225,7 @@ Prefer saving the history of opened files somewhere other than the default.
 
 #+begin_src emacs-lisp
 (use-package recentf
+  :ensure nil
   :init (recentf-mode 1)
   :custom
   (recentf-save-file "~/.emacs.d/etc/recentf")
@@ -235,6 +250,7 @@ Remember position in a file.
 
 #+begin_src emacs-lisp
 (use-package saveplace
+  :ensure nil
   :custom
   (save-place-file (locate-user-emacs-file "etc/saveplace" "places"))
   (save-place-forget-unreadable-files nil)
@@ -248,6 +264,7 @@ Remember position in a file.
 
 #+begin_src emacs-lisp
 (use-package sql
+  :ensure nil
   :preface
   (defun nl/sql-mode-hook ()
     "My SQL Mode configuration"
@@ -315,6 +332,7 @@ Window management. ~C-c left (winner-undo)~ undoes the last window configuration
 
 #+begin_src emacs-lisp
 (use-package winner
+  :ensure nil
   :init
   (winner-mode))
 #+end_src
