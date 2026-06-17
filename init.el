@@ -23,14 +23,20 @@
 
 (defconst emacs-start-time (current-time))
 
+;; Ensure encrypted files still decrypt while startup temporarily trims
+;; `file-name-handler-alist'.  Some files can be visited before startup
+;; finishes (for example via command-line arguments or desktop restore).
+(require 'epa-file)
+(epa-file-enable)
+
 (defvar nl/file-name-handler-alist-original file-name-handler-alist)
 
 ;; from https://github.com/D4lj337/Emacs-performance
 (setenv "LSP_USE_PLISTS" "true")
 (setq lsp-use-plists t)
 
-;; Disable file-name-handler-alist during startup for speed; restore after init.
-(setq file-name-handler-alist nil)
+;; Keep `file-name-handler-alist' intact.  Disabling it speeds startup, but
+;; breaks encrypted Org files when they are visited before startup finishes.
 
 (setq package-enable-at-startup nil
       message-log-max 16384
@@ -50,7 +56,7 @@
         gc-cons-percentage 0.1)
   (garbage-collect))
 
-(add-hook 'emacs-startup-hook #'nl/after-init)
+(add-hook 'after-init-hook #'nl/after-init)
 
 (setq comp-deferred-compilation t)
 

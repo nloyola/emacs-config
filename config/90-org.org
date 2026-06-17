@@ -139,7 +139,11 @@
   (org-modern-star '("◉" "○" "✸" "✿")) ;; Custom bullets for headlines
   (org-modern-list '((43 . "➤") (45 . "•") (42 . "◦"))) ;; Custom list markers
   (org-modern-table nil) ;; Disable table styling if not needed
-  (org-modern-hide-stars t) ;; hide stars in headlines
+  ;; NOTE: must not be `t'.  Hiding *all* stars marks the heading start
+  ;; `invisible', which makes Org 9.8's `org-back-to-heading' raise
+  ;; "Before first headline" and breaks TAB cycling.  `leading' keeps the
+  ;; final star visible (still a clean look) and avoids the bug.
+  (org-modern-hide-stars 'leading) ;; hide leading stars in headlines
   (org-modern-tag t) ;; Use org-modern labels for pill-like tag rendering
   (org-modern-label-border 4)
   (org-modern-block-fringe 2) ;; Add fringe to blocks
