@@ -8,4 +8,25 @@
 ;; Elpaca manages packages, so prevent Emacs from loading package.el first.
 (setq package-enable-at-startup nil)
 
+;; On WSL the GUI build is pgtk (Wayland), and Wayland forbids a client from
+;; positioning its own window.  WSLg surfaces each Emacs frame as a real Win32
+;; window, so after startup we ask Windows (via PowerShell + SetWindowPos) to
+;; move the frame so its top-right corner sits at the display's top-right
+;; corner.  See ~/.local/bin/emacs-top-right.ps1.
+(when (getenv "WSL_DISTRO_NAME")
+  (add-hook 'emacs-startup-hook
+            (lambda ()
+              (when (eq (window-system) 'pgtk)
+                (let ((ps "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe")
+                      (script (concat "\\\\wsl.localhost\\"
+                                      (getenv "WSL_DISTRO_NAME")
+                                      (subst-char-in-string
+                                       ?/ ?\\
+                                       (expand-file-name
+                                        "~/.local/bin/emacs-top-right.ps1")))))
+                  (when (file-executable-p ps)
+                    (start-process "emacs-top-right" nil ps
+                                   "-NoProfile" "-ExecutionPolicy" "Bypass"
+                                   "-File" script)))))))
+
 ;;; early-init.el ends here
