@@ -152,6 +152,95 @@ Stopped using this package since it does not work well on Emacs 30.
   (setq keycast-substitute-alist '((self-insert-command nil nil))))
 #+end_src
 
+** [[https://github.com/chiply/svg-line][svg-line]]
+
+Render the mode line as an SVG image.  This is easy to toggle off while testing
+with ~C-c l s~ or ~M-x svg-line-deactivate RET nl-mode-line RET~.
+
+#+begin_src emacs-lisp
+(use-package svg-line
+  :if (and (display-graphic-p) (>= emacs-major-version 29))
+  :ensure (:host github :repo "chiply/svg-line")
+  :demand t
+  :bind ("C-c l s" . nl/svg-line-mode-line-toggle)
+  :preface
+  (defun nl/svg-line-face-color (face attribute fallback)
+    "Return FACE ATTRIBUTE as a color, or FALLBACK when unspecified."
+    (let ((color (face-attribute face attribute nil t)))
+      (if (or (null color) (eq color 'unspecified)) fallback color)))
+
+  (defun nl/svg-line-buffer-icon ()
+    "Return a Nerd Icon for the current buffer's file type."
+    (when (require 'nerd-icons nil t)
+      (let ((icon (if buffer-file-name
+                      (nerd-icons-icon-for-file buffer-file-name)
+                    (nerd-icons-icon-for-mode major-mode))))
+        (unless (string= icon "")
+          (concat icon " ")))))
+
+  (defun nl/svg-line-buffer-name ()
+    "Return the current buffer name for `svg-line'."
+    (svg-line-seg (format " %s%s "
+                          (or (nl/svg-line-buffer-icon) "")
+                          (buffer-name))
+                  :id 'nl-buffer-name
+                  :help (buffer-file-name)
+                  :color (if (buffer-modified-p) "white" "goldenrod")
+                  :bg "#565063"))
+
+  (defun nl/svg-line-process ()
+    "Return `mode-line-process' content for `svg-line'."
+    (let ((process (format-mode-line mode-line-process)))
+      (unless (string= process "")
+        (format ":%s:" process))))
+
+  (defun nl/svg-line-minor-modes ()
+    "Return minor mode lighters for `svg-line'."
+    (format-mode-line minor-mode-alist))
+
+  (defun nl/svg-line-mode-line-toggle ()
+    "Toggle the experimental SVG mode line."
+    (interactive)
+    (svg-line-toggle 'nl-mode-line))
+  :config
+  (setq svg-line-font nl/gui-fixed-font-name
+        svg-line-font-size 15
+        svg-line-line-pad 4)
+
+  (svg-line-define 'nl-mode-line
+    :target 'mode-line
+    :active #'mode-line-window-selected-p
+    :background (lambda ()
+                  (nl/svg-line-face-color 'mode-line :background "#565063"))
+    :foreground (lambda ()
+                  (nl/svg-line-face-color 'mode-line :foreground "#ffffff"))
+    :inactive-background (lambda ()
+                           (nl/svg-line-face-color 'mode-line-inactive :background "#353644"))
+    :inactive-foreground (lambda ()
+                           (nl/svg-line-face-color 'mode-line-inactive :foreground "#ffffff"))
+    :content
+    (lambda ()
+      (list
+       (cons
+        (list #'nl/svg-line-buffer-name
+              " ["
+              (svg-line-seg (format-mode-line "%l") :color "light sky blue")
+              ","
+              (svg-line-seg (format-mode-line "%c") :color "light green")
+              "] "
+              "("
+              (svg-line-seg (format-mode-line "%p") :color "salmon")
+              "/"
+              (svg-line-seg (format-mode-line "%I") :color "sandy brown")
+              ") "
+              #'nl/svg-line-process)
+        (list (svg-line-seg (format " %s " (format-mode-line "%m"))
+                            :color "light sky blue")
+              #'nl/svg-line-minor-modes)))))
+
+  (svg-line-activate 'nl-mode-line))
+#+end_src
+
 ** [[https://github.com/rainstormstudio/nerd-icons.el][nerd-icons]]
 
 #+begin_src emacs-lisp

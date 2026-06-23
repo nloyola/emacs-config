@@ -8,14 +8,52 @@ A minor mode which sets the wrap-prefix property on the fly so that single-long-
   :commands (adaptive-wrap-prefix-mode))
 #+end_src
 
-** auth-source
+** auth-source and pass
 
 #+begin_src emacs-lisp
 (use-package auth-source
   :ensure nil ;; it's built into Emacs, no need to install
   :demand t
   :config
-  (setq auth-sources '("~/.authinfo.gpg")))
+  (setq auth-sources '("~/.authinfo.gpg" password-store)))
+
+(use-package auth-source-pass
+  :ensure nil
+  :after auth-source
+  :demand t
+  :config
+  (auth-source-pass-enable))
+
+(use-package password-store
+  :commands (password-store-copy
+             password-store-copy-field
+             password-store-edit
+             password-store-generate
+             password-store-get
+             password-store-insert
+             password-store-remove
+             password-store-rename)
+  :demand t
+  :custom
+  (password-store-executable "/usr/bin/pass")
+  :config
+  ;; Upstream `password-store-get' is intentionally non-interactive, so it
+  ;; does not appear in `M-x'.  Make it callable as a command while preserving
+  ;; its programmatic API for packages that call it with ENTRY and CALLBACK.
+  (defalias 'nl/password-store-get--raw (symbol-function 'password-store-get))
+
+  (defun password-store-get (entry &optional callback)
+    "Return password for ENTRY.
+When called interactively, copy it to the kill ring instead of printing it."
+    (interactive (list (password-store--completing-read t)))
+    (let ((secret (nl/password-store-get--raw entry callback)))
+      (when (called-interactively-p 'interactive)
+        (if secret
+            (progn
+              (kill-new secret)
+              (message "Copied password for %s to the kill ring." entry))
+          (message "No password found for %s." entry)))
+      secret)))
 #+end_src
 
 ** =compile=

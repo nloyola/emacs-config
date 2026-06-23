@@ -66,6 +66,63 @@ selects what you want.
          ("C--" . expreg-contract)))
 #+end_src
 
+** Hideshow folding
+
+Simple Org-like code folding with built-in =hideshow=, based on
+[[https://karthinks.com/software/simple-folding-with-hideshow/][Karthinks' hideshow cycling]].
+
+#+begin_src emacs-lisp
+(use-package hideshow
+  :ensure nil
+  :diminish hs-minor-mode
+  :hook (prog-mode . hs-minor-mode)
+  :bind (:map hs-minor-mode-map
+              ("C-<tab>" . nl/hs-cycle)
+              ("C-S-<tab>" . nl/hs-global-cycle)
+              ("C-<iso-lefttab>" . nl/hs-global-cycle))
+  :preface
+  (defun nl/hs-cycle (&optional level)
+    "Cycle the fold at point like Org's TAB cycling.
+With prefix LEVEL, hide blocks below that level."
+    (interactive "p")
+    (let (message-log-max
+          (inhibit-message t))
+      (if (= level 1)
+          (pcase last-command
+            ('nl/hs-cycle
+             (hs-hide-level 1)
+             (setq this-command 'nl/hs-cycle-children))
+            ('nl/hs-cycle-children
+             ;; `hs-show-block' needs to be called twice to open all folds of
+             ;; the parent block.
+             (save-excursion (hs-show-block))
+             (hs-show-block)
+             (setq this-command 'nl/hs-cycle-subtree))
+            ('nl/hs-cycle-subtree
+             (hs-hide-block))
+            (_
+             (if (not (hs-already-hidden-p))
+                 (hs-hide-block)
+               (hs-hide-level 1)
+               (setq this-command 'nl/hs-cycle-children))))
+        (hs-hide-level level)
+        (setq this-command 'nl/hs-hide-level))))
+
+  (defun nl/hs-global-cycle ()
+    "Cycle folding for the whole buffer."
+    (interactive)
+    (pcase last-command
+      ('nl/hs-global-cycle
+       (save-excursion (hs-show-all))
+       (setq this-command 'nl/hs-global-show))
+      (_ (hs-hide-all))))
+  :config
+  (setq hs-set-up-overlay
+        (lambda (overlay)
+          (when (eq 'code (overlay-get overlay 'hs))
+            (overlay-put overlay 'display " …")))))
+#+end_src
+
 ** [[https://github.com/nflath/hungry-delete][hungry-delete]]
 
 So that hungry deletion can be used in all modes.
