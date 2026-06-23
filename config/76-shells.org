@@ -32,6 +32,14 @@ Terminal emulator powered by Ghostty's VT engine.
     (kill-ring-save (point) (line-end-position))
     (ghostel-send-key "k" "ctrl"))
 
+  (defun nl/ghostel-forward-scroll-in-alt-screen (orig-fun event button)
+    "Forward wheel events to full-screen TUIs, otherwise scroll Emacs."
+    (when (and ghostel--term (ghostel--alt-screen-p ghostel--term))
+      (funcall orig-fun event button)))
+
+  (advice-add 'ghostel--forward-scroll-event
+              :around #'nl/ghostel-forward-scroll-in-alt-screen)
+
   (add-to-list 'project-switch-commands '(ghostel-project "Ghostel") t)
   (add-to-list 'project-switch-commands '(ghostel-project-list-buffers "Ghostel buffers") t)
   (add-to-list 'ghostel-eval-cmds '("magit-status-setup-buffer" magit-status-setup-buffer)))
