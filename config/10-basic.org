@@ -5,6 +5,40 @@ Override various default settings and key bindings.
 See https://tony-zorman.com/posts/emacs-potpourri.html
 
 #+begin_src emacs-lisp
+(defun nl/save-some-buffers ()
+  "Save modified file-visiting buffers without asking."
+  (interactive)
+  (save-some-buffers t))
+
+(defun nl/revert-buffer-no-confirm ()
+  "Revert the current buffer without asking."
+  (interactive)
+  (revert-buffer t t))
+
+(defun nl/install-basic-function-key-bindings ()
+  "Install function-key bindings that must override Emacs defaults."
+  (dolist (key '(("\eOP" . [f1])
+                 ("\e[1;2P" . [S-f1])
+                 ("\e[1;5P" . [C-f1])
+                 ("\eOQ" . [f2])
+                 ("\e[12~" . [f2])
+                 ("\e[1;2Q" . [S-f2])
+                 ("\e[15;2~" . [S-f5])
+                 ("\e[19~" . [f8])
+                 ("\e[23;2~" . [S-f11])
+                 ("\e[23;6~" . [C-S-f11])))
+    (define-key input-decode-map (car key) (cdr key)))
+  (global-set-key (kbd "<f2>") #'nl/save-some-buffers)
+  (global-set-key (kbd "S-<f2>") #'nl/revert-buffer-no-confirm))
+
+;; Keep these outside `use-package emacs' so an unrelated startup error cannot
+;; leave <f2> on Emacs's default `2C-command' in terminal Emacs.
+(nl/install-basic-function-key-bindings)
+(add-hook 'after-init-hook #'nl/install-basic-function-key-bindings)
+(add-hook 'emacs-startup-hook #'nl/install-basic-function-key-bindings)
+#+end_src
+
+#+begin_src emacs-lisp
 (use-package emacs
   :ensure nil
   :preface
@@ -15,7 +49,7 @@ See https://tony-zorman.com/posts/emacs-potpourri.html
 
   ;; custom-file setup and loading (MUST be early)
   (setq custom-file (expand-file-name "custom.el" user-emacs-directory))
-  (load custom-file)
+  (load custom-file 'noerror)
 
   ;; Property List Modifications (put) - Not customs
   (put 'downcase-region 'disabled nil)
@@ -57,8 +91,8 @@ See https://tony-zorman.com/posts/emacs-potpourri.html
   ("<f1>" . indent-for-tab-command)
   ("S-<f1>" . indent-region)
   ("C-<f1>" . find-file-at-point)
-  ("<f2>" . (lambda () (interactive) (save-some-buffers t)))
-  ("S-<f2>" . (lambda () (interactive) (revert-buffer t t)))
+  ("<f2>" . nl/save-some-buffers)
+  ("S-<f2>" . nl/revert-buffer-no-confirm)
   ("S-<f5>" . toggle-truncate-lines)
   ("<f8>" . window-toggle-side-windows)
   ("S-<f11>" . eval-region)
