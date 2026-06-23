@@ -4,7 +4,6 @@
 
 #+begin_src emacs-lisp
   (use-package org
-    :pin gnu
     :bind
     ("C-c c" . org-capture)
     :hook
