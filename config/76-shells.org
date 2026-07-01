@@ -131,7 +131,7 @@ No longer using this. Using [[https://codeberg.org/akib/emacs-eat][emacs-eat]] i
 #+begin_src emacs-lisp
 (use-package tramp
   :ensure nil
-  :defer t
+  :demand t
   :init
   (setq remote-file-name-inhibit-locks t
         remote-file-name-inhibit-auto-save-visited t
