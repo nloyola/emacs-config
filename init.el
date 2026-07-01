@@ -51,8 +51,7 @@
       native-comp-async-report-warnings-errors 'silent)
 
 (defun nl/after-init ()
-  (setq file-name-handler-alist nl/file-name-handler-alist-original
-        gc-cons-threshold 200000000
+  (setq gc-cons-threshold 200000000
         gc-cons-percentage 0.1)
   (garbage-collect))
 
