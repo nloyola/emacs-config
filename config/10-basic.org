@@ -70,6 +70,7 @@ See https://tony-zorman.com/posts/emacs-potpourri.html
   (set-frame-parameter (selected-frame) 'buffer-predicate #'buffer-file-name)
   (when (fboundp 'menu-bar-mode) (menu-bar-mode -1))
   (blink-cursor-mode -1)
+  (setq-default cursor-in-non-selected-windows nil)
   (global-so-long-mode 1)
   (windmove-default-keybindings 'meta)
   (electric-pair-mode 1)

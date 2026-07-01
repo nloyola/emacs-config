@@ -162,12 +162,36 @@ See https://www.gonsie.com/blorg/modeline.html for additional details.
     "Variable-pitch text in the mode line.")
 
   (defface nl/mode-line-buffer-id
-    '((t (:foreground "goldenrod" :background "#565063" :height 120)))
-    "Buffer name in the mode line.")
+    '((t (:foreground "goldenrod" :background "#565063" :height 120 :weight bold)))
+    "Buffer name in the selected window's mode line.")
+
+  (defface nl/mode-line-buffer-id-inactive
+    '((t (:foreground "#9ca0b0" :background "#353644" :height 120)))
+    "Buffer name in non-selected windows' mode lines.")
 
   (defface nl/mode-line-modified
-    '((t (:slant italic :background "#565063" :height 120)))
-    "Modified buffer name in the mode line.")
+    '((t (:slant italic :background "#565063" :height 120 :weight bold)))
+    "Modified buffer name in the selected window's mode line.")
+
+  (defface nl/mode-line-modified-inactive
+    '((t (:foreground "#9ca0b0" :slant italic :background "#353644" :height 120)))
+    "Modified buffer name in non-selected windows' mode lines.")
+
+  (defun nl/mode-line-selected-window-p ()
+    "Return non-nil when formatting the selected window's mode line."
+    (if (fboundp 'mode-line-window-selected-p)
+        (mode-line-window-selected-p)
+      (eq (selected-window) (get-buffer-window (current-buffer)))))
+
+  (defun nl/mode-line-buffer-face ()
+    "Return the buffer-name face for the current mode line."
+    (if (nl/mode-line-selected-window-p)
+        (if (buffer-modified-p)
+            'nl/mode-line-modified
+          'nl/mode-line-buffer-id)
+      (if (buffer-modified-p)
+          'nl/mode-line-modified-inactive
+        'nl/mode-line-buffer-id-inactive)))
 
   (defun nl/mode-line-theme ()
     (set-face-attribute 'mode-line nil
@@ -185,8 +209,9 @@ See https://www.gonsie.com/blorg/modeline.html for additional details.
     ;; font attributes explicitly as well.
     (when (facep 'mode-line-active)
       (set-face-attribute 'mode-line-active nil
+                          :background "#565063"
                           :foreground "white"
-                          :box '(:line-width 2 :color "#3d3947")
+                          :box '(:line-width 2 :color "goldenrod")
                           :height 120
                           :overline nil
                           :underline nil
@@ -195,8 +220,8 @@ See https://www.gonsie.com/blorg/modeline.html for additional details.
 
     (set-face-attribute 'mode-line-inactive nil
                         :background "#353644"
-                        :foreground "white"
-                        :box '(:line-width 2 :color "#353644")
+                        :foreground "#9ca0b0"
+                        :box '(:line-width 2 :color "#242631")
                         :height 120
                         :overline nil
                         :family nl/gui-fixed-font-name
@@ -213,12 +238,29 @@ See https://www.gonsie.com/blorg/modeline.html for additional details.
     (set-face-attribute 'nl/mode-line-buffer-id nil
                         :foreground "goldenrod"
                         :background "#565063"
+                        :weight 'bold
+                        :height 120
+                        :family nl/gui-fixed-font-name
+                        :inherit nil)
+    (set-face-attribute 'nl/mode-line-buffer-id-inactive nil
+                        :foreground "#9ca0b0"
+                        :background "#353644"
+                        :weight 'normal
                         :height 120
                         :family nl/gui-fixed-font-name
                         :inherit nil)
     (set-face-attribute 'nl/mode-line-modified nil
                         :slant 'italic
                         :background "#565063"
+                        :weight 'bold
+                        :height 120
+                        :family nl/gui-fixed-font-name
+                        :inherit nil)
+    (set-face-attribute 'nl/mode-line-modified-inactive nil
+                        :foreground "#9ca0b0"
+                        :slant 'italic
+                        :background "#353644"
+                        :weight 'normal
                         :height 120
                         :family nl/gui-fixed-font-name
                         :inherit nil))
@@ -227,11 +269,10 @@ See https://www.gonsie.com/blorg/modeline.html for additional details.
    mode-line-format
    (list
     ;; the buffer name; the file name as a tool tip
-    '(:eval (propertize " %b "
-                        'face
-                        (if (buffer-modified-p)
-                            'nl/mode-line-modified
-                          'nl/mode-line-buffer-id)
+    '(:eval (propertize (if (nl/mode-line-selected-window-p)
+                            " ◆ %b "
+                          "   %b ")
+                        'face (nl/mode-line-buffer-face)
                         'help-echo (buffer-file-name)))
 
     ;; line and column

@@ -273,13 +273,14 @@ Pulse highlight line on demand or after running select functions
   :bind (("C-c l p" . pulsar-pulse-line)
          ("C-c l h" . pulsar-highlight-line))
   :config
-  (pulsar-global-mode 1)
-  :config
   (setq pulsar-pulse t)
   (setq pulsar-delay 0.055)
   (setq pulsar-iterations 10)
   (setq pulsar-face 'pulsar-magenta)
-  (setq pulsar-highlight-face 'pulsar-yellow))
+  (setq pulsar-highlight-face 'pulsar-yellow)
+  (setq pulsar-pulse-on-window-change t)
+  (add-to-list 'pulsar-pulse-functions 'my/other-window-mru)
+  (pulsar-global-mode 1))
 
 #+end_src
 
