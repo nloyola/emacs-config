@@ -59,7 +59,14 @@ See https://tony-zorman.com/posts/emacs-potpourri.html
   (put 'erase-buffer 'disabled nil)
 
   ;; Function Calls / Mode Toggles / Aliases - Not customs
+  (defun nl/enable-terminal-mouse (&optional frame)
+    "Enable mouse wheel/click reporting in terminal FRAMEs."
+    (unless (window-system frame)
+      (xterm-mouse-mode 1)))
+
   (defalias 'yes-or-no-p 'y-or-n-p)
+  (nl/enable-terminal-mouse (selected-frame))
+  (add-hook 'after-make-frame-functions #'nl/enable-terminal-mouse)
   (set-terminal-coding-system 'utf-8)
   (set-keyboard-coding-system 'utf-8)
   (set-selection-coding-system 'utf-8)
