@@ -325,6 +325,24 @@ This package can be used to tie related commands into a family of short bindings
     (kill-new buffer-file-name)
     (message "Copied file name: %s" buffer-file-name))
 
+  (defun nl/current-buffer-folder ()
+    "Return the folder associated with the current buffer."
+    (cond
+     ((derived-mode-p 'dired-mode) (dired-current-directory))
+     (buffer-file-name (file-name-directory buffer-file-name))
+     (t default-directory)))
+
+  (defun nl/open-current-folder-in-nautilus ()
+    "Open the current buffer's folder in Nautilus."
+    (interactive)
+    (let ((folder (expand-file-name (nl/current-buffer-folder))))
+      (when (file-remote-p folder)
+        (user-error "Cannot open remote folder in Nautilus: %s" folder))
+      (unless (executable-find "nautilus")
+        (user-error "Nautilus executable not found"))
+      (start-process "nautilus" nil "nautilus" folder)
+      (message "Opened folder in Nautilus: %s" folder)))
+
   (defhydra hydra-nl-common (:color red :hint nil)
     ("f" hydra-nl-frames/body "frames" :color blue :column "Frames")
     ("w" hydra-window/body "windows" :color blue :column "Windows")
@@ -333,7 +351,8 @@ This package can be used to tie related commands into a family of short bindings
     ("s" hydra-nl-search/body "search" :color blue :column "Search")
     ("a" hydra-nl-align/body "align" :color blue :column "Align")
     ("y" nl/copy-buffer-file-name "copy file path" :color blue :column "Copy")
-    ("c" nl/open-alacritty-project-root "alacritty project root" :color blue :column "Shell")
+    ("o" nl/open-current-folder-in-nautilus "nautilus here" :color blue :column "External")
+    ("c" nl/open-alacritty-project-root "alacritty project root" :color blue)
     ("C" nl/open-alacritty-here "alacritty here" :color blue)
     ("v" nl/open-ghostel-project-root "ghostel project root" :color blue)
     ("V" nl/open-ghostel-here "ghostel here" :color blue)
