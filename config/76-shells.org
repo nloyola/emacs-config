@@ -25,6 +25,26 @@ Terminal emulator powered by Ghostty's VT engine.
     (interactive "sCommand to run: ")
     (ghostel)
     (ghostel-send-string (concat command "\n")))
+
+  (defun nl/ghostel-directory-here ()
+    "Return the current buffer's directory for opening Ghostel."
+    (cond
+     ((derived-mode-p 'dired-mode) (dired-current-directory))
+     ((buffer-file-name) (file-name-directory (buffer-file-name)))
+     (t default-directory)))
+
+  (defun nl/open-ghostel-here ()
+    "Open a new Ghostel session in the current buffer's directory."
+    (interactive)
+    (let ((default-directory (nl/ghostel-directory-here)))
+      (ghostel)))
+
+  (defun nl/open-ghostel-project-root ()
+    "Open a new Ghostel session in the current project root."
+    (interactive)
+    (require 'projectile)
+    (let ((default-directory (projectile-project-root)))
+      (ghostel)))
   :config
   (defun ghostel-send-C-k-and-kill ()
     "Send `C-k' to Ghostel and copy text to end of line."
