@@ -329,7 +329,14 @@ Project navigation and management library for Emacs.
 (use-package projectile
   :diminish projectile-mode
   :bind-keymap ("C-c p" . projectile-command-map)
-  :bind (:map projectile-command-map ("f" . consult-projectile-find-file))
+  :bind (:map projectile-command-map ("f" . nl/projectile-find-file))
+  :preface
+  (defun nl/projectile-find-file ()
+    "Find a project file with a UI suitable for the current frame type."
+    (interactive)
+    (if (display-graphic-p)
+        (consult-projectile-find-file)
+      (projectile-find-file)))
   :init (projectile-mode +1)
   :config
   ;; tramp-fix: https://github.com/syl20bnr/spacemacs/issues/11381

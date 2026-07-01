@@ -415,31 +415,31 @@ PATHS are relative to the project root."
   (setq vertico-cycle t
         vertico-sort-function #'vertico-sort-history-alpha)
   :config
-  (defun nl/vertico-posframe-bottom-left-offset (info)
-    "Position Vertico posframe near the bottom-left of the frame with padding."
-    (cons 96 (- (plist-get info :parent-frame-height)
-                (plist-get info :posframe-height)
-                96)))
-
   (require 'vertico-multiform)
-  (add-to-list 'vertico-multiform-commands
-               '(consult-buffer
-                 posframe
-                 (vertico-sort-function . nil)
-                 (vertico-posframe-poshandler . nl/vertico-posframe-bottom-left-offset)
-                 (vertico-posframe-fallback-mode . vertico-buffer-mode)))
-  (add-to-list 'vertico-multiform-commands
-               '(consult-projectile-find-file
-                 posframe
-                 (vertico-posframe-poshandler . nl/vertico-posframe-bottom-left-offset)
-                 (vertico-posframe-fallback-mode . vertico-buffer-mode)))
-  (add-to-list 'vertico-multiform-commands
-               '(consult-projectile
-                 posframe
-                 (vertico-posframe-poshandler . posframe-poshandler-frame-top-center)
-                 (vertico-posframe-fallback-mode . vertico-buffer-mode)))
-  (vertico-multiform-mode 1)
-  )
+  (when (display-graphic-p)
+    (defun nl/vertico-posframe-bottom-left-offset (info)
+      "Position Vertico posframe near the bottom-left of the frame with padding."
+      (cons 96 (- (plist-get info :parent-frame-height)
+                  (plist-get info :posframe-height)
+                  96)))
+
+    (add-to-list 'vertico-multiform-commands
+                 '(consult-buffer
+                   posframe
+                   (vertico-sort-function . nil)
+                   (vertico-posframe-poshandler . nl/vertico-posframe-bottom-left-offset)
+                   (vertico-posframe-fallback-mode . vertico-buffer-mode)))
+    (add-to-list 'vertico-multiform-commands
+                 '(consult-projectile-find-file
+                   posframe
+                   (vertico-posframe-poshandler . nl/vertico-posframe-bottom-left-offset)
+                   (vertico-posframe-fallback-mode . vertico-buffer-mode)))
+    (add-to-list 'vertico-multiform-commands
+                 '(consult-projectile
+                   posframe
+                   (vertico-posframe-poshandler . posframe-poshandler-frame-top-center)
+                   (vertico-posframe-fallback-mode . vertico-buffer-mode))))
+  (vertico-multiform-mode 1))
 
 ;; Use the `orderless' completion style.
 ;; Enable `partial-completion' for file path expansion.
@@ -484,6 +484,7 @@ PATHS are relative to the project root."
 
 (use-package vertico-posframe
   :after vertico
+  :if (display-graphic-p)
   :demand t
   :ensure t
   :custom-face
@@ -508,6 +509,13 @@ PATHS are relative to the project root."
     (setq-local completion-styles '(orderless)
                 completion-category-overrides '((lsp-capf (styles orderless)))))
   :hook (lsp-mode . corfu-lsp-setup)
+  :bind (:map corfu-map
+              ("SPC" . corfu-insert-separator)
+              ("RET" . corfu-insert)
+              ("TAB" . corfu-next)
+              ([tab] . corfu-next)
+              ("S-TAB" . corfu-previous)
+              ([backtab] . corfu-previous))
   ;; Optional customizations
   ;; :custom-face
   ;; (corfu-current ((t (:background "#440F04"))))
@@ -537,6 +545,12 @@ PATHS are relative to the project root."
 (with-eval-after-load 'corfu
   (set-face-attribute 'corfu-current nil
                       :background "#440F04"))
+
+(use-package corfu-terminal
+  :after corfu
+  :config
+  (unless (display-graphic-p)
+    (corfu-terminal-mode 1)))
 
 ;; A few more useful configurations...
 (use-package emacs
