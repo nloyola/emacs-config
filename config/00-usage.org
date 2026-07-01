@@ -158,7 +158,7 @@ an overview for daily use, not the source of truth for implementation.
 
 *** Files, projects, and tools
 
-- ~<f5>~ :: Compile project with consult + projectile history.
+- ~<f5>~ :: Compile project with consult + Projectile history via =ghostel-compile=.
 
 - ~C-<f5>~ :: Run =compile=.
 

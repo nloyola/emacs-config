@@ -38,18 +38,20 @@
       (beginning-of-line)))
 
   (defun my/consult-projectile-compile-with-history ()
-    "Prompt for a compile command using Consult and Projectile's default."
+    "Prompt for a compile command with Consult, then run it with Ghostel."
     (interactive)
     (require 'projectile)
+    (require 'consult)
+    (require 'ghostel-compile)
     (let* ((project-root (projectile-project-root))
            (default (projectile-compilation-command project-root))
            (command (consult--read
                      (delete-dups (cons default compile-history))
-                     :prompt "Compile command: "
+                     :prompt "Ghostel compile command: "
                      :default default)))
       (add-to-history 'compile-history command)
       (let ((default-directory project-root))
-        (compile command))))
+        (ghostel-compile command))))
 
   ;; https://www.emacs.dyerdwelling.family/emacs/20240804075952-emacs--finding-files-using-completing-read/
   (defun nl/find-file ()
@@ -203,7 +205,7 @@ https://www.reddit.com/r/emacs/comments/1rhi075/elegant_implementation_of_otherw
                ,nl/side-window-parameters))
 
 (add-to-list 'display-buffer-alist
-             '("\\*\\(?:compilation\\|Backtrace\\|Warnings\\|Completions\\|Compile-Log\\|cargo-run\\|\\Flycheck.*\\|Go Test\\)\\*"
+             '("\\*\\(?:compilation\\|ghostel-compile\\|Backtrace\\|Warnings\\|Completions\\|Compile-Log\\|cargo-run\\|\\Flycheck.*\\|Go Test\\)\\*"
                display-buffer-in-side-window
                (side . bottom)
                (slot . 1)
