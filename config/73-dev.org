@@ -353,11 +353,7 @@ Project navigation and management library for Emacs.
         projectile-generic-command
         (if (executable-find "fdfind")
             "fdfind . -0 --type f --color=never"
-          "find . -type f -print0 | cut -c3-"))
-
-  (def-projectile-commander-method ?d
-    "Open project root in dired."
-    (projectile-dired)))
+          "find . -type f -print0 | cut -c3-")))
 #+end_src
 
 ** [[https://github.com/radian-software/apheleia][apheleia]]
