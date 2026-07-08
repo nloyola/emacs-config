@@ -156,17 +156,35 @@ indentation, and each resulting paragraph is refilled."
     (add-hook 'git-commit-setup-hook #'nl/git-commit-setup-cancel-safety)
     (add-hook 'git-commit-setup-hook #'nl/git-commit-setup-fonts))
   (with-eval-after-load 'magit
+    ;; A full Magit line background masks inline branch badge backgrounds, so
+    ;; mark the current line with subtle rules instead.
+    (set-face-attribute 'magit-section-highlight nil
+                        :background 'unspecified
+                        :foreground 'unspecified
+                        :overline "#64748b"
+                        :underline '(:color "#64748b" :style line)
+                        :extend t)
     (let ((branch-font (face-attribute 'variable-pitch :family nil 'default)))
       (dolist (face '(magit-branch-current
                       magit-branch-local
                       magit-branch-remote
                       magit-branch-remote-head
                       magit-head))
-        (set-face-attribute face nil
-                            :family branch-font
-                            :weight 'bold
-                            :height 1.0
-                            :box '(:line-width (1 . -1) :style released-button)))))
+        (let ((branch-background (pcase face
+                                   ('magit-branch-current "#7c3aed")
+                                   ('magit-branch-local "#2563eb")
+                                   ('magit-branch-remote "#059669")
+                                   ('magit-branch-remote-head "#0891b2")
+                                   (_ "#6d28d9"))))
+          (set-face-attribute face nil
+                              :family branch-font
+                              :foreground "#ffffff"
+                              :background branch-background
+                              :weight 'bold
+                              :height 1.0
+                              :box `(:line-width (1 . -1)
+                                      :color ,branch-background
+                                      :style released-button))))))
   (with-eval-after-load 'magit-status
     (define-key magit-status-mode-map (kbd "q") #'magit-quit-session)
     (magit-add-section-hook 'magit-status-sections-hook
