@@ -216,20 +216,6 @@ Its default global bindings use the =C-c y= prefix.
   (setq xref-show-xrefs-function #'consult-xref
         xref-show-definitions-function #'consult-xref)
 
-  :custom
-  (consult-buffer-sources
-   '(consult-source-recent-file
-     consult-source-buffer
-     consult-source-hidden-buffer
-     consult-source-modified-buffer
-     consult-source-other-buffer
-     consult-source-buffer-register
-     consult-source-file-register
-     consult-source-bookmark
-     consult-source-project-buffer-hidden
-     consult-source-project-recent-file-hidden
-     consult-source-project-root-hidden))
-
   ;; Configure other variables and modes in the :config section,
   ;; after lazily loading the package.
   :config
