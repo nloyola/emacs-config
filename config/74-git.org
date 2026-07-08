@@ -155,6 +155,18 @@ indentation, and each resulting paragraph is refilled."
     (add-hook 'git-commit-setup-hook #'nl/git-commit-setup-fill-paragraph)
     (add-hook 'git-commit-setup-hook #'nl/git-commit-setup-cancel-safety)
     (add-hook 'git-commit-setup-hook #'nl/git-commit-setup-fonts))
+  (with-eval-after-load 'magit
+    (let ((branch-font (face-attribute 'variable-pitch :family nil 'default)))
+      (dolist (face '(magit-branch-current
+                      magit-branch-local
+                      magit-branch-remote
+                      magit-branch-remote-head
+                      magit-head))
+        (set-face-attribute face nil
+                            :family branch-font
+                            :weight 'bold
+                            :height 1.0
+                            :box '(:line-width (1 . -1) :style released-button)))))
   (with-eval-after-load 'magit-status
     (define-key magit-status-mode-map (kbd "q") #'magit-quit-session)
     (magit-add-section-hook 'magit-status-sections-hook
