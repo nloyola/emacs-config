@@ -1,5 +1,63 @@
 * Text & prose
 
+** App API request logs
+
+Highlight tab-separated App API request logs such as =appapi-requests.txt=.
+
+#+begin_src emacs-lisp
+(require 'derived)
+
+(defface appapi-log-status-success-face
+  '((t (:inherit success)))
+  "Face for successful App API request status codes.")
+
+(defface appapi-log-status-warning-face
+  '((t (:inherit warning)))
+  "Face for client-error App API request status codes.")
+
+(defface appapi-log-status-error-face
+  '((t (:inherit error)))
+  "Face for server-error App API request status codes.")
+
+(defun appapi-log-status-face (status)
+  "Return a face for numeric HTTP STATUS."
+  (cond ((string-prefix-p "2" status) 'appapi-log-status-success-face)
+        ((string-prefix-p "4" status) 'appapi-log-status-warning-face)
+        ((string-prefix-p "5" status) 'appapi-log-status-error-face)
+        (t 'font-lock-constant-face)))
+
+(defconst appapi-log-font-lock-keywords
+  `((,(rx line-start
+          (group (= 4 digit) "-" (= 2 digit) "-" (= 2 digit)
+                 " " (= 2 digit) ":" (= 2 digit) ":" (= 2 digit))
+          "\t"
+          (group (+ (not (any "\t"))))
+          "\t"
+          (group (+ (not (any " \t"))))
+          "\t"
+          (group (+ upper))
+          " status="
+          (group (group (= 3 digit)))
+          " dur="
+          (group (group (+ digit)) "ms")
+          " ip="
+          (group (+ (any digit "."))))
+     (1 font-lock-builtin-face)
+     (2 font-lock-variable-name-face)
+     (3 font-lock-string-face)
+     (4 font-lock-keyword-face)
+     (5 (appapi-log-status-face (match-string 6)))
+     (7 font-lock-type-face)
+     (9 font-lock-comment-face)))
+  "Font-lock keywords for `appapi-log-mode'.")
+
+(define-derived-mode appapi-log-mode fundamental-mode "AppAPI-Log"
+  "Major mode for App API request logs."
+  (setq font-lock-defaults '(appapi-log-font-lock-keywords)))
+
+(add-to-list 'auto-mode-alist '("appapi-requests\\.txt\\'" . appapi-log-mode))
+#+end_src
+
 ** [[https://github.com/minad/jinx][jinx]]
 
 Jinx is a fast just-in-time spell-checker for Emacs.
