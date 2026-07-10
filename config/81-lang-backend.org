@@ -175,6 +175,13 @@ Requires the =clj-kondo= binary on =PATH=.
   :mode (("\\.lua\\'" . lua-mode)))
 #+end_src
 
+** [[https://github.com/NixOS/nix-mode][nix-mode]]
+
+#+begin_src emacs-lisp
+(use-package nix-mode
+  :mode "\\.nix\\'")
+#+end_src
+
 ** PHP
 *** [[https://github.com/ejmr/php-mode][php-mode]]
 
