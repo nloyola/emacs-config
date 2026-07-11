@@ -64,9 +64,13 @@ Modern on-the-fly syntax checking extension for GNU Emacs.
   :config
   (setq flycheck-standard-error-navigation nil)
 
+  ;; org-lint: flycheck 36 passes org-lint's propertized position string to
+  ;; `flycheck-error-new-at' as a line number, which fails against modern Org
+  ;; (9.6+) with "Wrong type argument: number-or-marker-p".  `M-x org-lint'
+  ;; still works for manual checks.
   (setq-default flycheck-disabled-checkers
                 (append flycheck-disabled-checkers
-                        '(javascript-jshint)))
+                        '(javascript-jshint org-lint)))
 
   (setq flycheck-checkers (append flycheck-checkers
                                   '(javascript-eslint))
