@@ -82,7 +82,37 @@
      'append)
     (local-set-key (kbd "M-q") #'ignore)
     (local-set-key (kbd "C-c C-x m") #'markdown-toggle-markup-hiding)
+    (key-chord-define-local "jc" #'nl/markdown-command-menu)
     (markdown-toggle-markup-hiding 1))
+
+  (defconst nl/markdown-github-css-file
+    (expand-file-name "css/github-markdown-light.css" user-emacs-directory)
+    "Vendored GitHub light-theme markdown stylesheet for one-shot preview.")
+
+  (defun nl/markdown-preview ()
+    "Render the current Markdown buffer to a static HTML file and open it.
+One-shot preview (no live socket): re-run to refresh.  The output file is
+named after the source buffer so the browser URL ends in `<base>.html'
+rather than a random temp name.  Each source file gets a stable path
+(keyed by a hash of its name), so re-previewing overwrites in place
+instead of littering the temp directory."
+    (interactive)
+    (let* ((source (or (buffer-file-name) (buffer-name)))
+           (base (file-name-base source))
+           (dir (expand-file-name
+                 (md5 source)
+                 (expand-file-name "emacs-md-preview" temporary-file-directory)))
+           (html (expand-file-name (concat base ".html") dir))
+           (out (markdown-standalone markdown-output-buffer-name)))
+      (make-directory dir t)
+      (with-current-buffer out
+        (write-region (point-min) (point-max) html nil 'silent))
+      (browse-url-of-file html)))
+
+  (defun nl/markdown-command-menu ()
+    "Open the Markdown command hydra."
+    (interactive)
+    (hydra-nl-markdown/body))
   :hook
   (markdown-mode . nl/markdown-mode-setup)
   (gfm-mode . nl/markdown-mode-setup)
@@ -90,6 +120,31 @@
   (setq markdown-command "pandoc"
         markdown-fontify-code-blocks-natively t
         markdown-hide-markup t)
+
+  ;; One-shot `markdown-preview' (C-c C-c p): render current buffer to a
+  ;; static HTML file and open it once in the browser - no live socket.
+  ;; Style it like GitHub's light theme by feeding the same vendored
+  ;; `github-markdown-css' into markdown-mode's export variables. The CSS
+  ;; targets `.markdown-body', so we wrap the body in that container and add
+  ;; GitHub's recommended sizing (which lives in github.com's page shell,
+  ;; not the stylesheet). Re-run the command to refresh the preview.
+  (setq markdown-css-paths (list (concat "file://" nl/markdown-github-css-file))
+        markdown-xhtml-body-preamble "<div class=\"markdown-body\">"
+        markdown-xhtml-body-epilogue "</div>"
+        markdown-xhtml-header-content
+        (concat "<style>"
+                "body { margin: 0; background: #ffffff; }"
+                ".markdown-body { box-sizing: border-box; min-width: 200px;"
+                " max-width: 980px; margin: 0 auto; padding: 45px; }"
+                "@media (max-width: 767px) { .markdown-body { padding: 15px; } }"
+                "</style>"))
+
+  (with-eval-after-load 'hydra
+    (defhydra hydra-nl-markdown (:color blue :hint nil)
+      "Markdown"
+      ("p" nl/markdown-preview "Render preview in browser" :column "Preview")
+      ("e" markdown-export "Export to .html file" :column "Preview")
+      ("m" markdown-toggle-markup-hiding "Toggle markup hiding" :column "View")))
   (custom-set-faces
    `(markdown-code-face ((t (:family ,nl/gui-fixed-font-name
                                      :foreground "#91b831"
@@ -123,108 +178,6 @@
    `(markdown-header-face ((t (:family ,nl/gui-variable-font-name :height 110 :foreground "#91b831"))))
    `(markdown-header-delimiter-face ((t (:family ,nl/gui-variable-font-name :height 80))))
    ))
-#+end_src
-
-** [[https://github.com/ancane/markdown-preview-mode][markdown-preview-mode]]
-
-#+begin_src emacs-lisp
-(defconst nl/markdown-preview-dracula-style
-  "<style>
-  body {
-    margin: 0;
-    background: #282a36;
-    color: #f8f8f2;
-  }
-  #markdown-body.markdown-body {
-    box-sizing: border-box;
-    margin: 0 auto;
-    max-width: 52rem;
-    min-height: 100vh;
-    padding: 2rem 1.5rem 3rem;
-    background: #282a36;
-    color: #f8f8f2;
-    font-family: Georgia, serif;
-    line-height: 1.7;
-  }
-  #markdown-body.markdown-body a { color: #8be9fd; }
-  #markdown-body.markdown-body a:visited { color: #bd93f9; }
-  #markdown-body.markdown-body h1,
-  #markdown-body.markdown-body h2,
-  #markdown-body.markdown-body h3,
-  #markdown-body.markdown-body h4,
-  #markdown-body.markdown-body h5,
-  #markdown-body.markdown-body h6 {
-    color: #ff79c6;
-    line-height: 1.25;
-    margin-top: 1.6em;
-  }
-  #markdown-body.markdown-body h1,
-  #markdown-body.markdown-body h2 {
-    border-bottom: 1px solid #44475a;
-    padding-bottom: 0.2em;
-  }
-  #markdown-body.markdown-body pre,
-  #markdown-body.markdown-body code,
-  #markdown-body.markdown-body kbd {
-    font-family: \"Fira Code\", \"SFMono-Regular\", Consolas, monospace;
-  }
-  #markdown-body.markdown-body code {
-    background: #44475a;
-    color: #f1fa8c;
-    padding: 0.1em 0.3em;
-    border-radius: 4px;
-  }
-  #markdown-body.markdown-body pre {
-    background: #44475a;
-    color: #f8f8f2;
-    padding: 1em;
-    overflow-x: auto;
-    border-radius: 6px;
-  }
-  #markdown-body.markdown-body pre code {
-    background: transparent;
-    padding: 0;
-  }
-  #markdown-body.markdown-body blockquote {
-    margin: 1.5em 0;
-    padding-left: 1em;
-    border-left: 4px solid #6272a4;
-    color: #bd93f9;
-  }
-  #markdown-body.markdown-body table {
-    border-collapse: collapse;
-    width: 100%;
-  }
-  #markdown-body.markdown-body th,
-  #markdown-body.markdown-body td {
-    border: 1px solid #6272a4;
-    padding: 0.5rem 0.75rem;
-    text-align: left;
-  }
-  #markdown-body.markdown-body th {
-    background: #44475a;
-    color: #8be9fd;
-  }
-  #markdown-body.markdown-body hr {
-    border: 0;
-    border-top: 1px solid #6272a4;
-    margin: 2rem 0;
-  }
-  #markdown-body.markdown-body img {
-    max-width: 100%;
-    height: auto;
-  }
-  </style>"
-  "Dracula stylesheet for `markdown-preview-mode'.")
-
-(use-package markdown-preview-mode
-  :custom
-  (markdown-preview-http-port 9090)
-  :config
-  (setq markdown-preview-stylesheets
-        (list
-         nl/markdown-preview-dracula-style
-         )))
 #+end_src
 
 ** [[https://github.com/ajc/nginx-mode][nginx-mode]]
