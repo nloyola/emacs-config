@@ -479,42 +479,9 @@ onto the preceding symbol before completing."
           projectile-project-install-cmd "composer update"
           projectile-project-test-cmd  "composer host-test"
           create-lockfiles nil)
-    (cond ((string= (projectile-project-root) (expand-file-name "~/src/nordita/norweb-2021/"))
-           (setq lsp-intelephense-files-exclude
-                 (vconcat lsp-intelephense-files-exclude
-                          [
-                           ;;"public/wire/**" -- if uncommented, then wont be able to jump to definitions
-                           ;; "**/FieldtypeCombo/**"
-                           ;; "**/FieldtypeFieldsetGroup/**"
-                           ;; "**/FieldtypeRepeaterMatrix/**"
-                           ;; "**/FieldtypeTextareas/**"
-                           ;; "**/FileValidatorSvgSanitizer/**"
-                           ;; "**/InputfieldCKEditor/**"
-                           "public/wire.old/**"
-                           "**/AppApi/**"
-                           "**/ProcessHannaCode/**"
-                           "**/pw-fieldtype-yaml/**"
-                           "**/RockMigrations/**"
-                           "**/TracyDebugger/**"
-                           ])
-                 lsp-intelephense-rename-exclude
-                 (vconcat lsp-intelephense-rename-exclude
-                          ["public/wire/**"
-                           "public/wire.old/**"
-                           "**/AppApi/**"
-                           "**/FieldtypeCombo/**"
-                           "**/FieldtypeFieldsetGroup/**"
-                           "**/FieldtypeRepeaterMatrix/**"
-                           "**/FieldtypeTextareas/**"
-                           "**/FileValidatorSvgSanitizer/**"
-                           "**/InputfieldCKEditor/**"
-                           "**/ProcessHannaCode/**"
-                           "**/pw-fieldtype-yaml/**"
-                           "**/RockMigrations/**"
-                           "**/TracyDebugger/**"
-                           ])
-                 lsp-intelephense-php-version "8.5")
-           ))
+    ;; Intelephense per-project excludes moved to
+    ;; ~/.emacs.d/disabled/php-intelephense.org (not loaded). PHP uses phpactor;
+    ;; restore the call to nl/php-intelephense-nordita-excludes here to re-enable.
     )
 
   ;; this style is based on the symfony2 style

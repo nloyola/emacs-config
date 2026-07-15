@@ -109,9 +109,8 @@ Modern on-the-fly syntax checking extension for GNU Emacs.
   (lsp-enable-snippet t)
   (lsp-enable-file-watchers nil)
   (lsp-pyls-plugins-pycodestyle-max-line-length 120)
-  (lsp-intelephense-php-version "8.5")
-  (lsp-intelephense-format-enable nil)
-  (lsp-intelephense-multi-root nil)
+  ;; Intelephense settings moved to ~/.emacs.d/disabled/php-intelephense.org
+  ;; (not loaded). Using phpactor for PHP; see below.
   ;; Try phpactor for PHP for now; disable Intelephense (`iph`) and the old
   ;; felixfbecker PHP language server (`php-ls`).
   (lsp-disabled-clients '(semgrep-ls iph php-ls serenata tailwindcss))

@@ -1,0 +1,72 @@
+#+TITLE: Intelephense config (disabled)
+#+STARTUP: showall
+
+* Intelephense (disabled - currently using phpactor for PHP)
+
+This file lives outside =config/= on purpose. The loader in =init.el=
+(=load-config-org=) only evaluates files matching =config/*.org=, so nothing
+here runs. It is kept for reference / easy re-enable if PHP switches back from
+phpactor to Intelephense (=iph=).
+
+To re-enable:
+1. In =config/73-dev.org=, remove =iph= from =lsp-disabled-clients=.
+2. In =config/81-lang-backend.org=, stop pinning php buffers to phpactor
+   (=(setq-local lsp-enabled-clients '(phpactor))=) and restore the call to
+   =nl/php-intelephense-nordita-excludes= inside =nl-nordita-project-settings=.
+3. Copy the two blocks below back into the relevant =config/*.org= files
+   (or move this file into =config/= and wire up the call site).
+
+** Global settings (were in the =use-package lsp-mode= =:custom= block)
+
+#+begin_src emacs-lisp
+(setq lsp-intelephense-php-version "8.5"
+      lsp-intelephense-format-enable nil
+      lsp-intelephense-multi-root nil)
+#+end_src
+
+** Per-project excludes for norweb-2021
+
+Was inlined as a =cond= inside =nl-nordita-project-settings=. Extracted here as
+a helper; call =(nl/php-intelephense-nordita-excludes)= from that function once
+Intelephense is active again.
+
+#+begin_src emacs-lisp
+(defun nl/php-intelephense-nordita-excludes ()
+  "Extend Intelephense file/rename excludes for the norweb-2021 project."
+  (when (string= (projectile-project-root)
+                 (expand-file-name "~/src/nordita/norweb-2021/"))
+    (setq lsp-intelephense-files-exclude
+          (vconcat lsp-intelephense-files-exclude
+                   [
+                    ;;"public/wire/**" -- if uncommented, then wont be able to jump to definitions
+                    ;; "**/FieldtypeCombo/**"
+                    ;; "**/FieldtypeFieldsetGroup/**"
+                    ;; "**/FieldtypeRepeaterMatrix/**"
+                    ;; "**/FieldtypeTextareas/**"
+                    ;; "**/FileValidatorSvgSanitizer/**"
+                    ;; "**/InputfieldCKEditor/**"
+                    "public/wire.old/**"
+                    "**/AppApi/**"
+                    "**/ProcessHannaCode/**"
+                    "**/pw-fieldtype-yaml/**"
+                    "**/RockMigrations/**"
+                    "**/TracyDebugger/**"
+                    ])
+          lsp-intelephense-rename-exclude
+          (vconcat lsp-intelephense-rename-exclude
+                   ["public/wire/**"
+                    "public/wire.old/**"
+                    "**/AppApi/**"
+                    "**/FieldtypeCombo/**"
+                    "**/FieldtypeFieldsetGroup/**"
+                    "**/FieldtypeRepeaterMatrix/**"
+                    "**/FieldtypeTextareas/**"
+                    "**/FileValidatorSvgSanitizer/**"
+                    "**/InputfieldCKEditor/**"
+                    "**/ProcessHannaCode/**"
+                    "**/pw-fieldtype-yaml/**"
+                    "**/RockMigrations/**"
+                    "**/TracyDebugger/**"
+                    ])
+          lsp-intelephense-php-version "8.5")))
+#+end_src
