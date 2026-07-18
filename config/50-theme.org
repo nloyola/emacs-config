@@ -25,6 +25,18 @@ See https://protesilaos.com/codelog/2026-07-12-emacs-doric-themes-1-2-0/.
 
   (advice-add 'load-theme :after #'nl/fix-gnus-group-news-face-cycle)
 
+  (defun nl/fix-org-indent-hide-stars (&rest _)
+    "Keep `org-indent-mode' virtual leading stars invisible after theme changes.
+Doric themes set `org-indent' to inherit (fixed-pitch org-hide), so
+fixed-pitch's foreground wins over `org-hide' and the virtual heading
+stars org-indent draws in the line prefix render visibly.  Put
+`org-hide' first so its background-matching foreground hides them."
+    (custom-theme-set-faces
+     'user
+     '(org-indent ((t (:inherit (org-hide fixed-pitch)))))))
+
+  (advice-add 'load-theme :after #'nl/fix-org-indent-hide-stars)
+
   (setq doric-themes-to-toggle '(doric-light doric-plum))
 
   (mapc #'disable-theme custom-enabled-themes)
