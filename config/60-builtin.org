@@ -236,15 +236,12 @@ Make =dired= show directories first.
       (funcall orig-fun process)))
 
   (advice-add 'process-status :around #'nl/process-status-string-name-advice '((depth . -100)))
-
-  (defun nl/after-init-hook ()
-    (server-start t)
-    (edit-server-start t)
-    )
   :init
-  (if after-init-time
-      (edit-server-start)
-    (add-hook 'after-init-hook 'nl/after-init-hook)))
+  (require 'server)
+  (unless (server-running-p)
+    (server-start))
+  :config
+  (edit-server-start t))
 #+end_src
 
 ** =hl-line=
