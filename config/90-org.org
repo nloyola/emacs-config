@@ -243,6 +243,17 @@ served at http://localhost:35901). Replaces the deprecated org-roam-server.
 (use-package websocket
   :after org-roam)
 
+;; org-roam-ui pulls in simple-httpd. MELPA's simple-httpd recipe points at
+;; `skeeto/emacs-web-server', whose basename collides with the unrelated
+;; `eschulte/emacs-web-server' (the `web-server' package) already checked out
+;; under elpaca/sources/emacs-web-server/. Elpaca then reuses that directory,
+;; finds no simple-httpd.el, and the build fails ("Unable to find main elisp
+;; file"). Pin simple-httpd to skeeto's original `emacs-http-server' repo,
+;; which carries the same simple-httpd.el but has a non-colliding directory
+;; name, so the dependency installs cleanly.
+(use-package simple-httpd
+  :ensure (simple-httpd :host github :repo "skeeto/emacs-http-server"))
+
 (use-package org-roam-ui
   :after org-roam
   :custom
