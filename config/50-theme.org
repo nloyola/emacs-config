@@ -1,9 +1,45 @@
 * Theme
 See https://tinted-theming.github.io/base16-gallery/
 
-** [[https://github.com/LionyxML/kusanagi-theme][Kusanagi]]
+** [[https://protesilaos.com/emacs/doric-themes][Doric themes]]
+
+Minimalist themes by Protesilaos Stavrou. The active theme is =doric-plum=.
+See https://protesilaos.com/codelog/2026-07-12-emacs-doric-themes-1-2-0/.
 
 #+begin_src emacs-lisp
+(use-package doric-themes
+  :demand t
+  :config
+  (defun nl/fix-gnus-group-news-face-cycle (&rest _)
+    "Break the Gnus news face inheritance cycle after theme changes."
+    (custom-theme-set-faces
+     'user
+     '(gnus-group-news-low ((t (:inherit gnus-group-mail-1 :weight bold))))
+     '(gnus-group-news-low-empty ((t (:inherit gnus-group-mail-1-empty :weight normal))))
+     '(gnus-group-news-4 ((t (:inherit gnus-group-news-low))))
+     '(gnus-group-news-4-empty ((t (:inherit gnus-group-news-low-empty))))
+     '(gnus-group-news-5 ((t (:inherit gnus-group-news-low))))
+     '(gnus-group-news-5-empty ((t (:inherit gnus-group-news-low-empty))))
+     '(gnus-group-news-6 ((t (:inherit gnus-group-news-low))))
+     '(gnus-group-news-6-empty ((t (:inherit gnus-group-news-low-empty))))))
+
+  (advice-add 'load-theme :after #'nl/fix-gnus-group-news-face-cycle)
+
+  (setq doric-themes-to-toggle '(doric-light doric-plum))
+
+  (mapc #'disable-theme custom-enabled-themes)
+  (load-theme 'doric-plum :no-confirm))
+#+end_src
+
+** Past themes
+
+Themes previously used as the active theme, most recent first:
+
+- =kusanagi= - [[https://github.com/LionyxML/kusanagi-theme][kusanagi-theme]]
+
+** [[https://github.com/LionyxML/kusanagi-theme][Kusanagi]] (disabled)
+
+#+begin_src emacs-lisp :tangle no
 (use-package modus-themes
   :demand t)
 
@@ -31,8 +67,6 @@ See https://tinted-theming.github.io/base16-gallery/
   (mapc #'disable-theme custom-enabled-themes)
   (load-theme 'kusanagi :no-confirm))
 #+end_src
-
-The active theme is =kusanagi=.
 
 ** [[https://protesilaos.com/emacs/ef-themes#h:dd9e06f2-eef0-4afe-8a12-b7af5d597108][ef-themes]] (disabled)
 
