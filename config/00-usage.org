@@ -26,6 +26,8 @@ an overview for daily use, not the source of truth for implementation.
 
 - ~C-c w~ :: Open the alternate window management hydra.
 
+- ~C-c d~ / ~C-c C-d~ :: Open the dashboard buffer.
+
 *** Search, jump, and completion
 
 - ~C-S-s~ :: Start forward isearch.

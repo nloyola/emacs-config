@@ -29,11 +29,23 @@ Using =nerd-icons-dired= instead.
 Using =nerd-icons= or =all-the-icons= slows down init time.
 
 #+begin_src emacs-lisp
+(defun nl/open-dashboard ()
+  "Open the dashboard buffer."
+  (interactive)
+  (unless (locate-library "dashboard")
+    (when (fboundp 'elpaca-wait)
+      (elpaca-wait)))
+  (require 'dashboard)
+  (dashboard-open))
+
+(global-set-key (kbd "C-c d") #'nl/open-dashboard)
+(global-set-key (kbd "C-c D") #'nl/open-dashboard)
+(global-set-key (kbd "C-c C-d") #'nl/open-dashboard)
+
 (use-package dashboard
   ;; :after nerd-icons
   :demand t
-  :config
-  (dashboard-setup-startup-hook)
+  :defer nil
   :custom
   (dashboard-projects-backend 'projectile)
   (dashboard-center-content t)
@@ -41,11 +53,28 @@ Using =nerd-icons= or =all-the-icons= slows down init time.
   ;; (dashboard-set-heading-icons t)
   ;; (dashboard-set-file-icons t)
   :config
-  (setq dashboard-items '((recents  . 5)
+  (defconst nl/todo-index-file "~/Sync/RoamNotes/20260716120000-todo_index.org")
+
+  (defun nl/dashboard-insert-todo-index (list-size)
+    "Insert the Org-roam todo index into the dashboard."
+    (dashboard-insert-section
+     "Todo:"
+     '("Org-roam todo index")
+     list-size
+     'todo
+     "t"
+     (lambda (&rest _)
+       (find-file nl/todo-index-file))
+     (propertize el 'dashboard-path nl/todo-index-file)))
+
+  (add-to-list 'dashboard-item-generators '(todo . nl/dashboard-insert-todo-index))
+  (add-to-list 'dashboard-item-shortcuts '(todo . "t"))
+  (setq dashboard-items '((todo . 1)
+                          (recents  . 5)
                           (projects . 5)
                           (bookmarks . 5)
                           (registers . 5)))
-  )
+  (dashboard-setup-startup-hook))
 #+end_src
 
 ** [[https://github.com/alexluigit/dirvish][dirvish]] (disabled)
