@@ -53,23 +53,23 @@ Using =nerd-icons= or =all-the-icons= slows down init time.
   ;; (dashboard-set-heading-icons t)
   ;; (dashboard-set-file-icons t)
   :config
-  (defconst nl/todo-index-file "~/Sync/RoamNotes/20260716120000-todo_index.org")
+  (defconst nl/project-index-file "~/Sync/RoamNotes/20260718151200-project_index.org")
 
-  (defun nl/dashboard-insert-todo-index (list-size)
-    "Insert the Org-roam todo index into the dashboard."
+  (defun nl/dashboard-insert-project-index (list-size)
+    "Insert the Org-roam project index into the dashboard."
     (dashboard-insert-section
-     "Todo:"
-     '("Org-roam todo index")
+     "Project index:"
+     '("Org-roam project index")
      list-size
-     'todo
+     'project-index
      "t"
      (lambda (&rest _)
-       (find-file nl/todo-index-file))
-     (propertize el 'dashboard-path nl/todo-index-file)))
+       (find-file nl/project-index-file))
+     (propertize el 'dashboard-path nl/project-index-file)))
 
-  (add-to-list 'dashboard-item-generators '(todo . nl/dashboard-insert-todo-index))
-  (add-to-list 'dashboard-item-shortcuts '(todo . "t"))
-  (setq dashboard-items '((todo . 1)
+  (add-to-list 'dashboard-item-generators '(project-index . nl/dashboard-insert-project-index))
+  (add-to-list 'dashboard-item-shortcuts '(project-index . "t"))
+  (setq dashboard-items '((project-index . 1)
                           (recents  . 5)
                           (projects . 5)
                           (bookmarks . 5)
