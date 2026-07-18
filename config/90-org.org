@@ -262,3 +262,20 @@ served at http://localhost:35901). Replaces the deprecated org-roam-server.
   (org-roam-ui-update-on-save t)
   (org-roam-ui-open-on-start t))
 #+end_src
+
+*** nl-nordita-timesheet
+
+Runs the monthly Nordita timesheet from the "Nordita Hours" org-roam note and
+generates fresh month tables. Loaded lazily - the note's src blocks call these
+commands directly. See =~/.emacs.d/lisp/nl-nordita-timesheet.el=.
+
+#+begin_src emacs-lisp
+(use-package nl-nordita-timesheet
+  :ensure nil
+  :load-path "~/.emacs.d/lisp"
+  :commands (nl/nordita-generate-timesheet
+             nl/nordita-timesheet-generate
+             nl/nordita-insert-month
+             nl/nordita-insert-month-by-name
+             nl/nordita-insert-csv-block))
+#+end_src
