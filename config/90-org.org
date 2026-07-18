@@ -9,6 +9,24 @@
     :hook
     (org-mode . visual-line-mode)
     ;;(org-mode . nl/org-mode-setup)
+    :custom
+    ;; Org reads todo keywords from the *default* value of `org-todo-keywords'
+    ;; when it parses a buffer, so these have to be global.  A dir-local cannot
+    ;; set them: dir-locals run after org-mode has already parsed the buffer,
+    ;; which is why the old todo/norweb-2021/.dir-locals.el had to mutate the
+    ;; default and force a re-parse.  Set here, that whole dance is unnecessary.
+    ;; The `!' on DONE records a state-change timestamp, `@' on CANCELLED prompts
+    ;; for a note; existing LOGBOOK drawers depend on both.
+    (org-todo-keywords
+     '((sequence "TODO(t)" "IN-PROGRESS(p)" "WAITING(w)"
+                 "|" "DONE(d!)" "CANCELLED(c@)")))
+    ;; Used in the agenda and wherever org-modern is off; see org-modern-todo-faces.
+    (org-todo-keyword-faces
+     '(("IN-PROGRESS" . (:foreground "orange" :weight bold))
+       ("WAITING"     . (:foreground "magenta" :weight bold))
+       ("CANCELLED"   . (:foreground "forest green" :weight bold))))
+    (org-tag-alist
+     '(("BUG" . ?b) ("ENHANCEMENT" . ?e) ("CLIENT" . ?c) ("SERVER" . ?s)))
     :preface
     (defun nl/org-confirm-babel-evaluate (lang body)
       "Do not confirm evaluation for these languages."
@@ -98,7 +116,7 @@
               output))
           (advice-add 'org-export-to-file :around #'nl/org-export-inline-css)
           (setq org-capture-templates
-          '(("t" "Todo" entry (file+headline "~/Sync/orgfiles/todo.org" "Tasks")
+          '(("t" "Todo" entry (file+headline "~/Sync/RoamNotes/20260717110501-todo_inbox.org" "Tasks")
              "* TODO %?\n  %i\n  %a")
             ("l" "Link" entry (file+headline "~/Sync/orgfiles/links.org" "Links")
              "* %? %^L %^g \n%T" :prepend t)
@@ -148,9 +166,15 @@
   (org-modern-block-fringe 2) ;; Add fringe to blocks
   (org-hide-emphasis-markers t) ;; hides ~ and =
   (org-modern-block-name '("«" . "»"))
+  ;; org-modern renders keywords as pills from this list only.  A keyword missing
+  ;; here keeps Org's ordinary TODO face even though TODO/DONE get the label font,
+  ;; so every keyword in `org-todo-keywords' needs an entry.
   (org-modern-todo-faces
-   '(("TODO" . (:foreground "red" :weight bold))
-     ("DONE" . (:foreground "green" :weight bold))))
+   '(("TODO"        . (:foreground "red" :weight bold))
+     ("IN-PROGRESS" . (:foreground "orange" :weight bold))
+     ("WAITING"     . (:foreground "magenta" :weight bold))
+     ("DONE"        . (:foreground "green" :weight bold))
+     ("CANCELLED"   . (:foreground "forest green" :weight bold))))
   (org-modern-priority
    '((?A . "⚡")
      (?B . "⬆")
