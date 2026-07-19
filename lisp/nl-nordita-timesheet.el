@@ -20,6 +20,7 @@
 
 ;;; Code:
 
+(require 'cl-lib)
 (require 'org)
 (require 'seq)
 (require 'subr-x)
@@ -41,6 +42,9 @@
 
 (defvar nl/nordita-timesheet-cc "elizabeth.yang@su.se"
   "Cc: address for the timesheet email.")
+
+(defvar nl/nordita-timesheet-holiday-prefix "HOLIDAY: "
+  "Prefix for a Swedish holiday in a generated month table's notes column.")
 
 ;;;; Reading the note's month tables -----------------------------------------
 
@@ -182,6 +186,77 @@ Signals a user-error and stops if the script exits non-zero (see the
       (setq date (time-add date (days-to-time 1))))
     (nreverse days)))
 
+(defun nl/nordita-timesheet--easter (year)
+  "(MONTH . DAY) of Easter Sunday in YEAR, by the anonymous Gregorian algorithm.
+Emacs has no Swedish holiday support, and three of the holidays below are
+Easter-derived, so the date is computed here rather than pulled from a table
+that would need extending every year."
+  (let* ((a (% year 19))
+         (b (/ year 100))
+         (c (% year 100))
+         (d (/ b 4))
+         (e (% b 4))
+         (f (/ (+ b 8) 25))
+         (g (/ (+ (- b f) 1) 3))
+         (h (% (+ (* 19 a) (- b d g) 15) 30))
+         (i (/ c 4))
+         (k (% c 4))
+         (l (% (- (+ 32 (* 2 e) (* 2 i)) h k) 7))
+         (m (/ (+ a (* 11 h) (* 22 l)) 451))
+         (n (+ h l (- (* 7 m)) 114)))
+    (cons (/ n 31) (1+ (% n 31)))))
+
+(defun nl/nordita-timesheet--day-offset (month day year offset)
+  "(MONTH . DAY) OFFSET days from MONTH/DAY of YEAR."
+  (let ((time (time-add (encode-time 0 0 0 day month year)
+                        (days-to-time offset))))
+    (cons (string-to-number (format-time-string "%m" time))
+          (string-to-number (format-time-string "%d" time)))))
+
+(defun nl/nordita-timesheet--midsummer-eve (year)
+  "(MONTH . DAY) of Midsommarafton in YEAR: the Friday falling 19-25 June."
+  (let ((day 19))
+    (while (not (string= (format-time-string "%u" (encode-time 0 0 0 day 6 year)) "5"))
+      (setq day (1+ day)))
+    (cons 6 day)))
+
+(defun nl/nordita-timesheet-swedish-holidays (year)
+  "Alist of ((MONTH . DAY) . NAME) for Swedish holidays in YEAR.
+
+Covers the red days plus the three days Sweden effectively shuts down for -
+Midsommarafton, Julafton and Nyårsafton - because those are non-working days in
+practice and Midsommarafton is always a Friday, so it always lands on a working
+weekday.
+
+Påskdagen, Pingstdagen, Midsommardagen and Alla helgons dag are deliberately
+absent: each always falls at a weekend, and the timesheet table holds only
+Mon-Fri."
+  (let ((easter (nl/nordita-timesheet--easter year)))
+    (cl-flet ((from-easter (offset)
+                (nl/nordita-timesheet--day-offset
+                 (car easter) (cdr easter) year offset)))
+      (list
+       (cons '(1 . 1)   "Nyårsdagen")
+       (cons '(1 . 6)   "Trettondedag jul")
+       (cons (from-easter -2) "Långfredagen")
+       (cons (from-easter 1)  "Annandag påsk")
+       (cons '(5 . 1)   "Första maj")
+       (cons (from-easter 39) "Kristi himmelsfärdsdag")
+       (cons '(6 . 6)   "Sveriges nationaldag")
+       (cons (nl/nordita-timesheet--midsummer-eve year) "Midsommarafton")
+       (cons '(12 . 24) "Julafton")
+       (cons '(12 . 25) "Juldagen")
+       (cons '(12 . 26) "Annandag jul")
+       (cons '(12 . 31) "Nyårsafton")))))
+
+(defun nl/nordita-timesheet--holiday-note (year month day)
+  "Notes-column text for MONTH/DAY of YEAR: the holiday name, or an empty cell."
+  (let ((name (cdr (assoc (cons month day)
+                          (nl/nordita-timesheet-swedish-holidays year)))))
+    (if name
+        (concat nl/nordita-timesheet-holiday-prefix name)
+      "")))
+
 (defun nl/nordita-timesheet--week-span (year month)
   "(FIRST-WEEK . LAST-WEEK): the ISO week of MONTH's first weekday and of its
 last day, for the \"Weeks N-M\" heading."
@@ -216,16 +291,24 @@ year parent)."
      "#+begin_src emacs-lisp :results silent :exports none\n"
      (format "(nl/nordita-generate-timesheet \"%s\")\n" tag)
      "#+end_src\n\n"
+     "| day | hours | notes |\n|-----+-------+-------|\n"
+     (mapconcat
+      (lambda (d)
+        (format "| %s | 0 | %s |" d
+                (nl/nordita-timesheet--holiday-note
+                 year month (string-to-number d))))
+      days "\n")
+     "\n|-----+-------+-------|\n|     |       |       |\n"
+     "#+TBLFM: @>$2=vsum(@2$2..@-1$2)\n\n"
+     ;; The report blocks sit after the table: the timesheet block reads the
+     ;; table directly above it, while these two work on the summary that the
+     ;; first of them appends to the end of the section.
      "#+begin_src emacs-lisp :results silent :exports none\n"
      (format "(nl/nordita-generate-work-summary \"%s\")\n" tag)
      "#+end_src\n\n"
      "#+begin_src emacs-lisp :results silent :exports none\n"
      (format "(nl/nordita-email-work-summary \"%s\")\n" tag)
-     "#+end_src\n\n"
-     "| day | hours | notes |\n|-----+-------+-------|\n"
-     (mapconcat (lambda (d) (format "| %s | 0 |       |" d)) days "\n")
-     "\n|-----+-------+-------|\n|     |       |       |\n"
-     "#+TBLFM: @>$2=vsum(@2$2..@-1$2)\n")))
+     "#+end_src\n")))
 
 ;;;; Placing a month section (current-year flat, other years grouped) --------
 
@@ -307,28 +390,41 @@ the inserted heading."
     (save-excursion (goto-char pos) (insert section "\n"))
     pos))
 
+(defun nl/nordita-timesheet--align-table-at (pos)
+  "Align the table of the month section whose heading is at POS.
+Generated rows vary in width once holiday notes are present, so the section
+would otherwise land visibly ragged and need a manual TAB to straighten out."
+  (save-excursion
+    (goto-char pos)
+    (let ((end (save-excursion (org-end-of-subtree t t))))
+      (when (re-search-forward "^[ \t]*|" end t)
+        (org-table-align)))))
+
 (defun nl/nordita-timesheet--insert-section-for (tag)
   "Insert a fresh month section for TAG (\"YYYY-MM\") into the current buffer.
 Months of the current year go top-level; other years nest as `**' under a
-`* YEAR' parent (created if needed).  Everything is placed newest-first.
-Return the position of the inserted month heading."
+`* YEAR' parent (created if needed).  Everything is placed newest-first, and the
+table is aligned.  Return the position of the inserted month heading."
   (let* ((year  (string-to-number (substring tag 0 4)))
          (month (string-to-number (substring tag 5 7)))
-         (current-year (string-to-number (format-time-string "%Y"))))
-    (if (and (= year current-year)
-             (not (nl/nordita-timesheet--find-year-parent year)))
-        ;; Current year, no parent yet: top-level, newest-first.
-        (let ((pos (nl/nordita-timesheet--toplevel-insert-pos
-                    (nl/nordita-timesheet--tag-value tag))))
-          (save-excursion
-            (goto-char pos)
-            (insert (nl/nordita-timesheet--month-section year month 1) "\n"))
-          pos)
-      ;; Other year (or a current year that already has a parent): grouped.
-      (nl/nordita-timesheet--insert-under-parent
-       (nl/nordita-timesheet--ensure-year-parent year)
-       tag
-       (nl/nordita-timesheet--month-section year month 2)))))
+         (current-year (string-to-number (format-time-string "%Y")))
+         (pos
+          (if (and (= year current-year)
+                   (not (nl/nordita-timesheet--find-year-parent year)))
+              ;; Current year, no parent yet: top-level, newest-first.
+              (let ((pos (nl/nordita-timesheet--toplevel-insert-pos
+                          (nl/nordita-timesheet--tag-value tag))))
+                (save-excursion
+                  (goto-char pos)
+                  (insert (nl/nordita-timesheet--month-section year month 1) "\n"))
+                pos)
+            ;; Other year (or a current year that already has a parent): grouped.
+            (nl/nordita-timesheet--insert-under-parent
+             (nl/nordita-timesheet--ensure-year-parent year)
+             tag
+             (nl/nordita-timesheet--month-section year month 2)))))
+    (nl/nordita-timesheet--align-table-at pos)
+    pos))
 
 ;;;; Interactive entry points ------------------------------------------------
 
