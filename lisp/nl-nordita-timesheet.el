@@ -202,8 +202,9 @@ last day, for the \"Weeks N-M\" heading."
           (string-to-number (format-time-string "%V" month-end)))))
 
 (defun nl/nordita-timesheet--month-section (year month &optional level)
-  "Org section string for MONTH (1-12) of YEAR: the heading, a per-month
-timesheet block, and a zeroed weekday table with a total row and TBLFM sum.
+  "Org section string for MONTH (1-12) of YEAR: the heading, the three per-month
+`C-c C-c' blocks (timesheet, work summary, report email), and a zeroed weekday
+table with a total row and TBLFM sum.
 LEVEL is the heading depth in stars (default 1; use 2 for a month nested under a
 year parent)."
   (let* ((tag   (format "%04d-%02d" year month))
@@ -212,8 +213,14 @@ year parent)."
          (stars (make-string (or level 1) ?*)))
     (concat
      (format "%s %s: Weeks %d–%d\n" stars tag (car span) (cdr span))
-     "#+begin_src emacs-lisp :results silent\n"
+     "#+begin_src emacs-lisp :results silent :exports none\n"
      (format "(nl/nordita-generate-timesheet \"%s\")\n" tag)
+     "#+end_src\n\n"
+     "#+begin_src emacs-lisp :results silent :exports none\n"
+     (format "(nl/nordita-generate-work-summary \"%s\")\n" tag)
+     "#+end_src\n\n"
+     "#+begin_src emacs-lisp :results silent :exports none\n"
+     (format "(nl/nordita-email-work-summary \"%s\")\n" tag)
      "#+end_src\n\n"
      "| day | hours | notes |\n|-----+-------+-------|\n"
      (mapconcat (lambda (d) (format "| %s | 0 |       |" d)) days "\n")

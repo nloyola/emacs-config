@@ -279,3 +279,17 @@ commands directly. See =~/.emacs.d/lisp/nl-nordita-timesheet.el=.
              nl/nordita-insert-month-by-name
              nl/nordita-insert-csv-block))
 #+end_src
+
+*** nl-nordita-worklog
+
+Generates the monthly work report for Nordita from the norweb-2021 git history,
+embeds it in the same note, and prepares it for email as GitHub-styled HTML.
+Loaded lazily alongside its sibling. See =~/.emacs.d/lisp/nl-nordita-worklog.el=.
+
+#+begin_src emacs-lisp
+(use-package nl-nordita-worklog
+  :ensure nil
+  :load-path "~/.emacs.d/lisp"
+  :commands (nl/nordita-generate-work-summary
+             nl/nordita-email-work-summary))
+#+end_src
