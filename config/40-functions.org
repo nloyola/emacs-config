@@ -120,7 +120,7 @@
   (defun nl/frame-resize ()
     "Resizes the frame based on its current width."
     (interactive)
-    (if (<= (qwindow-total-width) 150)
+    (if (<= (window-total-width) 150)
         (nl/frame-grow-horizontally)
       (nl/frame-shrink-horizontally)))
 

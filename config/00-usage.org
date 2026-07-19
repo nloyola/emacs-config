@@ -26,7 +26,7 @@ an overview for daily use, not the source of truth for implementation.
 
 - ~C-c w~ :: Open the alternate window management hydra.
 
-- ~C-c d~ / ~C-c C-d~ :: Open the dashboard buffer.
+- ~C-c d~ / ~C-c D~ :: Open the dashboard buffer.
 
 *** Search, jump, and completion
 
@@ -176,9 +176,17 @@ an overview for daily use, not the source of truth for implementation.
 
 - ~C-c n i~ :: Insert an Org-roam node.
 
-- ~C-c l p~ :: Pulse the current line.
+- ~C-c v p~ :: Pulse the current line.
 
-- ~C-c l h~ :: Highlight the current line.
+- ~C-c v h~ :: Highlight the current line temporarily.
+
+- ~C-c v s~ :: Toggle the SVG mode line.
+
+  These live under ~C-c v~ (visual) rather than ~C-c l~ because
+  =lsp-keymap-prefix= owns ~C-c l~; see below.
+
+- ~C-c l~ :: Prefix for the =lsp-mode= command map, active in LSP-managed
+  buffers. Run ~C-c l~ and wait for =which-key= to list it.
 
 - ~C-c r~ :: Toggle =rainbow-mode=.
 

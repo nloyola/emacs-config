@@ -1,24 +1,27 @@
 * Computer-specific settings
 
-Load some computer-specific settings, such as the name and and email address.
+Load some computer-specific settings, such as the name and email address.
+
+These are keyed by short hostname, not by login name: =users/= holds one
+subdirectory per machine, and only the one matching =hostname -s= is loaded.
+Logging in as a different user on the same machine loads the same files.
 
 #+begin_src emacs-lisp
 (use-package emacs
   :ensure nil
   :init
-  (defvar nl/user-settings-dir nil
-    "The directory with user-specific Emacs settings for this
-  user.")
+  (defvar nl/host-settings-dir nil
+    "Directory of Emacs settings specific to this machine.
+Named after the short hostname, under `users'.")
 
-  ;; Settings for currently logged in user
   (require 's)
-  (let ((user-dir (concat user-emacs-directory "users")))
-    (when (file-directory-p user-dir)
-      (setq nl/user-settings-dir
-            (concat user-dir "/" (s-trim (shell-command-to-string "hostname -s"))))
-      (add-to-list 'load-path nl/user-settings-dir)))
+  (let ((hosts-dir (concat user-emacs-directory "users")))
+    (when (file-directory-p hosts-dir)
+      (setq nl/host-settings-dir
+            (concat hosts-dir "/" (s-trim (shell-command-to-string "hostname -s"))))
+      (add-to-list 'load-path nl/host-settings-dir)))
 
-  ;; Load settings specific for the current user
-  (when (file-exists-p nl/user-settings-dir)
-    (mapc 'load (directory-files nl/user-settings-dir nil "^[^#].*el$"))))
+  ;; Load the settings for this host, if any exist.
+  (when (and nl/host-settings-dir (file-exists-p nl/host-settings-dir))
+    (mapc 'load (directory-files nl/host-settings-dir nil "^[^#].*el$"))))
 #+end_src

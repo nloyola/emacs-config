@@ -38,9 +38,10 @@ Using =nerd-icons= or =all-the-icons= slows down init time.
   (require 'dashboard)
   (dashboard-open))
 
+;; `C-c C-d' is deliberately not bound here: the `helpful' block below claims
+;; it for `helpful-at-point', and being later in this file it would win anyway.
 (global-set-key (kbd "C-c d") #'nl/open-dashboard)
 (global-set-key (kbd "C-c D") #'nl/open-dashboard)
-(global-set-key (kbd "C-c C-d") #'nl/open-dashboard)
 
 (use-package dashboard
   ;; :after nerd-icons
@@ -184,14 +185,14 @@ Stopped using this package since it does not work well on Emacs 30.
 ** [[https://github.com/chiply/svg-line][svg-line]]
 
 Render the mode line as an SVG image.  This is easy to toggle off while testing
-with ~C-c l s~ or ~M-x svg-line-deactivate RET nl-mode-line RET~.
+with ~C-c v s~ or ~M-x svg-line-deactivate RET nl-mode-line RET~.
 
 #+begin_src emacs-lisp
 (use-package svg-line
   :if (and (display-graphic-p) (>= emacs-major-version 29))
   :ensure (:host github :repo "chiply/svg-line")
   :demand t
-  :bind ("C-c l s" . nl/svg-line-mode-line-toggle)
+  :bind ("C-c v s" . nl/svg-line-mode-line-toggle)
   :preface
   (defun nl/svg-line-face-color (face attribute fallback)
     "Return FACE ATTRIBUTE as a color, or FALLBACK when unspecified."
@@ -299,8 +300,11 @@ Pulse highlight line on demand or after running select functions
 
 #+begin_src emacs-lisp
 (use-package pulsar
-  :bind (("C-c l p" . pulsar-pulse-line)
-         ("C-c l h" . pulsar-highlight-line))
+  ;; `C-c v' (visual), not `C-c l': `lsp-keymap-prefix' is set to `C-c l' in
+  ;; 73-dev.org, and `lsp-mode-map' shadows global bindings under it in every
+  ;; LSP-managed buffer - which is exactly where these were wanted.
+  :bind (("C-c v p" . pulsar-pulse-line)
+         ("C-c v h" . pulsar-highlight-temporarily))
   :config
   (setq pulsar-pulse t)
   (setq pulsar-delay 0.055)
