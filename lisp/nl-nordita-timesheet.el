@@ -97,12 +97,16 @@ script.  Runs in the marker's buffer so it is safe from any current buffer."
       "\n")
      "\n")))
 
+(defvar nl/nordita-timesheet--month-names
+  '("January" "February" "March" "April" "May" "June" "July"
+    "August" "September" "October" "November" "December")
+  "Full English month names, index 0 = January.")
+
 (defun nl/nordita-timesheet--month-name (month)
   "\"2026-06\" -> \"June 2026\"."
   (format "%s %s"
           (nth (1- (string-to-number (substring month 5 7)))
-               '("January" "February" "March" "April" "May" "June" "July"
-                 "August" "September" "October" "November" "December"))
+               nl/nordita-timesheet--month-names)
           (substring month 0 4)))
 
 ;;;; The pipeline ------------------------------------------------------------
@@ -165,11 +169,6 @@ Signals a user-error and stops if the script exits non-zero (see the
                       months nil t nil nil (car months)))))
 
 ;;;; Generating a fresh month section ----------------------------------------
-
-(defvar nl/nordita-timesheet--month-names
-  '("January" "February" "March" "April" "May" "June" "July"
-    "August" "September" "October" "November" "December")
-  "Full English month names, index 0 = January.")
 
 (defun nl/nordita-timesheet--month-weekday-times (year month)
   "List of time values, in order, for every Mon-Fri in MONTH (1-12) of YEAR.
