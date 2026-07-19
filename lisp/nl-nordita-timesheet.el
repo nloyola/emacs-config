@@ -461,29 +461,5 @@ Use `nl/nordita-insert-month' to pick from the upcoming months instead."
      (list (1+ (seq-position nl/nordita-timesheet--month-names name #'string-equal)) year)))
   (goto-char (nl/nordita-timesheet--insert-section-for (format "%04d-%02d" year month))))
 
-(defun nl/nordita-insert-csv-block (week-number)
-  "Insert a #+begin_src csv block of zeroed days for the week of WEEK-NUMBER.
-Legacy helper for the old csv-format month sections."
-  (interactive "nEnter week number (1-52): ")
-  (let* ((year (nth 5 (decode-time (current-time))))
-         (first-day-of-year (encode-time 0 0 0 1 1 year))
-         (first-week-day (time-add first-day-of-year (* (- week-number 1) 7 24 60 60)))
-         (day-list '())
-         (org-buffer (current-buffer)))
-    (dotimes (day 31)
-      (let* ((date (time-add first-week-day (* day 24 60 60)))
-             (day-number (format-time-string "%d" date))
-             (day-of-week (format-time-string "%u" date))
-             (month (nth 4 (decode-time date))))
-        (ignore month)
-        (when (and (not (member day-of-week '("6" "7")))
-                   (equal (nth 5 (decode-time date)) year))
-          (push (list day-number "0") day-list))))
-    (with-current-buffer org-buffer
-      (insert "#+begin_src csv\n")
-      (dolist (row (reverse day-list))
-        (insert (mapconcat 'identity row ",") "\n"))
-      (insert "#+end_src\n"))))
-
 (provide 'nl-nordita-timesheet)
 ;;; nl-nordita-timesheet.el ends here

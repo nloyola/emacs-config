@@ -276,8 +276,7 @@ commands directly. See =~/.emacs.d/lisp/nl-nordita-timesheet.el=.
   :commands (nl/nordita-generate-timesheet
              nl/nordita-timesheet-generate
              nl/nordita-insert-month
-             nl/nordita-insert-month-by-name
-             nl/nordita-insert-csv-block))
+             nl/nordita-insert-month-by-name))
 #+end_src
 
 *** nl-nordita-worklog
