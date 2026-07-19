@@ -171,20 +171,26 @@ Signals a user-error and stops if the script exits non-zero (see the
     "August" "September" "October" "November" "December")
   "Full English month names, index 0 = January.")
 
-(defun nl/nordita-timesheet--month-weekdays (year month)
-  "List of \"DD\" day-of-month strings for every Mon-Fri in MONTH (1-12) of YEAR."
+(defun nl/nordita-timesheet--month-weekday-times (year month)
+  "List of time values, in order, for every Mon-Fri in MONTH (1-12) of YEAR.
+The single place the month's working days are enumerated: both the table rows
+and the \"Weeks N-M\" heading derive from it, so they cannot disagree."
   (let* ((next-month (if (= month 12) 1 (1+ month)))
          (next-year (if (= month 12) (1+ year) year))
          (month-end (time-subtract (encode-time 0 0 0 1 next-month next-year)
                                    (seconds-to-time 1)))
          (date (encode-time 0 0 0 1 month year))
-         days)
+         times)
     (while (time-less-p date month-end)
-      (when (and (= (string-to-number (format-time-string "%m" date)) month)
-                 (not (member (format-time-string "%u" date) '("6" "7"))))
-        (push (format-time-string "%d" date) days))
+      (unless (member (format-time-string "%u" date) '("6" "7"))
+        (push date times))
       (setq date (time-add date (days-to-time 1))))
-    (nreverse days)))
+    (nreverse times)))
+
+(defun nl/nordita-timesheet--month-weekdays (year month)
+  "List of \"DD\" day-of-month strings for every Mon-Fri in MONTH (1-12) of YEAR."
+  (mapcar (lambda (time) (format-time-string "%d" time))
+          (nl/nordita-timesheet--month-weekday-times year month)))
 
 (defun nl/nordita-timesheet--easter (year)
   "(MONTH . DAY) of Easter Sunday in YEAR, by the anonymous Gregorian algorithm.
@@ -258,23 +264,20 @@ Mon-Fri."
       "")))
 
 (defun nl/nordita-timesheet--week-span (year month)
-  "(FIRST-WEEK . LAST-WEEK): the ISO week of MONTH's first weekday and of its
-last day, for the \"Weeks N-M\" heading."
-  (let* ((month-start (encode-time 0 0 0 1 month year))
-         (next-month (if (= month 12) 1 (1+ month)))
-         (next-year (if (= month 12) (1+ year) year))
-         (month-end (time-subtract (encode-time 0 0 0 1 next-month next-year)
-                                   (seconds-to-time 1)))
-         (first-weekday
-          (let ((d month-start) found)
-            (while (and (not found) (time-less-p d month-end))
-              (if (member (format-time-string "%u" d) '("6" "7"))
-                  (setq d (time-add d (days-to-time 1))) ; skip weekend
-                (setq found t))
-              (unless found (setq d (time-add d (days-to-time 1)))))
-            d)))
-    (cons (string-to-number (format-time-string "%V" first-weekday))
-          (string-to-number (format-time-string "%V" month-end)))))
+  "(FIRST-WEEK . LAST-WEEK): ISO week of MONTH's first and last working day,
+for the \"Weeks N-M\" heading.
+
+Both ends come from weekdays, since the table holds only Mon-Fri.  A December
+whose final days fall in ISO week 1 of the next year is clamped back to the last
+weekday still inside the span, so the heading reads \"Weeks 49-52\" rather than a
+backwards \"Weeks 49-1\"; those trailing days keep their rows in the table."
+  (let* ((times (nl/nordita-timesheet--month-weekday-times year month))
+         (week (lambda (time)
+                 (string-to-number (format-time-string "%V" time))))
+         (first (funcall week (car times)))
+         (last (car (last (seq-filter (lambda (w) (>= w first))
+                                      (mapcar week times))))))
+    (cons first last)))
 
 (defun nl/nordita-timesheet--month-section (year month &optional level)
   "Org section string for MONTH (1-12) of YEAR: the heading, the three per-month
