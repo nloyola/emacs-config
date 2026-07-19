@@ -86,13 +86,29 @@ anyway, and email clients strip external stylesheets.")
      (goto-char marker)
      (org-end-of-subtree t t))))
 
-(defun nl/nordita-worklog--week-start (marker)
-  "Position of the first \"** Week\" heading under MARKER, or nil."
+(defun nl/nordita-worklog--month-level (marker)
+  "Outline level of the month heading at MARKER.
+1 for a current-year month at the top level, 2 for one grouped under a
+`* YEAR' parent.  Everything else here is expressed relative to it, so the two
+layouts `nl/nordita-timesheet--insert-section-for' can produce behave alike."
   (with-current-buffer (marker-buffer marker)
     (org-with-wide-buffer
-     (let ((end (nl/nordita-worklog--subtree-end marker)))
+     (goto-char marker)
+     (org-outline-level))))
+
+(defun nl/nordita-worklog--week-regexp (level)
+  "Regexp matching a week heading nested directly under a month at LEVEL."
+  (format "^\\*\\{%d\\} Week " (1+ level)))
+
+(defun nl/nordita-worklog--week-start (marker)
+  "Position of the first week heading under MARKER, or nil."
+  (with-current-buffer (marker-buffer marker)
+    (org-with-wide-buffer
+     (let ((end (nl/nordita-worklog--subtree-end marker))
+           (regexp (nl/nordita-worklog--week-regexp
+                    (nl/nordita-worklog--month-level marker))))
        (goto-char marker)
-       (when (re-search-forward "^\\*\\* Week " end t)
+       (when (re-search-forward regexp end t)
          (match-beginning 0))))))
 
 (defun nl/nordita-worklog--week-text (marker)
@@ -109,13 +125,24 @@ by construction is safer than filtering them out afterwards."
         (org-with-wide-buffer
          (let ((end (nl/nordita-worklog--subtree-end marker)))
            (nl/nordita-worklog--promote
-            (buffer-substring-no-properties beg end))))))))
+            (buffer-substring-no-properties beg end)
+            (nl/nordita-worklog--month-level marker))))))))
 
-(defun nl/nordita-worklog--promote (text)
-  "Strip one leading star from every heading line in TEXT.
-Weeks go from `**' to `*' and topic groups from `***' to `**', so the export
+(defun nl/nordita-worklog--promote (text n)
+  "Strip N leading stars from every heading line in TEXT.
+Called with the month's level, so weeks end up at `*' and topic groups at `**'
+whether the month sat at the top level or under a year parent, and the export
 renders weeks as h2 and topics as h3 under the title's h1."
-  (replace-regexp-in-string "^\\*\\(\\*+ \\)" "\\1" text))
+  (if (<= n 0)
+      text
+    (replace-regexp-in-string (format "^\\*\\{%d\\}\\(\\*+ \\)" n) "\\1" text)))
+
+(defun nl/nordita-worklog--demote (text n)
+  "Add N stars to every heading line in TEXT."
+  (if (<= n 0)
+      text
+    (replace-regexp-in-string "^\\(\\*+ \\)" (concat (make-string n ?*) "\\1")
+                              text)))
 
 (defun nl/nordita-worklog--read-month ()
   "Prompt for a month with a section in the current buffer."
@@ -161,12 +188,18 @@ about the data it found."
         (unless (string-empty-p head) head)))))
 
 (defun nl/nordita-worklog--insert (marker text)
-  "Insert TEXT at the end of the subtree at MARKER."
-  (with-current-buffer (marker-buffer marker)
-    (org-with-wide-buffer
-     (goto-char (nl/nordita-worklog--subtree-end marker))
-     (unless (bolp) (insert "\n"))
-     (insert "\n" text))))
+  "Insert TEXT at the end of the subtree at MARKER.
+The skill emits weeks at `**', which nests correctly only under a top-level
+month.  TEXT is demoted to the month's own depth first: inserted at `**' under a
+month that is itself `**', the weeks would land as sibling months instead of
+children, leaving the month with no summary the rest of this file could find."
+  (let ((text (nl/nordita-worklog--demote
+               text (1- (nl/nordita-worklog--month-level marker)))))
+    (with-current-buffer (marker-buffer marker)
+      (org-with-wide-buffer
+       (goto-char (nl/nordita-worklog--subtree-end marker))
+       (unless (bolp) (insert "\n"))
+       (insert "\n" text)))))
 
 ;;;###autoload
 (defun nl/nordita-generate-work-summary (month)
