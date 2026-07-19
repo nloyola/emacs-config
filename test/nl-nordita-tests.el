@@ -133,6 +133,46 @@ for nested months."
       (nl/nordita-worklog--insert marker nl-nordita-tests--summary)
       (should (nl/nordita-worklog--week-start marker)))))
 
+;;;; Cleaning claude's output -------------------------------------------------
+
+(defconst nl-nordita-tests--fenced-output
+  "```org\n** Week 27 - Jul 1-5\n\n*** Topic\nSome prose.\n```\n"
+  "A reply the model wrapped in a code fence despite embedded mode asking for
+bare org.  This reached the note once, leaving a literal ``` as its last line.")
+
+(ert-deftest nl-nordita-clean-drops-a-trailing-fence ()
+  "The closing ``` must not survive into the note.
+The opening one is dropped by starting at the week heading; nothing else would
+have caught the closing one, so it landed after the final paragraph."
+  (let ((text (nl/nordita-worklog--clean nl-nordita-tests--fenced-output)))
+    (should-not (string-match-p "```" text))
+    (should (equal text "** Week 27 - Jul 1-5\n\n*** Topic\nSome prose.\n"))))
+
+(ert-deftest nl-nordita-clean-keeps-unfenced-output-intact ()
+  "Output that was never fenced must come through unchanged."
+  (should (equal (nl/nordita-worklog--clean
+                  "** Week 27 - Jul 1-5\n\n*** Topic\nSome prose.\n")
+                 "** Week 27 - Jul 1-5\n\n*** Topic\nSome prose.\n")))
+
+(ert-deftest nl-nordita-clean-still-rejects-output-with-no-weeks ()
+  "The one safety property: a reply with no week heading never reaches the note."
+  (should-not (nl/nordita-worklog--clean "I could not find any commits.\n"))
+  (should-not (nl/nordita-worklog--clean "```org\nnothing here\n```\n")))
+
+(ert-deftest nl-nordita-preamble-ignores-a-wrapping-fence ()
+  "An opening ```org is half of the fence, not a preamble worth warning about."
+  (should-not (nl/nordita-worklog--preamble nl-nordita-tests--fenced-output)))
+
+(ert-deftest nl-nordita-preamble-still-reports-real-prose ()
+  "A genuine sentence before the first week heading is still surfaced, fence or
+no fence - that is where the model would put a warning about the data it found."
+  (should (equal (nl/nordita-worklog--preamble
+                  "I only found 3 commits this month.\n\n** Week 27 - Jul 1-5\n")
+                 "I only found 3 commits this month."))
+  (should (equal (nl/nordita-worklog--preamble
+                  "```org\nHeads up: the branch was empty.\n** Week 27 - Jul 1-5\n")
+                 "Heads up: the branch was empty.")))
+
 ;;;; Star shifting ------------------------------------------------------------
 
 (ert-deftest nl-nordita-worklog-shift-is-a-noop-at-zero ()

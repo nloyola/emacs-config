@@ -161,30 +161,47 @@ shell.  Left in, they end up as literal junk in the note and the report."
   (replace-regexp-in-string
    "\e\\][^\a\e]*\\(?:\a\\|\e\\\\\\)\\|\e\\[[0-9;?]*[A-Za-z]\\|\e[=>]" "" text))
 
+(defun nl/nordita-worklog--strip-fence (text)
+  "Remove a trailing markdown code fence from TEXT.
+Embedded mode asks for bare org, but the model sometimes wraps the whole reply
+in a ```org block regardless.  The opening fence is already discarded by taking
+everything from the first week heading; the closing one sits at the very end,
+where nothing else would have removed it, and lands in the note as a literal
+``` line after the last paragraph."
+  (string-trim-right
+   (replace-regexp-in-string "\n[ \t]*```[a-zA-Z]*[ \t]*\\'" "" text)))
+
 (defun nl/nordita-worklog--clean (output)
   "Org text from claude's OUTPUT, or nil if it contains no summary at all.
 
-Takes everything from the first \"** Week\" heading onward.  Anything before it -
-a stray file header, or a sentence of preamble the model added despite embedded
-mode - is dropped.  Generation is nondeterministic and takes a minute, so
-throwing away an otherwise-good run over a preamble just means paying for the
-month twice; the safety property that matters is that output with no \"** Week\"
-heading at all never reaches the note."
+Takes everything from the first \"** Week\" heading onward, less any trailing
+code fence.  Anything before it - a stray file header, or a sentence of preamble
+the model added despite embedded mode - is dropped.  Generation is
+nondeterministic and takes a minute, so throwing away an otherwise-good run over
+a preamble just means paying for the month twice; the safety property that
+matters is that output with no \"** Week\" heading at all never reaches the note."
   (let ((output (nl/nordita-worklog--strip-ansi output)))
     (when (string-match "^\\*\\* Week " output)
-      (concat (string-trim-right (substring output (match-beginning 0))) "\n"))))
+      (concat (nl/nordita-worklog--strip-fence
+               (string-trim-right (substring output (match-beginning 0))))
+              "\n"))))
 
 (defun nl/nordita-worklog--preamble (output)
   "Text OUTPUT carried before its first \"** Week\" heading, ignoring keyword
-lines, or nil if there was none.  Surfaced rather than silently discarded: a
-preamble is usually harmless, but it is also where the model would put a warning
-about the data it found."
+lines and a wrapping code fence, or nil if there was none.  Surfaced rather than
+silently discarded: a preamble is usually harmless, but it is also where the
+model would put a warning about the data it found.
+
+An opening ```org line is not a preamble but the other half of the fence
+`nl/nordita-worklog--strip-fence' removes, so it does not count here either -
+otherwise every fenced reply would report a preamble that needs no attention,
+and the warning would stop meaning anything."
   (let* ((output (nl/nordita-worklog--strip-ansi output))
          (start  (string-match "^\\*\\* Week " output)))
     (when start
       (let ((head (string-trim
                    (replace-regexp-in-string
-                    "^#\\+[^\n]*$" "" (substring output 0 start)))))
+                    "^\\(?:#\\+\\|```\\)[^\n]*$" "" (substring output 0 start)))))
         (unless (string-empty-p head) head)))))
 
 (defun nl/nordita-worklog--insert (marker text)
