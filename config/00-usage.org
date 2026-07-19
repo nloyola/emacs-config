@@ -160,7 +160,9 @@ an overview for daily use, not the source of truth for implementation.
 
 *** Files, projects, and tools
 
-- ~<f5>~ :: Compile project with consult + Projectile history via =ghostel-compile=.
+- ~<f5>~ :: Compile the project with =my/consult-projectile-compile-with-history=:
+  pick from the Projectile command history via consult, then run it through
+  =ghostel-compile=.
 
 - ~C-<f5>~ :: Run =compile=.
 
