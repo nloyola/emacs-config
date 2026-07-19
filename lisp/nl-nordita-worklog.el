@@ -247,9 +247,14 @@ not touched."
        :name "nordita-worklog"
        :buffer buf
        :noquery t
+       ;; `git fetch' is allowed alongside `git log' because the skill reports
+       ;; `origin/development': the local remote-tracking ref is only as current
+       ;; as the last fetch, so without it a month's summary quietly loses
+       ;; whatever merged after that.  Both are read-only on the repo.
        :command (list nl/nordita-worklog-claude
                       "-p" (format nl/nordita-worklog-prompt pretty)
-                      "--allowedTools" "Bash(git log:*)" "Skill")
+                      "--allowedTools" "Bash(git log:*)" "Bash(git fetch:*)"
+                      "Skill")
        :sentinel
        (lambda (proc _event)
          (when (memq (process-status proc) '(exit signal))
