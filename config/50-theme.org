@@ -1,12 +1,42 @@
 * Theme
 See https://tinted-theming.github.io/base16-gallery/
 
-** [[https://protesilaos.com/emacs/doric-themes][Doric themes]]
+** [[https://github.com/dpassen/modus-alabaster][Modus Alabaster]]
 
-Minimalist themes by Protesilaos Stavrou. The active theme is =doric-plum=.
-See https://protesilaos.com/codelog/2026-07-12-emacs-doric-themes-1-2-0/.
+Niki Tonsky's [[https://github.com/tonsky/sublime-scheme-alabaster][Alabaster]] colours implemented on top of =modus-themes=, so the
+Modus palette-override and accessibility machinery still applies.  The
+active theme is =modus-alabaster-dark=.
+
+The Gnus and =org-indent= face repairs the Doric block needs are absent
+here on purpose: Modus defines the =gnus-group-news-*= faces outright
+rather than through an inheritance cycle, and leaves =org-indent= alone.
 
 #+begin_src emacs-lisp
+(use-package modus-alabaster
+  :ensure (:host github
+           :repo "dpassen/modus-alabaster"
+           :files ("*.el"))
+  :demand t
+  :config
+  (setq modus-themes-to-toggle '(modus-alabaster-light modus-alabaster-dark))
+
+  (mapc #'disable-theme custom-enabled-themes)
+  (load-theme 'modus-alabaster-dark :no-confirm))
+#+end_src
+
+** Past themes
+
+Themes previously used as the active theme, most recent first:
+
+- =doric-plum= - [[https://protesilaos.com/emacs/doric-themes][doric-themes]]
+- =kusanagi= - [[https://github.com/LionyxML/kusanagi-theme][kusanagi-theme]]
+
+** [[https://protesilaos.com/emacs/doric-themes][Doric themes]] (disabled)
+
+Minimalist themes by Protesilaos Stavrou.
+See https://protesilaos.com/codelog/2026-07-12-emacs-doric-themes-1-2-0/.
+
+#+begin_src emacs-lisp :tangle no
 (use-package doric-themes
   :demand t
   :config
@@ -42,12 +72,6 @@ stars org-indent draws in the line prefix render visibly.  Put
   (mapc #'disable-theme custom-enabled-themes)
   (load-theme 'doric-plum :no-confirm))
 #+end_src
-
-** Past themes
-
-Themes previously used as the active theme, most recent first:
-
-- =kusanagi= - [[https://github.com/LionyxML/kusanagi-theme][kusanagi-theme]]
 
 ** [[https://github.com/LionyxML/kusanagi-theme][Kusanagi]] (disabled)
 
