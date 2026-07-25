@@ -232,10 +232,44 @@ with ~C-c v s~ or ~M-x svg-line-deactivate RET nl-mode-line RET~.
     "Toggle the experimental SVG mode line."
     (interactive)
     (svg-line-toggle 'nl-mode-line))
+
+  (defconst nl/svg-line-drag-commands
+    '((mode-line   . mouse-drag-mode-line)
+      (header-line . mouse-drag-header-line)
+      (tab-line    . mouse-drag-tab-line))
+    "Draggable `svg-line' targets and the command that resizes each one.")
+
+  (defun nl/svg-line-restore-drag (map name)
+    "Rebind `down-mouse-1' in MAP so line NAME stays draggable.  Return MAP.
+
+`svg-line' dispatches clicks on button release, so it binds `down-mouse-1'
+to `ignore'.  That text-property binding shadows the global
+\\[mouse-drag-mode-line] and kills drag-to-resize.  Restoring it is safe
+because `mouse-drag-line' runs the drag from a transient map: a real drag
+ends in `drag-mouse-1', which the transient map swallows, while a plain
+click still ends in `mouse-1' and reaches `svg-line' as before.
+
+MAP binds the event both directly and under its `t' catch-all, which is
+what matches when the event arrives with a `mode-line' prefix."
+    (let ((drag (cdr (assq (plist-get (svg-line--spec name) :target)
+                           nl/svg-line-drag-commands)))
+          (fallback (lookup-key map [t])))
+      (when drag
+        (define-key map [down-mouse-1] drag)
+        (when (keymapp fallback)
+          (define-key fallback [down-mouse-1] drag))))
+    map)
+
+  (defun nl/svg-line-click-map-advice (orig name)
+    "Around advice for `svg-line--seg-make-click-map' (ORIG on NAME)."
+    (nl/svg-line-restore-drag (funcall orig name) name))
   :config
   (setq svg-line-font nl/gui-fixed-font-name
         svg-line-font-size 15
         svg-line-line-pad 4)
+
+  (advice-add 'svg-line--seg-make-click-map
+              :around #'nl/svg-line-click-map-advice)
 
   (svg-line-define 'nl-mode-line
     :target 'mode-line
