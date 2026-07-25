@@ -126,7 +126,9 @@ Modern on-the-fly syntax checking extension for GNU Emacs.
   (lsp-rust-analyzer-display-lifetime-elision-hints-use-parameter-names nil)
   (lsp-rust-analyzer-display-closure-return-type-hints t)
   (lsp-rust-analyzer-display-parameter-hints nil)
-  (lsp-rust-analyzer-display-reborrow-hints nil)
+  ;; This one is a string enum ("never" / "always" / "mutable"), not a
+  ;; boolean; nil serializes to JSON null and rust-analyzer rejects it.
+  (lsp-rust-analyzer-display-reborrow-hints "never")
   :config
   ;; `lsp' auto-requires every package in `lsp-client-packages' before it
   ;; selects a client.  Keep Java explicit so PHP buffers do not load lsp-java.
