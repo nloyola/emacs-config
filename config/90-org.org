@@ -144,6 +144,75 @@
     )
 #+end_src
 
+*** HTML preview
+
+One-shot preview of the current Org buffer in the browser, mirroring
+=nl/markdown-preview= (=jc p= in Markdown buffers): export to a static HTML
+file styled like GitHub's light theme, then open it once. Re-run to refresh.
+
+#+begin_src emacs-lisp
+  (defconst nl/org-github-css-file
+    (expand-file-name "css/github-markdown-light.css" user-emacs-directory)
+    "Vendored GitHub light-theme stylesheet used for the one-shot Org preview.")
+
+  (defun nl/org-preview ()
+    "Export the current Org buffer to a static HTML file and open it.
+One-shot preview (no live reload): re-run to refresh.  The output file is
+named after the source buffer so the browser URL ends in `<base>.html'
+rather than a random temp name.  Each source file gets a stable path
+(keyed by a hash of its name), so re-previewing overwrites in place
+instead of littering the temp directory.
+
+Uses `org-export-as' rather than `org-export-to-file' on purpose: the
+latter is advised to run the email CSS inliner, which is irrelevant here."
+    (interactive)
+    (require 'ox-html)
+    (let* ((source (or (buffer-file-name) (buffer-name)))
+           (base (file-name-base source))
+           (dir (expand-file-name
+                 (md5 source)
+                 (expand-file-name "emacs-org-preview" temporary-file-directory)))
+           (html (expand-file-name (concat base ".html") dir))
+           ;; The vendored stylesheet targets `.markdown-body', so put that
+           ;; class on Org's content div and add GitHub's page-shell sizing
+           ;; (which lives on github.com, not in the stylesheet itself).
+           (org-html-content-class "markdown-body")
+           (org-html-head-include-default-style nil)
+           (org-html-head-include-scripts nil)
+           (org-html-postamble nil)
+           (org-html-head
+            (concat "<link rel=\"stylesheet\" href=\"file://"
+                    nl/org-github-css-file "\">"
+                    "<style>"
+                    "body { margin: 0; background: #ffffff; }"
+                    ".markdown-body { box-sizing: border-box; min-width: 200px;"
+                    " max-width: 980px; margin: 0 auto; padding: 45px; }"
+                    "@media (max-width: 767px) { .markdown-body { padding: 15px; } }"
+                    "</style>"))
+           (output (org-export-as 'html)))
+      (make-directory dir t)
+      (with-temp-file html
+        (insert output))
+      (browse-url-of-file html)))
+
+  (defun nl/org-command-menu ()
+    "Open the Org command hydra."
+    (interactive)
+    (hydra-nl-org/body))
+
+  (defun nl/org-mode-chords ()
+    "Bind the Org command hydra to the `jc' key chord in this buffer."
+    (key-chord-define-local "jc" #'nl/org-command-menu))
+
+  (add-hook 'org-mode-hook #'nl/org-mode-chords)
+
+  (with-eval-after-load 'hydra
+    (defhydra hydra-nl-org (:color blue :hint nil)
+      "Org"
+      ("p" nl/org-preview "Render preview in browser" :column "Preview")
+      ("e" org-html-export-to-html "Export to .html file" :column "Preview")))
+#+end_src
+
 **** org-modern
 
 #+begin_src emacs-lisp
