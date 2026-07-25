@@ -626,7 +626,19 @@ Using ruff now
 
 See https://robert.kra.hn/posts/rust-emacs-setup/
 
+=rustic-mode= derives from =rust-mode=, which derives from =prog-mode= by
+default and uses its own font-lock and indentation. Setting
+=rust-mode-treesitter-derive= before =rust-mode= loads makes it derive from the
+built-in =rust-ts-mode= instead, so =rustic-mode= inherits tree-sitter
+font-lock and indentation while keeping cargo integration and the bindings
+below. This needs the =rust= grammar from the Tree-sitter section in
+=60-builtin.org=.
+
 #+begin_src emacs-lisp
+;; Plain `setq': `rust-mode' reads this at load time to decide what it derives
+;; from, so it has to be set before the package is required.
+(setq rust-mode-treesitter-derive t)
+
 (defun nl/rustic-mode-hook ()
   (setq-local buffer-save-without-query t
               ;;compilation-ask-about-save nil
