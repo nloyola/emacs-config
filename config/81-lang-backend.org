@@ -645,13 +645,20 @@ below. This needs the =rust= grammar from the Tree-sitter section in
               ))
 
 (defun nl/toml-mode-hook ()
+  ;; Neither `conf-toml-mode' nor `toml-ts-mode' derives from `prog-mode', so
+  ;; `nl/prog-mode-hook' never runs here - call it explicitly.
+  (nl/prog-mode-hook)
+  ;; `toml-ts-mode' derives from `text-mode', which turns on `mixed-pitch-mode'
+  ;; (see 20-fonts.org). Code should stay monospaced.
+  (mixed-pitch-mode -1)
   (setq-local buffer-save-without-query t
               ;;compilation-ask-about-save nil
               ))
 
 (use-package rustic
   :hook ((rustic-mode . nl/rustic-mode-hook)
-         (conf-toml-mode . nl/toml-mode-hook))
+         (conf-toml-mode . nl/toml-mode-hook)
+         (toml-ts-mode . nl/toml-mode-hook))
   :bind (:map rustic-mode-map
               ("M-j" . lsp-ui-imenu)
               ("M-?" . lsp-find-references)
