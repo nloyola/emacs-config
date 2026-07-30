@@ -64,9 +64,27 @@ See https://tony-zorman.com/posts/emacs-potpourri.html
     (unless (window-system frame)
       (xterm-mouse-mode 1)))
 
+  (defun nl/osc52-copy (text)
+    "Push TEXT to the host clipboard with the OSC 52 escape sequence.
+Terminal Emacs has no direct access to the X/Wayland selection, so kills
+never reach other panes of a multiplexer such as herdr, tmux, or zellij.
+OSC 52 hands the text to the terminal, which owns the real clipboard."
+    (send-string-to-terminal
+     (concat "\e]52;c;"
+             (base64-encode-string (encode-coding-string text 'utf-8) t)
+             "\a")
+     (frame-terminal (selected-frame))))
+
+  (defun nl/enable-terminal-clipboard (&optional frame)
+    "Route the kill ring to the host clipboard in terminal FRAMEs."
+    (unless (display-graphic-p frame)
+      (setq interprogram-cut-function #'nl/osc52-copy)))
+
   (defalias 'yes-or-no-p 'y-or-n-p)
   (nl/enable-terminal-mouse (selected-frame))
   (add-hook 'after-make-frame-functions #'nl/enable-terminal-mouse)
+  (nl/enable-terminal-clipboard (selected-frame))
+  (add-hook 'after-make-frame-functions #'nl/enable-terminal-clipboard)
   (set-terminal-coding-system 'utf-8)
   (set-keyboard-coding-system 'utf-8)
   (set-selection-coding-system 'utf-8)
