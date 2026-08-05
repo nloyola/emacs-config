@@ -33,3 +33,6 @@
 /agent/
 /elpaca/
 /docs/superpowers/
+
+# Ghostel native module (built by the build_ghostel script)
+/var/

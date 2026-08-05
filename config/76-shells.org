@@ -19,6 +19,11 @@ Terminal emulator powered by Ghostty's VT engine.
          :map project-prefix-map
          ("m" . ghostel-project)
          ("M" . ghostel-project-list-buffers))
+  :custom
+  ;; Keep the native module outside the Elpaca build directory so rebuilding
+  ;; the package cannot clobber a .so that a running Emacs has mapped.
+  ;; Built by the `build_ghostel' script in nlscripts.
+  (ghostel-module-directory (locate-user-emacs-file "var/ghostel/"))
   :preface
   (defun nl/open-ghostel-and-run-command (command)
     "Open a new Ghostel session and run shell COMMAND."
