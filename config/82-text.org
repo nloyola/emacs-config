@@ -58,6 +58,31 @@ Highlight tab-separated App API request logs such as =appapi-requests.txt=.
 (add-to-list 'auto-mode-alist '("appapi-requests\\.txt\\'" . appapi-log-mode))
 #+end_src
 
+** [[https://codeberg.org/pkal/flymake-harper.el][flymake-harper]]
+
+A Flymake backend for [[https://writewithharper.com/][Harper]], a grammar checker that runs entirely locally. It
+complements =jinx= below: jinx catches misspelled words, Harper catches grammar,
+usage, and style problems across the sentence.
+
+The backend shells out to =harper-cli= (not =harper-ls=), which Home Manager
+installs from the =harper= package - see =nix/common.nix= in =home_config=.
+
+Upstream quirk worth knowing: =flymake-harper--options=, the list of Harper
+rules, is probed with =harper-cli config= inside =eval-when-compile=. Byte
+compilation never evaluates the =defcustom= holding the executable name, so the
+probe always fails and the list bakes as nil, whether or not =harper-cli= is on
+=PATH=. Linting is unaffected, since the backend never reads that list; the only
+casualties are the completion candidates when customizing
+=flymake-harper-disable=, and file-local values of it being treated as unsafe.
+
+=flymake-harper-setup= enables =flymake-mode= in the buffer itself, so no separate
+hook is needed. Diagnostics are browsable with =M-g f= (=consult-flymake=).
+
+#+begin_src emacs-lisp
+(use-package flymake-harper
+  :hook (text-mode . flymake-harper-setup))
+#+end_src
+
 ** [[https://github.com/minad/jinx][jinx]]
 
 Jinx is a fast just-in-time spell-checker for Emacs.
