@@ -332,16 +332,16 @@ This package can be used to tie related commands into a family of short bindings
      (buffer-file-name (file-name-directory buffer-file-name))
      (t default-directory)))
 
-  (defun nl/open-current-folder-in-nautilus ()
-    "Open the current buffer's folder in Nautilus."
+  (defun nl/open-current-folder-in-thunar ()
+    "Open the current buffer's folder in Thunar."
     (interactive)
     (let ((folder (expand-file-name (nl/current-buffer-folder))))
       (when (file-remote-p folder)
-        (user-error "Cannot open remote folder in Nautilus: %s" folder))
-      (unless (executable-find "nautilus")
-        (user-error "Nautilus executable not found"))
-      (start-process "nautilus" nil "nautilus" folder)
-      (message "Opened folder in Nautilus: %s" folder)))
+        (user-error "Cannot open remote folder in Thunar: %s" folder))
+      (unless (executable-find "thunar")
+        (user-error "Thunar executable not found"))
+      (start-process "thunar" nil "thunar" folder)
+      (message "Opened folder in Thunar: %s" folder)))
 
   (defhydra hydra-nl-common (:color red :hint nil)
     ("f" hydra-nl-frames/body "frames" :color blue :column "Frames")
@@ -351,7 +351,7 @@ This package can be used to tie related commands into a family of short bindings
     ("s" hydra-nl-search/body "search" :color blue :column "Search")
     ("a" hydra-nl-align/body "align" :color blue :column "Align")
     ("y" nl/copy-buffer-file-name "copy file path" :color blue :column "Copy")
-    ("o" nl/open-current-folder-in-nautilus "nautilus here" :color blue :column "External")
+    ("o" nl/open-current-folder-in-thunar "thunar here" :color blue :column "External")
     ("c" nl/open-alacritty-project-root "alacritty project root" :color blue)
     ("C" nl/open-alacritty-here "alacritty here" :color blue)
     ("v" nl/open-ghostel-project-root "ghostel project root" :color blue)
