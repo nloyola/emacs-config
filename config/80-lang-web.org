@@ -67,15 +67,15 @@
     (auto-fill-mode -1)
     (auto-revert-mode 1)
     (setq-local fill-column 100)
-    (setq-local visual-fill-column-width 100)
-    (setq-local visual-fill-column-center-text nil)
     (setq-local truncate-lines nil)
     (setq adaptive-wrap-extra-indent 0)
     (adaptive-wrap-prefix-mode)
     (variable-pitch-mode)
-    (face-remap-add-relative 'variable-pitch :height 0.9)
+    ;; 1.135 of the 170 (1/10 pt) `variable-pitch' height lands on ~19.3 pt,
+    ;; i.e. 4 pt above the 15.3 pt this used to render at.  A relative height
+    ;; keeps the Wayland DPI scaling `nl/font-height' applies to the base face.
+    (face-remap-add-relative 'variable-pitch :height 1.135)
     (visual-line-mode 1)
-    (visual-fill-column-mode 1)
     (font-lock-add-keywords
      nil
      '(("~~[^~\n]*?\\(`[^`\n]+`\\)[^~\n]*?~~" 1 'nl/markdown-struck-inline-code-face t))
@@ -150,12 +150,12 @@ instead of littering the temp directory."
                                      :foreground "#91b831"
                                      :background "#303030"
                                      :weight normal
-                                     :height 120))))
+                                     :height 160))))
    `(markdown-pre-face ((t (:family ,nl/gui-fixed-font-name
                                      :foreground "#91b831"
                                      :background "#303030"
                                      :weight normal
-                                     :height 120))))
+                                     :height 160))))
    `(markdown-inline-code-face ((t (:family ,nl/gui-fixed-font-name
                                             :foreground "#91b831"
                                             :background "#303030"
@@ -168,15 +168,15 @@ instead of littering the temp directory."
                                                 :underline "#ff5555"))))
    `(markdown-bold-face ((t (:family ,nl/gui-variable-font-name :weight bold))))
    `(markdown-italic-face ((t (:family ,nl/gui-variable-font-name :slant italic))))
-   `(markdown-list-face ((t (:family ,nl/gui-variable-font-name :height 130))))
-   `(markdown-header-face-1 ((t (:family ,nl/gui-variable-font-name :height 190 :foreground "#91b831"))))
-   `(markdown-header-face-2 ((t (:family ,nl/gui-variable-font-name :height 170 :foreground "#91b831"))))
-   `(markdown-header-face-3 ((t (:family ,nl/gui-variable-font-name :height 150 :foreground "#91b831"))))
-   `(markdown-header-face-4 ((t (:family ,nl/gui-variable-font-name :height 140 :foreground "#91b831"))))
-   `(markdown-header-face-5 ((t (:family ,nl/gui-variable-font-name :height 130 :foreground "#91b831"))))
-   `(markdown-header-face-6 ((t (:family ,nl/gui-variable-font-name :height 120 :foreground "#91b831"))))
-   `(markdown-header-face ((t (:family ,nl/gui-variable-font-name :height 110 :foreground "#91b831"))))
-   `(markdown-header-delimiter-face ((t (:family ,nl/gui-variable-font-name :height 80))))
+   `(markdown-list-face ((t (:family ,nl/gui-variable-font-name :height 170))))
+   `(markdown-header-face-1 ((t (:family ,nl/gui-variable-font-name :height 230 :foreground "#91b831"))))
+   `(markdown-header-face-2 ((t (:family ,nl/gui-variable-font-name :height 210 :foreground "#91b831"))))
+   `(markdown-header-face-3 ((t (:family ,nl/gui-variable-font-name :height 190 :foreground "#91b831"))))
+   `(markdown-header-face-4 ((t (:family ,nl/gui-variable-font-name :height 180 :foreground "#91b831"))))
+   `(markdown-header-face-5 ((t (:family ,nl/gui-variable-font-name :height 170 :foreground "#91b831"))))
+   `(markdown-header-face-6 ((t (:family ,nl/gui-variable-font-name :height 160 :foreground "#91b831"))))
+   `(markdown-header-face ((t (:family ,nl/gui-variable-font-name :height 150 :foreground "#91b831"))))
+   `(markdown-header-delimiter-face ((t (:family ,nl/gui-variable-font-name :height 120))))
    ))
 #+end_src
 
