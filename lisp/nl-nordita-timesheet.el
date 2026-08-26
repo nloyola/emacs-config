@@ -28,8 +28,9 @@
 
 ;;;; Configuration -----------------------------------------------------------
 
-(defvar nl/nordita-timesheet-uv (expand-file-name "~/.local/bin/uv")
-  "Path to the uv executable that runs the timesheet script.")
+(defvar nl/nordita-timesheet-uv nil
+  "Path to the uv executable that runs the timesheet script.
+When nil, uv is looked up on `exec-path' at call time.")
 
 (defvar nl/nordita-timesheet-project (expand-file-name "~/src/nordita/timesheet/")
   "Directory of the timesheet Python project (holds the PDF template).")
@@ -45,6 +46,14 @@
 
 (defvar nl/nordita-timesheet-holiday-prefix "HOLIDAY: "
   "Prefix for a Swedish holiday in a generated month table's notes column.")
+
+(defun nl/nordita-timesheet--uv ()
+  "Return the uv executable, or signal a clear error if it is not installed."
+  (or (and nl/nordita-timesheet-uv
+           (file-executable-p nl/nordita-timesheet-uv)
+           nl/nordita-timesheet-uv)
+      (executable-find "uv")
+      (user-error "uv not found on `exec-path' - install uv or set `nl/nordita-timesheet-uv'")))
 
 ;;;; Reading the note's month tables -----------------------------------------
 
@@ -132,7 +141,7 @@ Signals a user-error and stops if the script exits non-zero (see the
     ;; Fill the PDF (cwd = project so the timesheet.pdf template resolves).
     (let ((buf (get-buffer-create "*timesheet*")))
       (with-current-buffer buf (erase-buffer))
-      (let ((code (call-process nl/nordita-timesheet-uv nil buf t "run" "timesheet"
+      (let ((code (call-process (nl/nordita-timesheet--uv) nil buf t "run" "timesheet"
                                 (format "--month=%s" month)
                                 "--output" pdf-name csv-name)))
         (unless (eq code 0)
