@@ -29,4 +29,16 @@
                                    "-NoProfile" "-ExecutionPolicy" "Bypass"
                                    "-File" script)))))))
 
+;; Hyprland composites and blurs any surface that is actually see-through, so
+;; the frost is bought entirely on this side.  `alpha-background' is the right
+;; knob rather than `alpha': it dims only the pixels Emacs paints as background
+;; and leaves glyphs fully opaque, so text stays crisp at values that would
+;; make a whole-window `alpha' unreadable.  80 sits a touch more open than
+;; alacritty's 0.85.
+;;
+;; This lives in `default-frame-alist' rather than on the initial frame so that
+;; emacsclient frames inherit it, and here in early-init so the first frame is
+;; mapped translucent instead of flashing opaque first.
+(add-to-list 'default-frame-alist '(alpha-background . 80))
+
 ;;; early-init.el ends here
