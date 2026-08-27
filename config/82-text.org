@@ -78,9 +78,65 @@ casualties are the completion candidates when customizing
 =flymake-harper-setup= enables =flymake-mode= in the buffer itself, so no separate
 hook is needed. Diagnostics are browsable with =M-g f= (=consult-flymake=).
 
+=org-mode= derives from =text-mode=, so Harper runs in Org buffers too, which is
+wanted. What is not wanted there are the rules that fire on Org syntax rather
+than on prose, collected in =nl/flymake-harper-org-disable=:
+
+- =LongSentences=: Harper is handed the raw buffer with no notion of Org syntax,
+  so headings, property drawers, tables, and lists all collapse into one
+  enormous "sentence" and every Org Roam note gets a =This sentence is 309 words
+  long= diagnostic.
+- =ToDoHyphen=: every =TODO= keyword in a heading draws =Hyphenate `to-do`=.
+- =Spaces=: fires on the indentation of list continuation lines and source
+  blocks, which is by far the loudest rule on a note tree.
+- =NumericRangeEnDash=: fires on the =-= in tables, dates, and command-line flags.
+
+Second upstream bug, on top of the =flymake-harper--options= one above:
+=flymake-harper-disable= does not work at all. Harper reports the rule name as a
+JSON string (="LongSentences"=), and =flymake-harper-sentinel-1= filters it with
+=memq= against a list of symbols, which can never match - not even the shipped
+default of =(Dashes)=. The advice below re-implements that filter with a string
+comparison, which makes =flymake-harper-disable= behave as documented, including
+buffer-locally.  The rules above are then disabled in Org buffers only;
+everything else Harper checks stays on there.
+
 #+begin_src emacs-lisp
 (use-package flymake-harper
-  :hook (text-mode . flymake-harper-setup))
+  :hook (text-mode . nl/flymake-harper-setup)
+  :init
+  (defvar nl/flymake-harper-org-disable
+    '(LongSentences ToDoHyphen Spaces NumericRangeEnDash)
+    "Harper rules that fire on Org syntax rather than on prose.")
+
+  (defun nl/flymake-harper-setup ()
+    "Set up Harper, dropping rules that misfire on Org markup.
+Runs from `text-mode-hook', which precedes `org-mode-hook', so the
+disable list is in place before the first check."
+    (when (derived-mode-p 'org-mode)
+      (setq-local flymake-harper-disable
+                  (append nl/flymake-harper-org-disable flymake-harper-disable)))
+    (flymake-harper-setup))
+  :config
+  (defun nl/flymake-harper--apply-disable (args)
+    "Drop lints whose rule is in `flymake-harper-disable'.
+ARGS are the arguments of `flymake-harper-sentinel-1', (SOURCE DATA).
+Upstream compares the rule name, a string, with `memq' against a list of
+symbols, so its own filter never matches.  The disable list is read from
+SOURCE, since the sentinel runs in the process buffer."
+    (pcase-let* ((`(,source ,data) args)
+                 (disabled (and (buffer-live-p source)
+                                (mapcar (lambda (rule)
+                                          (if (symbolp rule) (symbol-name rule) rule))
+                                        (buffer-local-value 'flymake-harper-disable source)))))
+      (list source
+            (if disabled
+                (seq-remove (lambda (lint)
+                              (member (plist-get lint :rule) disabled))
+                            data)
+              data))))
+
+  (advice-add 'flymake-harper-sentinel-1 :filter-args
+              #'nl/flymake-harper--apply-disable))
 #+end_src
 
 ** [[https://github.com/minad/jinx][jinx]]
