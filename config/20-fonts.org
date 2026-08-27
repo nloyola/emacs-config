@@ -47,12 +47,25 @@ Help from here:  https://howardabrams.com/hamacs/ha-display.html#org54a2529
                     "Alegreya")))
      (warn "Cannot find a Serif font. Install a serif font such as XCharter or Charter."))))
 
+(defun nl/font-height (height)
+  "Scale an absolute face HEIGHT (1/10 pt) for the current session.
+
+Absolute `:height' values do not follow the default face's point size,
+so they miss the DPI compensation the X session gets for free.  Under
+Wayland, scale by the same 1.25 the default face uses.  See
+`nl/wayland-session-p'."
+  (if (nl/wayland-session-p)
+      (round (* height 1.25))
+    height))
+
 (defun nl/set-favorite-font-size (size)
   "Set the default font size as well as equalize the fixed and variable fonts."
   (let ((fav-font (format "%s-%d" nl/gui-fixed-font-name size)))
     (set-face-attribute 'default nil :font fav-font)
-    (set-face-attribute 'fixed-pitch nil :family nl/gui-fixed-font-name :inherit 'default :height 120)
-    (set-face-attribute 'variable-pitch nil :family nl/gui-variable-font-name :inherit 'default :height 170)))
+    (set-face-attribute 'fixed-pitch nil :family nl/gui-fixed-font-name :inherit 'default
+                        :height (nl/font-height 120))
+    (set-face-attribute 'variable-pitch nil :family nl/gui-variable-font-name :inherit 'default
+                        :height (nl/font-height 170))))
 
 (defun nl/mac-monitor-fontsize ()
   "Quickly set reset my font size when I connect my laptop to a monitor on a Mac."
