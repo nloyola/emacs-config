@@ -96,7 +96,7 @@ line numbers out of step with the code they number.")
 (defun nl/mac-monitor-fontsize ()
   "Quickly set reset my font size when I connect my laptop to a monitor on a Mac."
   (interactive)
-  (nl/set-favorite-font-size 13))
+  (nl/set-favorite-font-size 11))
 
 (defun nl/wayland-session-p ()
   "Return non-nil when this Emacs belongs to a Wayland session.
@@ -114,7 +114,7 @@ comes out ~20% smaller under Hyprland."
   ;; 14 is 11 * 1.25 rounded: parity with what the X session renders.  Only the
   ;; default face follows this; the mode-line faces below stay at their fixed
   ;; :height 120.
-  (nl/set-favorite-font-size (if (nl/wayland-session-p) 14 11)))
+  (nl/set-favorite-font-size (if (nl/wayland-session-p) 11 11)))
 
 (defun nl/mac-laptop-fontsize ()
   "Quickly set reset my font size when I disconnect my laptop to a monitor from a Mac."
