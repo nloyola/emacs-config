@@ -71,9 +71,8 @@
     (setq adaptive-wrap-extra-indent 0)
     (adaptive-wrap-prefix-mode)
     (variable-pitch-mode)
-    ;; 1.135 of the 170 (1/10 pt) `variable-pitch' height lands on ~19.3 pt,
-    ;; i.e. 4 pt above the 15.3 pt this used to render at.  A relative height
-    ;; keeps the Wayland DPI scaling `nl/font-height' applies to the base face.
+    ;; Markdown prose sits a shade above Org's, so bump `variable-pitch'
+    ;; (itself relative - see `nl/variable-pitch-height') by a further 1.135.
     (face-remap-add-relative 'variable-pitch :height 1.135)
     (visual-line-mode 1)
     (font-lock-add-keywords

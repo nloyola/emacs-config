@@ -39,19 +39,34 @@
                (string= lang "sql")
                (string= lang "sqlite")
                )))
-    (defun nl/apply-org-tag-face (&rest _)
-      "Apply the preferred Org tag styling."
+    (defun nl/apply-org-faces (&rest _)
+      "Apply the preferred Org tag and monospaced-face styling.
+
+The heights are relative (`nl/org-block-height'), never absolute: a
+relative value multiplies the inherited `fixed-pitch', so it follows the
+session's point size, while an absolute one would replace that height
+outright and render at a fixed size regardless of the base font."
       (set-face-attribute 'org-tag nil
                           :inherit '(fixed-pitch)
                           :background "#303030"
                           :foreground "#ffffff"
-                          :box '(:line-width 2 :color "#505050")))
+                          :box '(:line-width 2 :color "#505050"))
+      (set-face-attribute 'org-table nil
+                          :inherit 'fixed-pitch
+                          :foreground "#91b831"
+                          :height nl/org-block-height)
+      (set-face-attribute 'org-block nil
+                          :inherit 'fixed-pitch
+                          :background "gray18"
+                          :height nl/org-block-height)
+      ;; The #+begin_src/#+end_src lines keep their theme colours; only the
+      ;; size follows the block they delimit.
+      (dolist (face '(org-block-begin-line org-block-end-line
+                      org-code org-verbatim))
+        (when (facep face)
+          (set-face-attribute face nil :height nl/org-block-height))))
     :config
     (custom-set-faces
-    ;; No explicit :height - an absolute one would override the inherited
-    ;; `fixed-pitch' height and miss its Wayland scaling (see `nl/font-height').
-    '(org-table ((t (:inherit fixed-pitch :foreground "#91b831"))))
-    '(org-block ((t (:background "gray18" :inherit fixed-pitch))))
     ;; '(org-code ((t (:inherit fixed-pitch :height 110))))
     ;; '(org-verbatim ((t (:inherit (shadow fixed-pitch) :height 120))))
     ;; '(org-link ((t (:underline t))))
@@ -68,9 +83,9 @@
     ;; ;; '(org-level-4 ((t (:inherit outline-4 :height 140))))
     ;; ;; '(org-level-5 ((t (:inherit outline-5 :height 120))))
     )
-    (nl/apply-org-tag-face)
-    (add-hook 'org-mode-hook #'nl/apply-org-tag-face)
-    (advice-add 'load-theme :after #'nl/apply-org-tag-face)
+    (nl/apply-org-faces)
+    (add-hook 'org-mode-hook #'nl/apply-org-faces)
+    (advice-add 'load-theme :after #'nl/apply-org-faces)
     (setq org-confirm-babel-evaluate 'nl/org-confirm-babel-evaluate
           ;;org-ellipsis " ⤵"
           ;;org-hide-emphasis-markers t

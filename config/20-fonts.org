@@ -47,25 +47,51 @@ Help from here:  https://howardabrams.com/hamacs/ha-display.html#org54a2529
                     "Alegreya")))
      (warn "Cannot find a Serif font. Install a serif font such as XCharter or Charter."))))
 
-(defun nl/font-height (height)
-  "Scale an absolute face HEIGHT (1/10 pt) for the current session.
+(defvar nl/fixed-pitch-height 1.0
+  "Relative `:height' for the `fixed-pitch' face, as a multiple of `default'.
 
-Absolute `:height' values do not follow the default face's point size,
-so they miss the DPI compensation the X session gets for free.  Under
-Wayland, scale by the same 1.25 the default face uses.  See
-`nl/wayland-session-p'."
-  (if (nl/wayland-session-p)
-      (round (* height 1.25))
-    height))
+Org source blocks, tables, inline code, everything `mixed-pitch' keeps
+monospaced, and the line numbers render at this size - Modus with
+`modus-themes-mixed-fonts' gives `line-number' :inherit (fixed-pitch
+default), so this is the one knob for all of them.
+
+Deliberately relative, not absolute: a relative height multiplies the
+inherited `default', which already carries the session's point size, so
+it needs no per-session DPI compensation.  An absolute value here
+renders larger than the code it sits beside under Wayland - that is what
+put the line numbers at 21px against 18px code.")
+
+(defvar nl/variable-pitch-height 1.28
+  "Relative `:height' for the `variable-pitch' face, as a multiple of `default'.
+
+Org body text renders at this size, and the theme's heading scales
+\(see `modus-themes-headings' in 50-theme.org) multiply it, so lowering
+this shrinks the headings along with the prose.
+
+Relative for the same reason as `nl/fixed-pitch-height': it multiplies
+the inherited `default', so it tracks the session's point size instead
+of needing a Wayland fudge factor.")
+
+(defvar nl/org-block-height 0.85
+  "Relative `:height' for Org's monospaced faces, as a multiple of `fixed-pitch'.
+
+Applied by `nl/apply-org-faces' in 90-org.org to `org-block', its
+begin/end lines, `org-table', `org-code' and `org-verbatim'.
+
+Separate from `nl/fixed-pitch-height' on purpose: `line-number' inherits
+`fixed-pitch', so shrinking that face to taste inside Org would drag the
+line numbers out of step with the code they number.")
 
 (defun nl/set-favorite-font-size (size)
   "Set the default font size as well as equalize the fixed and variable fonts."
   (let ((fav-font (format "%s-%d" nl/gui-fixed-font-name size)))
     (set-face-attribute 'default nil :font fav-font)
+    ;; Relative height - no `nl/font-height' here, see `nl/fixed-pitch-height'.
     (set-face-attribute 'fixed-pitch nil :family nl/gui-fixed-font-name :inherit 'default
-                        :height (nl/font-height 120))
+                        :height nl/fixed-pitch-height)
+    ;; Relative height - see `nl/variable-pitch-height'.
     (set-face-attribute 'variable-pitch nil :family nl/gui-variable-font-name :inherit 'default
-                        :height (nl/font-height 170))))
+                        :height nl/variable-pitch-height)))
 
 (defun nl/mac-monitor-fontsize ()
   "Quickly set reset my font size when I connect my laptop to a monitor on a Mac."
