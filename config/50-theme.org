@@ -3,10 +3,16 @@ See https://tinted-theming.github.io/base16-gallery/
 
 ** [[https://protesilaos.com/emacs/modus-themes][modus-themes]]
 
-Protesilaos Stavrou's accessibility-first themes, built into Emacs.  The
-active theme is =modus-vivendi-tritanopia=, the dark variant whose
-palette avoids blue/yellow distinctions and leans on red and cyan
-instead.
+Protesilaos Stavrou's accessibility-first themes, built into Emacs.
+=modus-vivendi-tritanopia= - the dark variant whose palette avoids
+blue/yellow distinctions and leans on red and cyan instead - is loaded
+here so that a theme is in force from the first frame, and stands as the
+fallback whenever the desktop palette below cannot be mapped.  The
+omarchy block that follows replaces it once elpaca has built the package.
+
+The settings below are not spent either way: the omarchy themes are
+Modus-derived, so =modus-themes-mixed-fonts=, =-variable-pitch-ui= and
+=-headings= govern them too.
 
 The Gnus and =org-indent= face repairs the Doric block needs are absent
 here on purpose: Modus defines the =gnus-group-news-*= faces outright
@@ -32,6 +38,83 @@ rather than through an inheritance cycle, and leaves =org-indent= alone.
 
   (mapc #'disable-theme custom-enabled-themes)
   (load-theme 'modus-vivendi-tritanopia :no-confirm))
+#+end_src
+
+** [[https://github.com/ovistoica/omarchy.el][omarchy.el]] - follow the desktop palette
+
+=qs-theme= (nlscripts) switches the whole Hyprland session - alacritty,
+ghostty, rofi, Hyprland, mako, btm and the quickshell bar - between the
+palettes under =~/.config/theme/themes/=.  This block makes Emacs one
+more consumer of that switch.
+
+omarchy.el bundles 22 Modus-derived themes named after the Omarchy
+palettes, and 22 of the 25 =qs-theme= palettes carry those names
+verbatim, so the two sides line up by name with no translation table.
+Only =colorful=, =doomone= and =warm= - the ones authored in
+=home_config= rather than ported - have no counterpart, and fall back to
+the Modus theme above.
+
+The package's own =omarchy-init= is deliberately not called: it drives
+the =omarchy-*= CLIs, which do not exist on a host that merely borrows
+Omarchy's palettes.  Emacs reads =~/.local/state/theme/theme.name=
+instead, the same file every other consumer reads.
+
+#+begin_src emacs-lisp
+(use-package omarchy
+  :ensure (:host github
+           :repo "ovistoica/omarchy.el"
+           :files (:defaults "themes"))
+  :demand t
+  :init
+  (setq omarchy-default-theme 'modus-vivendi-tritanopia)
+  :config
+  (require 'omarchy-themes)
+
+  ;; The three locally authored palettes have no bundled theme.  Without an
+  ;; entry here `omarchy-apply-theme' interns the bare name and fails to
+  ;; load it, so name them explicitly rather than letting them error.
+  (dolist (name '("colorful" "doomone" "warm"))
+    (setf (alist-get name omarchy-theme-map nil nil #'equal)
+          omarchy-default-theme))
+
+  (defconst nl/qs-theme-state-file
+    (expand-file-name "theme/theme.name"
+                      (or (getenv "XDG_STATE_HOME")
+                          (expand-file-name "~/.local/state")))
+    "File `qs-theme set' writes the active palette name into.")
+
+  (defun nl/qs-theme-current ()
+    "Return the palette name `qs-theme' last set, or nil."
+    (when (file-readable-p nl/qs-theme-state-file)
+      (with-temp-buffer
+        (insert-file-contents nl/qs-theme-state-file)
+        (let ((name (string-trim (buffer-string))))
+          (unless (string-empty-p name) name)))))
+
+  (defun nl/qs-theme-sync ()
+    "Load the Emacs theme matching the palette `qs-theme' has in force.
+Run at startup, and again from `qs-theme set' over emacsclient."
+    (interactive)
+    (omarchy-apply-theme (or (nl/qs-theme-current) omarchy-default-theme)))
+
+  (defun nl/qs-theme-set (name)
+    "Switch the whole desktop, Emacs included, to palette NAME.
+Emacs is not themed here.  `qs-theme' calls back over emacsclient, so the
+theme arrives by the same path as a switch made from anywhere else and is
+applied exactly once."
+    (interactive
+     (list (completing-read "qs-theme: " (process-lines "qs-theme" "list") nil t)))
+    (start-process "qs-theme" nil "qs-theme" "set" name))
+
+  ;; A daemon has no display until the first client frame attaches, and a
+  ;; theme loaded before then resolves against the wrong colour capabilities.
+  (if (and (daemonp) (not (display-graphic-p)))
+      (letrec ((sync (lambda ()
+                       (when (display-graphic-p)
+                         (remove-hook 'server-after-make-frame-hook sync)
+                         (nl/qs-theme-sync)))))
+        (add-hook 'server-after-make-frame-hook sync))
+    (nl/qs-theme-sync)))
 #+end_src
 
 ** Past themes
