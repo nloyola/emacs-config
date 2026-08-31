@@ -45,7 +45,6 @@
       read-process-output-max (* 1024 1024)
       auto-window-vscroll nil
       frame-inhibit-implied-resize t
-      pixel-scroll-precision-mode t
       byte-compile-warnings '(not obsolete)
       warning-suppress-log-types '((comp) (bytecomp))
       native-comp-async-report-warnings-errors 'silent)
@@ -66,6 +65,21 @@
 (if (fboundp 'fringe-mode) (fringe-mode -1))
 
 (if (fboundp 'menu-bar-mode) (menu-bar-mode -1))
+
+;; Pixel-precision scrolling.  This was previously written as
+;; `pixel-scroll-precision-mode t' inside the `setq' above, which only set the
+;; variable: it never loaded pixel-scroll.el nor ran the mode body, so the mode
+;; was never actually on.  `key-binding' for [wheel-down] still came back
+;; `mwheel-scroll'.  It has to be called as a function.
+;;
+;; Worth having on its own merits, but the reason it got noticed: mwheel-scroll
+;; jumps a whole line per event, so each wheel tick repaints a large slice of
+;; the window at once.  On this machine the NVIDIA 550 driver predates explicit
+;; sync (aquamarine logs `drm: Explicit sync unsupported'), so the compositor
+;; can scan out a frame the client is still drawing, and the bigger the damage
+;; region the more obvious the resulting tear.  Scrolling by pixels moves far
+;; less per frame.
+(pixel-scroll-precision-mode 1)
 
 (setq inhibit-startup-message t
       initial-scratch-message "")
