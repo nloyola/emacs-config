@@ -72,11 +72,24 @@ Relative for the same reason as `nl/fixed-pitch-height': it multiplies
 the inherited `default', so it tracks the session's point size instead
 of needing a Wayland fudge factor.")
 
-(defvar nl/org-block-height 0.85
-  "Relative `:height' for Org's monospaced faces, as a multiple of `fixed-pitch'.
+(defvar nl/org-block-height 1.0
+  "Relative `:height' for Org's monospaced faces, as a multiple of `default'.
 
 Applied by `nl/apply-org-faces' in 90-org.org to `org-block', its
 begin/end lines, `org-table', `org-code' and `org-verbatim'.
+
+1.0 means an Org source block renders at exactly the size of code in a
+prog-mode buffer - and, since `nl/linux-monitor-fontsize' moved to 10.5,
+at the size Alacritty renders too.
+
+Read this as a multiple of the frame `default', NOT of the height Emacs
+finally applies.  Org buffers run `mixed-pitch-mode', which remaps
+`default' to `variable-pitch', so every relative height in them is
+multiplied by `nl/variable-pitch-height' before it lands.
+`nl/apply-org-faces' divides that factor back out so the number here
+means what it says.  That compensation is why this is 1.0 and not the
+0.85 it used to be: 0.85 was really 0.85 * 1.28 = 1.09, which rendered
+source blocks larger than the default face rather than smaller.
 
 Separate from `nl/fixed-pitch-height' on purpose: `line-number' inherits
 `fixed-pitch', so shrinking that face to taste inside Org would drag the
