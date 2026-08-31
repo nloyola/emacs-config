@@ -84,7 +84,9 @@ line numbers out of step with the code they number.")
 
 (defun nl/set-favorite-font-size (size)
   "Set the default font size as well as equalize the fixed and variable fonts."
-  (let ((fav-font (format "%s-%d" nl/gui-fixed-font-name size)))
+  ;; %s, not %d: the Wayland size is fractional (10.5) and %d would silently
+  ;; truncate it to 10.  Integer sizes still format identically.
+  (let ((fav-font (format "%s-%s" nl/gui-fixed-font-name size)))
     (set-face-attribute 'default nil :font fav-font)
     ;; Relative height - no `nl/font-height' here, see `nl/fixed-pitch-height'.
     (set-face-attribute 'fixed-pitch nil :family nl/gui-fixed-font-name :inherit 'default
@@ -111,10 +113,20 @@ comes out ~20% smaller under Hyprland."
 (defun nl/linux-monitor-fontsize ()
   "Quickly set reset my font size when I connect my laptop to a monitor on Linux."
   (interactive)
-  ;; 13 is 11 * 1.25 rounded: what Wayland has to ask for to match the 11 the
-  ;; X session already scales up.  Only the default face follows this; the
-  ;; mode-line faces below stay at their fixed :height 120.
-  (nl/set-favorite-font-size (if (nl/wayland-session-p) 13 11)))
+  ;; 10.5 under Wayland is what matches Alacritty, which is the reference now
+  ;; that alacritty.toml carries its own Hyprland size (13).  Measured, not
+  ;; derived: Alacritty reports 189x43 cells in an 1894x1034 window with 6px
+  ;; padding, so its cell is 9.93x23.5px, and `font-info' puts JetBrainsMono
+  ;; at 10.5 on a 10x24 cell.  The two programs disagree about what a point
+  ;; is - Emacs resolves through fontconfig at ~116 DPI while these heads are
+  ;; actually 161 DPI - so equal point sizes do not render equal, and cell
+  ;; size is the only reliable way to line them up.
+  ;;
+  ;; Replaces 13 (= 11 * 1.25), which was chosen to match the X session's own
+  ;; Emacs rather than the terminal, and rendered ~31% wider than Alacritty.
+  ;; Only the default face follows this; the mode-line faces below stay at
+  ;; their fixed :height 120.
+  (nl/set-favorite-font-size (if (nl/wayland-session-p) 10.5 11)))
 
 (defun nl/mac-laptop-fontsize ()
   "Quickly set reset my font size when I disconnect my laptop to a monitor from a Mac."
