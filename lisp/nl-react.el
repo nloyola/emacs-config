@@ -1,4 +1,4 @@
-;;; angular --- package to help with development in Angular projects
+;;; nl-react --- package to help with development in React projects
 
 ;;; Commentary:
 
@@ -17,7 +17,7 @@
 
 
 (provide 'nl-react)
-;;; nl-angular.el ends here
+;;; nl-react.el ends here
 
 ;; Local Variables:
 ;; flycheck-disabled-checkers: (emacs-lisp-checkdoc)

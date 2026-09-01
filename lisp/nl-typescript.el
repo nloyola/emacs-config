@@ -100,7 +100,7 @@
 (define-key typescript-ts-mode-map (kbd "C-c C-t c") 'nl/typescript-compile-this-file)
 
 (provide 'nl-typescript)
-;;; nl-angular.el ends here
+;;; nl-typescript.el ends here
 
 ;; Local Variables:
 ;; flycheck-disabled-checkers: (emacs-lisp-checkdoc)
