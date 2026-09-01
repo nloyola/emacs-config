@@ -56,8 +56,6 @@
 
 (add-hook 'after-init-hook #'nl/after-init)
 
-(setq comp-deferred-compilation t)
-
 ;; Turn off mouse interface early in startup to avoid momentary display
 (if (fboundp 'tool-bar-mode) (tool-bar-mode -1))
 (if (fboundp 'scroll-bar-mode) (scroll-bar-mode -1))

@@ -130,12 +130,10 @@ OSC 52 hands the text to the terminal, which owns the real clipboard."
   (user-mail-address "nloyola@gmail.com")
 
   ;; Compilation and Byte-Code
-  (comp-async-report-warnings-errors nil) ;; native-comp warnings
   (byte-compile-warnings '(not free-vars unresolved noruntime lexical make-local))
 
   ;; Text Handling
   (sentence-end-double-space nil)
-  (default-major-mode 'text-mode)
   (initial-major-mode 'text-mode)
   (case-fold-search t)
   (fill-column 100)
@@ -151,7 +149,6 @@ OSC 52 hands the text to the terminal, which owns the real clipboard."
   ;; Window/Scrolling Behavior
   (scroll-up-aggressively 0.01)
   (scroll-down-aggressively 0.01)
-  (redisplay-dont-pause t)
   (scroll-step 1)
   (scroll-margin 3)
   (scroll-conservatively 10)
