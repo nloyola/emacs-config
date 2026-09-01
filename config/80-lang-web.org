@@ -364,8 +364,8 @@ instead of littering the temp directory."
   (defun nl/web-mode-indent-line ()
     "Indent web-mode lines, with better standalone PHP control indentation."
     (web-mode-indent-line)
-    (when-let ((indentation (and (nl/web-mode-php-control-line-p)
-                                 (nl/web-mode-php-matching-if-indentation))))
+    (when-let* ((indentation (and (nl/web-mode-php-control-line-p)
+                                  (nl/web-mode-php-matching-if-indentation))))
       (indent-line-to indentation)))
 
   (defun nl/web-mode-indent-region (start end)

@@ -103,21 +103,21 @@ in effect, so the compensation is unconditional."
     (setq org-confirm-babel-evaluate 'nl/org-confirm-babel-evaluate
           ;;org-ellipsis " ⤵"
           ;;org-hide-emphasis-markers t
-          org-catch-invisible-edits 'error
+          org-fold-catch-invisible-edits 'error
           org-startup-indented t
           org-cycle-include-plain-lists 'integrate
           org-return-follows-link t
           org-M-RET-may-split-line nil
           org-src-fontify-natively t
           org-src-preserve-indentation t
-          org-edit-src-content-indentation 0
+          org-src-content-indentation 0
           org-enforce-todo-dependencies t
           org-enforce-todo-checkbox-dependencies t
           ;; org-link-frame-setup '((file . find-file))
           org-export-backends '(ascii html icalendar latex md)
           org-log-into-drawer t
           org-file-apps '(("\\.png\\'" . browse-url) (auto-mode . emacs))
-          org-export-babel-evaluate t ; Ensure babel blocks are evaluated on export
+          org-export-use-babel t ; Ensure babel blocks are evaluated on export
           org-confirm-babel-evaluate nil ; Optional: Stops Emacs from asking 'yes/no' every time)
           org-babel-default-header-args:mermaid
           '((:results . "file")

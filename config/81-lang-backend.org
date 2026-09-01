@@ -341,7 +341,7 @@ Requires the =clj-kondo= binary on =PATH=.
 
   (defun nl/php-indent-line ()
     "Indent PHP, including simple HTML embedded in heredocs/NOWDOCs."
-    (if-let ((node (nl/php--heredoc-node)))
+    (if-let* ((node (nl/php--heredoc-node)))
         (nl/php--indent-heredoc-line node)
       (treesit-indent)))
 

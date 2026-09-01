@@ -100,7 +100,7 @@ Enable ANSI colors for compilation buffers.
         (run-mode-hooks 'compilation-mode-hook)
         (setq next-error-last-buffer outbuf)
         (display-buffer outbuf '(nil (allow-no-window . t)))
-        (when-let (w (get-buffer-window outbuf))
+        (when-let* ((w (get-buffer-window outbuf)))
            (set-window-start w (point-min)))
         )))
 
@@ -194,7 +194,7 @@ A minimalist package that enhances compilation-mode.
     (lsp-deferred))
   :hook (scss-mode . nl/scss-mode-hook)
   :config
-  (setq flymake-allowed-file-name-masks nil)
+  (setq flymake-proc-allowed-file-name-masks nil)
   )
 #+end_src
 
@@ -231,7 +231,7 @@ Make =dired= show directories first.
   (defun nl/process-status-string-name-advice (orig-fun process)
     "Let `process-status' handle PROCESS names even after TRAMP is loaded."
     (if (stringp process)
-        (when-let ((proc (get-process process)))
+        (when-let* ((proc (get-process process)))
           (funcall orig-fun proc))
       (funcall orig-fun process)))
 

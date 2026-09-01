@@ -204,10 +204,10 @@ indentation, and each resulting paragraph is refilled."
 The following code makes magit-status run alone in the frame, and then restores the old window configuration when you quit out of magit.
 
 #+begin_src emacs-lisp
-(defadvice magit-status (around magit-fullscreen activate)
+(define-advice magit-status (:around (orig-fun &rest args) magit-fullscreen)
   ;;(window-configuration-to-register ?magit-fullscreen)
   (window-configuration-to-register ?z)
-  ad-do-it
+  (apply orig-fun args)
   (delete-other-windows))
 
 (defun magit-quit-session ()
