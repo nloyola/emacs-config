@@ -5,6 +5,22 @@ Override various default settings and key bindings.
 See https://tony-zorman.com/posts/emacs-potpourri.html
 
 #+begin_src emacs-lisp
+;; `operating-system-release' has been obsolete since 28.1 with no replacement.
+;; It reported the kernel release, which is what /proc/sys/kernel/osrelease
+;; holds verbatim, so reading that file is a faithful stand-in.  The
+;; WSL_DISTRO_NAME check comes first because early-init.el already keys its
+;; WSLg window placement off the same variable.
+(defconst nl/wsl-p
+  (and (eq system-type 'gnu/linux)
+       (or (and (getenv "WSL_DISTRO_NAME") t)
+           (and (file-readable-p "/proc/sys/kernel/osrelease")
+                (with-temp-buffer
+                  (insert-file-contents "/proc/sys/kernel/osrelease")
+                  (and (string-match-p "-microsoft" (downcase (buffer-string))) t)))))
+  "Non-nil when this Emacs is running under WSL.")
+#+end_src
+
+#+begin_src emacs-lisp
 (defun nl/save-some-buffers ()
   "Save modified file-visiting buffers without asking."
   (interactive)

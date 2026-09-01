@@ -425,7 +425,7 @@ Modified the bindings to coincide with the ones used in =org-mode=.
 Sometimes you end up with cursors outside of your view. You can scroll the screen to center on each cursor with ~C-v~ and ~M-v~.
 
 #+begin_src emacs-lisp
-(unless (string-match "-microsoft" (downcase operating-system-release))
+(unless nl/wsl-p
   (use-package multiple-cursors
     :after selected
     :bind (("C-S-c C-S-c" . mc/edit-lines)
@@ -453,7 +453,7 @@ Sometimes you end up with cursors outside of your view. You can scroll the scree
     (advice-add 'mc/dump-list :after #'my/mc-lists-add-lexical-cookie)
     ))
 
-(when (string-match "-microsoft" (downcase operating-system-release))
+(when nl/wsl-p
   (use-package multiple-cursors
     :bind (("C-S-c C-S-c" . mc/edit-lines)
            ("C->"         . mc/mark-next-like-this)
@@ -485,7 +485,7 @@ Provides the =selected-minor-mode= for Emacs. When =selected-minor-mode= is acti
 =selected-keymap= will be enabled when the region is active.
 
 #+begin_src emacs-lisp
-(unless (string-match "-microsoft" (downcase operating-system-release))
+(unless nl/wsl-p
   (use-package selected
     :diminish selected-minor-mode
     ;; :bind (:map selected-keymap

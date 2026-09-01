@@ -266,7 +266,7 @@ stars org-indent draws in the line prefix render visibly.  Put
   (disable-theme 'xresources)
   (load-theme 'xresources t))
 
-(unless (string-match "-microsoft" (downcase operating-system-release))
+(unless nl/wsl-p
   (use-package xresources-theme
     :ensure (:host github :repo "martenlienen/xresources-theme")
     :hook (after-init . nl/xresources-theme-hook)
