@@ -29,8 +29,6 @@
 
 ;; Please see the README
 
-;; (eval-when-compile
-;;   (require 'cl))
 (require 'cl-lib)
 
 (defgroup pl nil
@@ -62,9 +60,9 @@
             (match-end 0))
            ((memq :group args)
             (let ((group
-                   (loop named outer for arg on args
-                         when (eq (car arg) :group) do
-                         (return-from outer (cadr arg)))))
+                   (cl-loop named outer for arg on args
+                            when (eq (car arg) :group) do
+                            (cl-return-from outer (cadr arg)))))
               (if group
                   (match-string group)
                 (error "Unexpected regexp :group %s" group))))
@@ -82,10 +80,10 @@
 (defmacro pl-or (&rest parsers)
   (let ((outer-sym (make-symbol "outer"))
         (parser-sym (make-symbol "parser")))
-    `(loop named ,outer-sym for ,parser-sym in ',parsers
-           finally (throw 'failed nil) do
-           (catch 'failed
-             (return-from ,outer-sym (eval ,parser-sym))))))
+    `(cl-loop named ,outer-sym for ,parser-sym in ',parsers
+              finally (throw 'failed nil) do
+              (catch 'failed
+                (cl-return-from ,outer-sym (eval ,parser-sym))))))
 
 (defmacro pl-try (&rest forms)
   `(catch 'failed ,@forms))

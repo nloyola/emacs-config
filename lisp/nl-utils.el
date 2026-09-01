@@ -6,6 +6,8 @@
 
 ;;; Code:
 
+(require 'cl-lib)
+
 ;; used to refactor Jasmine test suites
 (defun nl/test-suite-mixin-fix (importText injectRegexArgs extendRegexArgs)
   (goto-char (point-min))
@@ -67,7 +69,7 @@
 
 (defun nl/files-test-suite-mixin-fix (fix-func files)
   (interactive)
-  (loop for file in files do
+  (cl-loop for file in files do
         (progn
           (setq default-directory "/home/nelson/src/cbsr/scala/bbweb")
           (find-file file)
@@ -173,7 +175,7 @@
 
 (defun nl/files-scalatest-timestamp-fix (fix-func files)
   (interactive)
-  (loop for file in files do
+  (cl-loop for file in files do
         (progn
           (setq default-directory "/home/nelson/src/cbsr/scala/bbweb")
           (find-file file)
@@ -229,7 +231,7 @@
 
 (defun nl/files-jssuite-create-controller-fix (fix-func files)
   (interactive)
-  (loop for file in files do
+  (cl-loop for file in files do
         (progn
           (setq default-directory "/home/nelson/src/cbsr/scala/bbweb")
           (find-file file)
