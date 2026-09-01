@@ -45,7 +45,7 @@
   "Primary To: address for the monthly work report.")
 
 (defvar nl/nordita-worklog-cc
-  "mikael.fogelstrom@su.se,hans.muhlen@su.se"
+  "mikael.fogelstrom@su.se,hans.muhlen@su.se,alessia.ferraro@su.se"
   "Cc: addresses for the monthly work report.")
 
 (defvar nl/nordita-worklog-greeting "Hi Elizabeth,"
