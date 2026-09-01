@@ -162,14 +162,21 @@ shell.  Left in, they end up as literal junk in the note and the report."
    "\e\\][^\a\e]*\\(?:\a\\|\e\\\\\\)\\|\e\\[[0-9;?]*[A-Za-z]\\|\e[=>]" "" text))
 
 (defun nl/nordita-worklog--strip-fence (text)
-  "Remove a trailing markdown code fence from TEXT.
-Embedded mode asks for bare org, but the model sometimes wraps the whole reply
-in a ```org block regardless.  The opening fence is already discarded by taking
-everything from the first week heading; the closing one sits at the very end,
-where nothing else would have removed it, and lands in the note as a literal
-``` line after the last paragraph."
+  "Remove markdown code fence lines from TEXT.
+Embedded mode asks for bare org, but the model sometimes wraps the summary in a
+```org block regardless.  The opening fence is already discarded by taking
+everything from the first week heading; the closing one is not, and lands in the
+note as a literal ``` line.
+
+It is not always the last line: when the model adds a closing remark after the
+block, the fence ends up buried mid-report, which is how one reached a sent
+report.  So every fence line goes, wherever it sits - the summary is org, where
+a bare ``` line is never meant literally.  The line is replaced by a newline
+rather than deleted outright, so that stripping a fence between two body lines
+cannot run them together."
   (string-trim-right
-   (replace-regexp-in-string "\n[ \t]*```[a-zA-Z]*[ \t]*\\'" "" text)))
+   (replace-regexp-in-string
+    "\n[ \t]*```[a-zA-Z]*[ \t]*\\(?:\n\\|\\'\\)" "\n" text)))
 
 (defun nl/nordita-worklog--clean (output)
   "Org text from claude's OUTPUT, or nil if it contains no summary at all.
