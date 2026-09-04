@@ -41,4 +41,12 @@
 ;; mapped translucent instead of flashing opaque first.
 (add-to-list 'default-frame-alist '(alpha-background . 80))
 
+;; The Wayland app_id (Hyprland's window "class") is baked in once per process:
+;; `pgtk_term_init' hands GTK a `--name <x-resource-name>' argv when the first
+;; graphical frame is created, and it defaults to `invocation-name', which for
+;; this build is the versioned binary `emacs-32.0.50'.  Pin it here, before any
+;; frame exists, so windows come up as plain "Emacs" instead of "emacs-32-0-50".
+;; Setting it later has no effect: `gtk_init' has already run by then.
+(setq x-resource-name "Emacs")
+
 ;;; early-init.el ends here

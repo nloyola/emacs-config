@@ -180,8 +180,8 @@ OSC 52 hands the text to the terminal, which owns the real clipboard."
   (use-dialog-box nil)
   (visible-bell t)
   (frame-title-format
-   '("" invocation-name ": " (:eval (replace-regexp-in-string
-                                     "^ +" "" (buffer-name)))))
+   '("" "Emacs" ": " (:eval (replace-regexp-in-string
+                             "^ +" "" (buffer-name)))))
   (next-line-add-newlines nil)
   (indicate-empty-lines t)
   (inhibit-compacting-font-caches t)
