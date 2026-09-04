@@ -247,11 +247,12 @@ See https://www.gonsie.com/blorg/modeline.html for additional details.
   (defconst nl/mode-line-height 85
     "Absolute `:height' (1/10 pt) for every mode-line face.
 
-Absolute, not relative, because the `nl/mode-line-*' faces set
-`:inherit nil' so a float here would have no `default' to multiply.
-That makes it DPI-dependent: Emacs resolves it through the DPI sampled
-at first-frame creation, which is `text-scaling-factor' * 96 (see
-`nl/linux-monitor-fontsize').
+Absolute, not relative, because these faces do not share a base: some
+set `:inherit nil' and others inherit `mode-line-buffer-id', so a float
+would multiply something different in each and they would not come out
+the same size.  That makes it DPI-dependent: Emacs resolves it through
+the DPI sampled at first-frame creation, which is `text-scaling-factor'
+* 96 (see `nl/linux-monitor-fontsize').
 
 Sized to sit ~12% above the `default' face, which is the relationship
 this mode line has always had:
@@ -264,28 +265,49 @@ this mode line has always had:
 Re-measure with `font-info' on `mode-line' if the DPI changes again;
 120 resolves to 27px at 162 DPI, which towers over a 17px default.")
 
+  ;; None of these faces names a colour, on purpose.  Emacs draws the mode
+  ;; line with `mode-line' (selected window) or `mode-line-inactive' (any
+  ;; other) as the base face and merges the propertized faces on top, so a
+  ;; face that leaves foreground and background unspecified inherits whatever
+  ;; the active theme put there - and the active/inactive distinction comes
+  ;; out for free, without a second set of faces to keep in step.
+  ;;
+  ;; That matters here because `qs-theme' switches Emacs across 25 palettes
+  ;; (see the omarchy block in 50-theme.org).  Any literal colour would be
+  ;; wrong in 24 of them.  It also defeats the point of the tritanopia
+  ;; palettes, which avoid exactly the blue/yellow distinctions the old
+  ;; goldenrod-on-#565063 mode line was built out of.
+
   (defface nl/mode-line-fixed
-    `((t (:height ,nl/mode-line-height)))
-    "Fixed-pitch text in the mode line.")
+    `((t (:height ,nl/mode-line-height :inherit nil)))
+    "Fixed-pitch text in the mode line.
+Colourless by design; see the commentary above.")
 
   (defface nl/mode-line-variable
-    `((t (:height ,nl/mode-line-height)))
-    "Variable-pitch text in the mode line.")
+    `((t (:height ,nl/mode-line-height :inherit nil)))
+    "Variable-pitch text in the mode line.
+Colourless by design; see the commentary above.")
 
   (defface nl/mode-line-buffer-id
-    `((t (:foreground "goldenrod" :background "#565063" :height ,nl/mode-line-height :weight bold)))
-    "Buffer name in the selected window's mode line.")
+    `((t (:height ,nl/mode-line-height :weight bold :inherit mode-line-buffer-id)))
+    "Buffer name in the selected window's mode line.
+Inherits `mode-line-buffer-id', which every theme styles.")
 
   (defface nl/mode-line-buffer-id-inactive
-    `((t (:foreground "#9ca0b0" :background "#353644" :height ,nl/mode-line-height)))
-    "Buffer name in non-selected windows' mode lines.")
+    `((t (:height ,nl/mode-line-height :weight normal :inherit nil)))
+    "Buffer name in non-selected windows' mode lines.
+Nothing to dim by hand: the base `mode-line-inactive' already is.")
 
   (defface nl/mode-line-modified
-    `((t (:slant italic :background "#565063" :height ,nl/mode-line-height :weight bold)))
-    "Modified buffer name in the selected window's mode line.")
+    `((t (:height ,nl/mode-line-height :weight bold :slant italic
+          :inherit mode-line-buffer-id)))
+    "Modified buffer name in the selected window's mode line.
+Italic is the modified marker - there is no standard face for this state,
+and a borrowed one (`warning', say) is toned for `bg-main' rather than for
+a mode-line background.")
 
   (defface nl/mode-line-modified-inactive
-    `((t (:foreground "#9ca0b0" :slant italic :background "#353644" :height ,nl/mode-line-height)))
+    `((t (:height ,nl/mode-line-height :weight normal :slant italic :inherit nil)))
     "Modified buffer name in non-selected windows' mode lines.")
 
   (defun nl/mode-line-selected-window-p ()
@@ -304,77 +326,34 @@ Re-measure with `font-info' on `mode-line' if the DPI changes again;
           'nl/mode-line-modified-inactive
         'nl/mode-line-buffer-id-inactive)))
 
-  (defun nl/mode-line-theme ()
-    (set-face-attribute 'mode-line nil
-                        :background "#565063"
-                        :foreground "white"
-                        :box '(:line-width 2 :color "#3d3947")
-                        :height nl/mode-line-height
-                        :overline nil
-                        :underline nil
-                        :family nl/gui-fixed-font-name
-                        :inherit 'default)
+  (defun nl/mode-line-theme (&optional _theme)
+    "Re-apply the mode line's font size on top of the active theme.
 
-    ;; Emacs 29+ uses `mode-line-active' for the selected window.  Some
-    ;; themes make it inherit a large variable-pitch UI face, so set its
-    ;; font attributes explicitly as well.
-    (when (facep 'mode-line-active)
-      (set-face-attribute 'mode-line-active nil
-                          :background "#565063"
-                          :foreground "white"
-                          :box '(:line-width 2 :color "goldenrod")
+Size only - the colours, box and family of `mode-line', `mode-line-active'
+and `mode-line-inactive' are left to whichever theme is loaded.  Without
+this the mode line would render at the theme's own UI size (22px under
+`modus-themes-variable-pitch-ui'), which towers over a 17px default and
+over the 19px `nl/mode-line-*' segments drawn on top of it.
+
+Takes and ignores an argument so it can go straight on
+`enable-theme-functions', which calls its hooks with the theme."
+    (dolist (face '(mode-line mode-line-active mode-line-inactive))
+      (when (facep face)
+        (set-face-attribute face nil :height nl/mode-line-height)))
+
+    ;; The `nl/mode-line-*' faces are ours, so no theme overwrites them and
+    ;; their defface specs stand.  Re-asserting the two attributes that
+    ;; depend on variables keeps a `C-M-x' on this file enough to see a font
+    ;; change, rather than needing a restart.
+    (dolist (face '(nl/mode-line-fixed nl/mode-line-buffer-id
+                    nl/mode-line-buffer-id-inactive nl/mode-line-modified
+                    nl/mode-line-modified-inactive))
+      (set-face-attribute face nil
                           :height nl/mode-line-height
-                          :overline nil
-                          :underline nil
-                          :family nl/gui-fixed-font-name
-                          :inherit 'default))
-
-    (set-face-attribute 'mode-line-inactive nil
-                        :background "#353644"
-                        :foreground "#9ca0b0"
-                        :box '(:line-width 2 :color "#242631")
-                        :height nl/mode-line-height
-                        :overline nil
-                        :family nl/gui-fixed-font-name
-                        :inherit 'default)
-
-    (set-face-attribute 'nl/mode-line-fixed nil
-                        :height nl/mode-line-height
-                        :family nl/gui-fixed-font-name
-                        :inherit nil)
+                          :family nl/gui-fixed-font-name))
     (set-face-attribute 'nl/mode-line-variable nil
                         :height nl/mode-line-height
-                        :family nl/gui-variable-font-name
-                        :inherit nil)
-    (set-face-attribute 'nl/mode-line-buffer-id nil
-                        :foreground "goldenrod"
-                        :background "#565063"
-                        :weight 'bold
-                        :height nl/mode-line-height
-                        :family nl/gui-fixed-font-name
-                        :inherit nil)
-    (set-face-attribute 'nl/mode-line-buffer-id-inactive nil
-                        :foreground "#9ca0b0"
-                        :background "#353644"
-                        :weight 'normal
-                        :height nl/mode-line-height
-                        :family nl/gui-fixed-font-name
-                        :inherit nil)
-    (set-face-attribute 'nl/mode-line-modified nil
-                        :slant 'italic
-                        :background "#565063"
-                        :weight 'bold
-                        :height nl/mode-line-height
-                        :family nl/gui-fixed-font-name
-                        :inherit nil)
-    (set-face-attribute 'nl/mode-line-modified-inactive nil
-                        :foreground "#9ca0b0"
-                        :slant 'italic
-                        :background "#353644"
-                        :weight 'normal
-                        :height nl/mode-line-height
-                        :family nl/gui-fixed-font-name
-                        :inherit nil))
+                        :family nl/gui-variable-font-name))
   :init
   (setq-default
    mode-line-format
@@ -388,15 +367,21 @@ Re-measure with `font-info' on `mode-line' if the DPI changes again;
 
     ;; line and column
     " ["
-    (propertize "%l" 'face '(:inherit nl/mode-line-fixed :foreground "light sky blue")) ","
-    (propertize "%c" 'face '(:inherit nl/mode-line-fixed :foreground "light green"))
+    (propertize "%l" 'face 'nl/mode-line-fixed) ","
+    (propertize "%c" 'face 'nl/mode-line-fixed)
     "] "
 
     ;; relative position, size of file
     " ("
-    (propertize "%p" 'face '(:inherit nl/mode-line-fixed :foreground "salmon")) ;; % above top
+    ;; Undimmed on purpose.  `shadow' is the obvious face for a secondary
+    ;; readout, but Modus tunes it for `bg-main', not for the mode line:
+    ;; against `bg-mode-line-active' (#003c52 here) its #989898 measures
+    ;; 4.12:1, under the 4.5:1 WCAG AA needs for text this size.  The plain
+    ;; mode-line foreground is 11.88:1, and every theme guarantees its own
+    ;; mode-line contrast, so this stays legible across all 25 palettes.
+    (propertize "%p" 'face 'nl/mode-line-fixed) ;; % above top
     "/"
-    (propertize "%I" 'face '(:inherit nl/mode-line-fixed :foreground "sandy brown")) ;; size
+    (propertize "%I" 'face 'nl/mode-line-fixed) ;; size
     ") "
 
     ;; ansi-term's line or char mode
@@ -411,8 +396,20 @@ Re-measure with `font-info' on `mode-line' if the DPI changes again;
                                    ,(+ 50 (string-width (if (listp mode-name) (car mode-name) mode-name))))))))
 
     ;; the current major mode
-    (propertize " %m " 'face '(:inherit nl/mode-line-variable :foreground "light sky blue"))
+    (propertize " %m " 'face '(:inherit (mode-line-emphasis nl/mode-line-variable)))
     minor-mode-alist
     ))
-  :hook (after-init . nl/mode-line-theme))
+  :config
+  ;; NOT `after-init'.  omarchy is an elpaca package, and elpaca activates
+  ;; packages asynchronously, so the `load-theme' inside `nl/qs-theme-sync'
+  ;; (50-theme.org) runs *after* `after-init-hook' has already fired - the
+  ;; theme won every startup and this function's work was invisible.  The
+  ;; same applies at runtime: `qs-theme set' calls back over emacsclient and
+  ;; loads a theme whenever the desktop palette changes.
+  ;;
+  ;; `enable-theme-functions' fires on every one of those, which is exactly
+  ;; when the mode-line faces need re-asserting.
+  (add-hook 'enable-theme-functions #'nl/mode-line-theme)
+  ;; ...and once now, for the case where a theme is already in force.
+  (nl/mode-line-theme))
 #+end_src
