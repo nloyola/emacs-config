@@ -79,8 +79,8 @@ Applied by `nl/apply-org-faces' in 90-org.org to `org-block', its
 begin/end lines, `org-table', `org-code' and `org-verbatim'.
 
 1.0 means an Org source block renders at exactly the size of code in a
-prog-mode buffer - and, since `nl/linux-monitor-fontsize' moved to 10.5,
-at the size Alacritty renders too.
+prog-mode buffer - and, since `nl/linux-monitor-fontsize' is kept pinned
+to Alacritty's cell, at the size Alacritty renders too.
 
 Read this as a multiple of the frame `default', NOT of the height Emacs
 finally applies.  Org buffers run `mixed-pitch-mode', which remaps
@@ -97,8 +97,8 @@ line numbers out of step with the code they number.")
 
 (defun nl/set-favorite-font-size (size)
   "Set the default font size as well as equalize the fixed and variable fonts."
-  ;; %s, not %d: the Wayland size is fractional (10.5) and %d would silently
-  ;; truncate it to 10.  Integer sizes still format identically.
+  ;; %s, not %d: the Wayland size is fractional (7.6) and %d would silently
+  ;; truncate it to 7.  Integer sizes still format identically.
   (let ((fav-font (format "%s-%s" nl/gui-fixed-font-name size)))
     (set-face-attribute 'default nil :font fav-font)
     ;; Relative height - no `nl/font-height' here, see `nl/fixed-pitch-height'.
@@ -126,20 +126,34 @@ comes out ~20% smaller under Hyprland."
 (defun nl/linux-monitor-fontsize ()
   "Quickly set reset my font size when I connect my laptop to a monitor on Linux."
   (interactive)
-  ;; 10.5 under Wayland is what matches Alacritty, which is the reference now
-  ;; that alacritty.toml carries its own Hyprland size (13).  Measured, not
+  ;; The Wayland size matches Alacritty, which is the reference now that
+  ;; alacritty.toml carries its own Hyprland size (13).  Measured, not
   ;; derived: Alacritty reports 189x43 cells in an 1894x1034 window with 6px
-  ;; padding, so its cell is 9.93x23.5px, and `font-info' puts JetBrainsMono
-  ;; at 10.5 on a 10x24 cell.  The two programs disagree about what a point
-  ;; is - Emacs resolves through fontconfig at ~116 DPI while these heads are
-  ;; actually 161 DPI - so equal point sizes do not render equal, and cell
-  ;; size is the only reliable way to line them up.
+  ;; padding, so its cell is 9.93x23.5px, and the target is the 17px font /
+  ;; 10x24 cell that sits on top of it.
+  ;;
+  ;; The number is a function of the DPI this build resolves, which is
+  ;; `org.gnome.desktop.interface text-scaling-factor' times 96, sampled once
+  ;; when the first graphical frame is created and never updated (this pgtk
+  ;; build is configured --without-gsettings, so nothing tracks the key).
+  ;; Alacritty ignores that key entirely - it reads the Wayland output scale,
+  ;; which is 1.0 - so it stays at 96 DPI no matter what this is set to, and
+  ;; equal point sizes do not render equal.  Cell size is the only reliable
+  ;; way to line the two up.
+  ;;
+  ;;   text-scaling-factor   DPI     size for a 10x24 cell
+  ;;   1.2                   115.2   10.5
+  ;;   1.6875 (162, actual)  162     7.6   <- current
+  ;;
+  ;; 7.6 is the middle of the 7.4-7.8 plateau that all render 17px, so DPI
+  ;; drift does not tip it to 16 or 18.  Re-measure with `font-info' and
+  ;; `frame-char-width' if text-scaling-factor changes again.
   ;;
   ;; Replaces 13 (= 11 * 1.25), which was chosen to match the X session's own
   ;; Emacs rather than the terminal, and rendered ~31% wider than Alacritty.
-  ;; Only the default face follows this; the mode-line faces below stay at
-  ;; their fixed :height 120.
-  (nl/set-favorite-font-size (if (nl/wayland-session-p) 10.5 11)))
+  ;; Only the default face follows this; the mode-line faces below carry
+  ;; their own absolute size, `nl/mode-line-height'.
+  (nl/set-favorite-font-size (if (nl/wayland-session-p) 7.6 11)))
 
 (defun nl/mac-laptop-fontsize ()
   "Quickly set reset my font size when I disconnect my laptop to a monitor from a Mac."
@@ -230,28 +244,48 @@ See https://www.gonsie.com/blorg/modeline.html for additional details.
 (use-package emacs
   :ensure nil
   :preface
+  (defconst nl/mode-line-height 85
+    "Absolute `:height' (1/10 pt) for every mode-line face.
+
+Absolute, not relative, because the `nl/mode-line-*' faces set
+`:inherit nil' so a float here would have no `default' to multiply.
+That makes it DPI-dependent: Emacs resolves it through the DPI sampled
+at first-frame creation, which is `text-scaling-factor' * 96 (see
+`nl/linux-monitor-fontsize').
+
+Sized to sit ~12% above the `default' face, which is the relationship
+this mode line has always had:
+
+  text-scaling-factor   DPI     default   this   renders
+  1.0                   96      14px      120    16px
+  1.2                   115.2   17px      120    19px
+  1.6875                162     17px       85    19px   <- current
+
+Re-measure with `font-info' on `mode-line' if the DPI changes again;
+120 resolves to 27px at 162 DPI, which towers over a 17px default.")
+
   (defface nl/mode-line-fixed
-    '((t (:height 120)))
+    `((t (:height ,nl/mode-line-height)))
     "Fixed-pitch text in the mode line.")
 
   (defface nl/mode-line-variable
-    '((t (:height 120)))
+    `((t (:height ,nl/mode-line-height)))
     "Variable-pitch text in the mode line.")
 
   (defface nl/mode-line-buffer-id
-    '((t (:foreground "goldenrod" :background "#565063" :height 120 :weight bold)))
+    `((t (:foreground "goldenrod" :background "#565063" :height ,nl/mode-line-height :weight bold)))
     "Buffer name in the selected window's mode line.")
 
   (defface nl/mode-line-buffer-id-inactive
-    '((t (:foreground "#9ca0b0" :background "#353644" :height 120)))
+    `((t (:foreground "#9ca0b0" :background "#353644" :height ,nl/mode-line-height)))
     "Buffer name in non-selected windows' mode lines.")
 
   (defface nl/mode-line-modified
-    '((t (:slant italic :background "#565063" :height 120 :weight bold)))
+    `((t (:slant italic :background "#565063" :height ,nl/mode-line-height :weight bold)))
     "Modified buffer name in the selected window's mode line.")
 
   (defface nl/mode-line-modified-inactive
-    '((t (:foreground "#9ca0b0" :slant italic :background "#353644" :height 120)))
+    `((t (:foreground "#9ca0b0" :slant italic :background "#353644" :height ,nl/mode-line-height)))
     "Modified buffer name in non-selected windows' mode lines.")
 
   (defun nl/mode-line-selected-window-p ()
@@ -275,7 +309,7 @@ See https://www.gonsie.com/blorg/modeline.html for additional details.
                         :background "#565063"
                         :foreground "white"
                         :box '(:line-width 2 :color "#3d3947")
-                        :height 120
+                        :height nl/mode-line-height
                         :overline nil
                         :underline nil
                         :family nl/gui-fixed-font-name
@@ -289,7 +323,7 @@ See https://www.gonsie.com/blorg/modeline.html for additional details.
                           :background "#565063"
                           :foreground "white"
                           :box '(:line-width 2 :color "goldenrod")
-                          :height 120
+                          :height nl/mode-line-height
                           :overline nil
                           :underline nil
                           :family nl/gui-fixed-font-name
@@ -299,38 +333,38 @@ See https://www.gonsie.com/blorg/modeline.html for additional details.
                         :background "#353644"
                         :foreground "#9ca0b0"
                         :box '(:line-width 2 :color "#242631")
-                        :height 120
+                        :height nl/mode-line-height
                         :overline nil
                         :family nl/gui-fixed-font-name
                         :inherit 'default)
 
     (set-face-attribute 'nl/mode-line-fixed nil
-                        :height 120
+                        :height nl/mode-line-height
                         :family nl/gui-fixed-font-name
                         :inherit nil)
     (set-face-attribute 'nl/mode-line-variable nil
-                        :height 120
+                        :height nl/mode-line-height
                         :family nl/gui-variable-font-name
                         :inherit nil)
     (set-face-attribute 'nl/mode-line-buffer-id nil
                         :foreground "goldenrod"
                         :background "#565063"
                         :weight 'bold
-                        :height 120
+                        :height nl/mode-line-height
                         :family nl/gui-fixed-font-name
                         :inherit nil)
     (set-face-attribute 'nl/mode-line-buffer-id-inactive nil
                         :foreground "#9ca0b0"
                         :background "#353644"
                         :weight 'normal
-                        :height 120
+                        :height nl/mode-line-height
                         :family nl/gui-fixed-font-name
                         :inherit nil)
     (set-face-attribute 'nl/mode-line-modified nil
                         :slant 'italic
                         :background "#565063"
                         :weight 'bold
-                        :height 120
+                        :height nl/mode-line-height
                         :family nl/gui-fixed-font-name
                         :inherit nil)
     (set-face-attribute 'nl/mode-line-modified-inactive nil
@@ -338,7 +372,7 @@ See https://www.gonsie.com/blorg/modeline.html for additional details.
                         :slant 'italic
                         :background "#353644"
                         :weight 'normal
-                        :height 120
+                        :height nl/mode-line-height
                         :family nl/gui-fixed-font-name
                         :inherit nil))
   :init
