@@ -95,18 +95,48 @@ Separate from `nl/fixed-pitch-height' on purpose: `line-number' inherits
 `fixed-pitch', so shrinking that face to taste inside Org would drag the
 line numbers out of step with the code they number.")
 
+(defun nl/set-favorite-font (font)
+  "Set FONT as the `default' face and equalize the fixed and variable fonts.
+
+FONT is anything Emacs can parse as a font name.  The two callers below
+build one from a point size or from a pixel size; nothing else should
+call this directly."
+  (set-face-attribute 'default nil :font font)
+  ;; Relative height - no `nl/font-height' here, see `nl/fixed-pitch-height'.
+  (set-face-attribute 'fixed-pitch nil :family nl/gui-fixed-font-name :inherit 'default
+                      :height nl/fixed-pitch-height)
+  ;; Relative height - see `nl/variable-pitch-height'.
+  (set-face-attribute 'variable-pitch nil :family nl/gui-variable-font-name :inherit 'default
+                      :height nl/variable-pitch-height))
+
 (defun nl/set-favorite-font-size (size)
-  "Set the default font size as well as equalize the fixed and variable fonts."
-  ;; %s, not %d: the Wayland size is fractional (7.6) and %d would silently
-  ;; truncate it to 7.  Integer sizes still format identically.
-  (let ((fav-font (format "%s-%s" nl/gui-fixed-font-name size)))
-    (set-face-attribute 'default nil :font fav-font)
-    ;; Relative height - no `nl/font-height' here, see `nl/fixed-pitch-height'.
-    (set-face-attribute 'fixed-pitch nil :family nl/gui-fixed-font-name :inherit 'default
-                        :height nl/fixed-pitch-height)
-    ;; Relative height - see `nl/variable-pitch-height'.
-    (set-face-attribute 'variable-pitch nil :family nl/gui-variable-font-name :inherit 'default
-                        :height nl/variable-pitch-height)))
+  "Set the default font to SIZE points, equalizing the pitch faces.
+
+A point size renders through whatever DPI the build resolved, so it is
+only as stable as that DPI is.  Under Wayland prefer
+`nl/set-favorite-font-pixel-size'.
+
+%s, not %d: a size may be fractional and %d would silently truncate it.
+Integer sizes still format identically."
+  (nl/set-favorite-font (format "%s-%s" nl/gui-fixed-font-name size)))
+
+(defun nl/set-favorite-font-pixel-size (pixels)
+  "Set the default font to PIXELS pixels tall, equalizing the pitch faces.
+
+Pixels, not points, because this pgtk build turns a point size into
+pixels with `gdk_screen_get_resolution' - sampled once when the first
+graphical frame is created, never updated, and fed on Wayland by
+`org.gnome.desktop.interface text-scaling-factor' * 96.  A point size
+therefore made Emacs a consumer of a desktop-wide key: raising it for
+this frame shrank every point size the rest of the session was written
+in, and Chrome's tab strip in particular, since Chrome reads the GTK
+font in points but does not apply that key to it.
+
+Pinning the size in pixels takes the key out of the loop, so it can hold
+whatever value suits the rest of the desktop and Emacs still renders the
+same on any DPI - including the 96 fallback a frame gets when the
+settings portal is not answering yet at session start."
+  (nl/set-favorite-font (format "%s:pixelsize=%d" nl/gui-fixed-font-name pixels)))
 
 (defun nl/mac-monitor-fontsize ()
   "Quickly set reset my font size when I connect my laptop to a monitor on a Mac."
@@ -132,28 +162,24 @@ comes out ~20% smaller under Hyprland."
   ;; padding, so its cell is 9.93x23.5px, and the target is the 17px font /
   ;; 10x24 cell that sits on top of it.
   ;;
-  ;; The number is a function of the DPI this build resolves, which is
-  ;; `org.gnome.desktop.interface text-scaling-factor' times 96, sampled once
-  ;; when the first graphical frame is created and never updated (this pgtk
-  ;; build is configured --without-gsettings, so nothing tracks the key).
-  ;; Alacritty ignores that key entirely - it reads the Wayland output scale,
-  ;; which is 1.0 - so it stays at 96 DPI no matter what this is set to, and
-  ;; equal point sizes do not render equal.  Cell size is the only reliable
-  ;; way to line the two up.
+  ;; Stated in pixels, which is the only unit both ends of that comparison
+  ;; agree on: Alacritty reads the Wayland output scale (1.0 here, so 96 DPI)
+  ;; and ignores `text-scaling-factor', while Emacs resolves a point size
+  ;; through that key - see `nl/set-favorite-font-pixel-size'.  Equal point
+  ;; sizes therefore did not render equal, and the fix used to be a point
+  ;; size chosen per DPI (10.5 at 1.2, 7.6 at 1.6875), which had to be
+  ;; re-derived every time the key moved.  17px is 17px at any DPI.
   ;;
-  ;;   text-scaling-factor   DPI     size for a 10x24 cell
-  ;;   1.2                   115.2   10.5
-  ;;   1.6875 (162, actual)  162     7.6   <- current
-  ;;
-  ;; 7.6 is the middle of the 7.4-7.8 plateau that all render 17px, so DPI
-  ;; drift does not tip it to 16 or 18.  Re-measure with `font-info' and
-  ;; `frame-char-width' if text-scaling-factor changes again.
+  ;; Re-measure with `font-info' and `frame-char-width' if the target
+  ;; changes; want 17, 10, 24.
   ;;
   ;; Replaces 13 (= 11 * 1.25), which was chosen to match the X session's own
   ;; Emacs rather than the terminal, and rendered ~31% wider than Alacritty.
-  ;; Only the default face follows this; the mode-line faces below carry
-  ;; their own absolute size, `nl/mode-line-height'.
-  (nl/set-favorite-font-size (if (nl/wayland-session-p) 7.6 11)))
+  ;; Only the default face follows this; the mode-line faces below are sized
+  ;; from it, see `nl/mode-line-height'.
+  (if (nl/wayland-session-p)
+      (nl/set-favorite-font-pixel-size 17)
+    (nl/set-favorite-font-size 11)))
 
 (defun nl/mac-laptop-fontsize ()
   "Quickly set reset my font size when I disconnect my laptop to a monitor from a Mac."
@@ -244,26 +270,37 @@ See https://www.gonsie.com/blorg/modeline.html for additional details.
 (use-package emacs
   :ensure nil
   :preface
-  (defconst nl/mode-line-height 85
-    "Absolute `:height' (1/10 pt) for every mode-line face.
+  (defconst nl/mode-line-pixel-height 19
+    "Height in pixels of every mode-line face.
+
+Sized to sit ~12% above the 17px `default' face, which is the
+relationship this mode line has always had.")
+
+  (defun nl/mode-line-height ()
+    "Return the absolute `:height' (1/10 pt) for every mode-line face.
 
 Absolute, not relative, because these faces do not share a base: some
 set `:inherit nil' and others inherit `mode-line-buffer-id', so a float
 would multiply something different in each and they would not come out
-the same size.  That makes it DPI-dependent: Emacs resolves it through
-the DPI sampled at first-frame creation, which is `text-scaling-factor'
-* 96 (see `nl/linux-monitor-fontsize').
+the same size.
 
-Sized to sit ~12% above the `default' face, which is the relationship
-this mode line has always had:
+An absolute height is in 1/10 pt, so it resolves through the DPI the
+build sampled at first-frame creation - which is why a literal value
+here was wrong at every DPI but the one it was written for (120 renders
+27px at 162 DPI, towering over a 17px default).  The `default' face is
+pinned in pixels instead (see `nl/set-favorite-font-pixel-size'), so its
+own `:height' is this session's measured px-to-point conversion, and
+scaling that by the pixel ratio lands on the right point size at any
+DPI.
 
-  text-scaling-factor   DPI     default   this   renders
-  1.0                   96      14px      120    16px
-  1.2                   115.2   17px      120    19px
-  1.6875                162     17px       85    19px   <- current
-
-Re-measure with `font-info' on `mode-line' if the DPI changes again;
-120 resolves to 27px at 162 DPI, which towers over a 17px default.")
+Falls back to 120 - correct at 115.2 DPI - when there is no font to
+measure, which is the case in a frameless daemon."
+    (let* ((info (ignore-errors (font-info (face-font 'default))))
+           (px (and info (aref info 2))))
+      (if (and px (> px 0))
+          (max 1 (round (* (face-attribute 'default :height)
+                           (/ (float nl/mode-line-pixel-height) px))))
+        120)))
 
   ;; None of these faces names a colour, on purpose.  Emacs draws the mode
   ;; line with `mode-line' (selected window) or `mode-line-inactive' (any
@@ -279,27 +316,27 @@ Re-measure with `font-info' on `mode-line' if the DPI changes again;
   ;; goldenrod-on-#565063 mode line was built out of.
 
   (defface nl/mode-line-fixed
-    `((t (:height ,nl/mode-line-height :inherit nil)))
+    `((t (:height ,(nl/mode-line-height) :inherit nil)))
     "Fixed-pitch text in the mode line.
 Colourless by design; see the commentary above.")
 
   (defface nl/mode-line-variable
-    `((t (:height ,nl/mode-line-height :inherit nil)))
+    `((t (:height ,(nl/mode-line-height) :inherit nil)))
     "Variable-pitch text in the mode line.
 Colourless by design; see the commentary above.")
 
   (defface nl/mode-line-buffer-id
-    `((t (:height ,nl/mode-line-height :weight bold :inherit mode-line-buffer-id)))
+    `((t (:height ,(nl/mode-line-height) :weight bold :inherit mode-line-buffer-id)))
     "Buffer name in the selected window's mode line.
 Inherits `mode-line-buffer-id', which every theme styles.")
 
   (defface nl/mode-line-buffer-id-inactive
-    `((t (:height ,nl/mode-line-height :weight normal :inherit nil)))
+    `((t (:height ,(nl/mode-line-height) :weight normal :inherit nil)))
     "Buffer name in non-selected windows' mode lines.
 Nothing to dim by hand: the base `mode-line-inactive' already is.")
 
   (defface nl/mode-line-modified
-    `((t (:height ,nl/mode-line-height :weight bold :slant italic
+    `((t (:height ,(nl/mode-line-height) :weight bold :slant italic
           :inherit mode-line-buffer-id)))
     "Modified buffer name in the selected window's mode line.
 Italic is the modified marker - there is no standard face for this state,
@@ -307,7 +344,7 @@ and a borrowed one (`warning', say) is toned for `bg-main' rather than for
 a mode-line background.")
 
   (defface nl/mode-line-modified-inactive
-    `((t (:height ,nl/mode-line-height :weight normal :slant italic :inherit nil)))
+    `((t (:height ,(nl/mode-line-height) :weight normal :slant italic :inherit nil)))
     "Modified buffer name in non-selected windows' mode lines.")
 
   (defun nl/mode-line-selected-window-p ()
@@ -339,7 +376,7 @@ Takes and ignores an argument so it can go straight on
 `enable-theme-functions', which calls its hooks with the theme."
     (dolist (face '(mode-line mode-line-active mode-line-inactive))
       (when (facep face)
-        (set-face-attribute face nil :height nl/mode-line-height)))
+        (set-face-attribute face nil :height (nl/mode-line-height))))
 
     ;; The `nl/mode-line-*' faces are ours, so no theme overwrites them and
     ;; their defface specs stand.  Re-asserting the two attributes that
@@ -349,10 +386,10 @@ Takes and ignores an argument so it can go straight on
                     nl/mode-line-buffer-id-inactive nl/mode-line-modified
                     nl/mode-line-modified-inactive))
       (set-face-attribute face nil
-                          :height nl/mode-line-height
+                          :height (nl/mode-line-height)
                           :family nl/gui-fixed-font-name))
     (set-face-attribute 'nl/mode-line-variable nil
-                        :height nl/mode-line-height
+                        :height (nl/mode-line-height)
                         :family nl/gui-variable-font-name))
   :init
   (setq-default
