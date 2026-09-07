@@ -82,31 +82,107 @@
     (local-set-key (kbd "M-q") #'ignore)
     (local-set-key (kbd "C-c C-x m") #'markdown-toggle-markup-hiding)
     (key-chord-define-local "jc" #'nl/markdown-command-menu)
+    (add-hook 'after-save-hook #'nl/markdown-preview-refresh nil t)
     (markdown-toggle-markup-hiding 1))
 
   (defconst nl/markdown-github-css-file
     (expand-file-name "css/github-markdown-light.css" user-emacs-directory)
     "Vendored GitHub light-theme markdown stylesheet for one-shot preview.")
 
-  (defun nl/markdown-preview ()
-    "Render the current Markdown buffer to a static HTML file and open it.
-One-shot preview (no live socket): re-run to refresh.  The output file is
-named after the source buffer so the browser URL ends in `<base>.html'
-rather than a random temp name.  Each source file gets a stable path
-(keyed by a hash of its name), so re-previewing overwrites in place
-instead of littering the temp directory."
-    (interactive)
+  (defvar nl/markdown-preview--opened (make-hash-table :test #'equal)
+    "Preview HTML paths already handed to the browser in this session.
+Keeps a re-render from opening a second tab on the same file.")
+
+  (defun nl/markdown-preview--paths ()
+    "Return (DIR HTML) for the current buffer's preview.
+The output file is named after the source buffer so the browser URL ends
+in `<base>.html' rather than a random temp name, and each source file
+gets a stable directory (keyed by a hash of its name) so re-previewing
+overwrites in place instead of littering the temp directory."
     (let* ((source (or (buffer-file-name) (buffer-name)))
-           (base (file-name-base source))
            (dir (expand-file-name
                  (md5 source)
-                 (expand-file-name "emacs-md-preview" temporary-file-directory)))
-           (html (expand-file-name (concat base ".html") dir))
+                 (expand-file-name "emacs-md-preview" temporary-file-directory))))
+      (list dir (expand-file-name (concat (file-name-base source) ".html") dir))))
+
+  (defun nl/markdown-preview--reload-script (stamp)
+    "Return a <script> that reloads the page once `stamp.js' stops matching STAMP.
+The preview is a plain `file://' page with no server behind it, and
+Chrome refuses `fetch'/XHR between `file://' URLs - but it still loads a
+`file://' script as a subresource.  So the page polls a sibling
+`stamp.js' that the Emacs side rewrites on every render, and reloads only
+when the stamp it calls back with differs from the one baked into this
+render.  Nothing is refetched while the document sits unchanged.
+
+Scroll position is parked in `sessionStorage' across the reload, so
+refreshing a long document does not jump back to the top."
+    (concat
+     "<script>"
+     "(function () {"
+     " var stamp = '" stamp "';"
+     " var key = 'nl-md-scroll:' + location.pathname;"
+     " var restored = false;"
+     " if (history.scrollRestoration) { history.scrollRestoration = 'manual'; }"
+     " function save () {"
+     "  if (!restored) { return; }"
+     "  try { sessionStorage.setItem(key, String(window.scrollY)); } catch (e) {}"
+     " }"
+     " addEventListener('scroll', save, {passive: true});"
+     " addEventListener('beforeunload', save);"
+     " addEventListener('load', function () {"
+     "  try {"
+     "   var y = sessionStorage.getItem(key);"
+     "   if (y !== null) { scrollTo(0, parseInt(y, 10)); }"
+     "  } catch (e) {}"
+     "  restored = true;"
+     " });"
+     " window.nlMarkdownStamp = function (s) {"
+     "  if (s && s !== stamp) { save(); location.reload(); }"
+     " };"
+     " setInterval(function () {"
+     "  var el = document.createElement('script');"
+     "  el.src = 'stamp.js?t=' + Date.now();"
+     "  el.onload = el.onerror = function () { el.remove(); };"
+     "  document.head.appendChild(el);"
+     " }, 1000);"
+     "}());"
+     "</script>"))
+
+  (defun nl/markdown-preview (&optional reopen)
+    "Render the current Markdown buffer to a static HTML file and preview it.
+The first invocation opens the file in the browser.  Later ones - another
+`jc p', or simply saving the buffer, see `nl/markdown-preview-refresh' -
+rewrite the same file and let the open tab pick the new render up on its
+own, rather than stacking up a fresh tab per preview.
+
+With a prefix argument REOPEN, hand the file to the browser again, which
+is how to get the preview back after closing its tab."
+    (interactive "P")
+    (let* ((paths (nl/markdown-preview--paths))
+           (dir (car paths))
+           (html (cadr paths))
+           (stamp (format-time-string "%s%3N"))
+           (markdown-xhtml-header-content
+            (concat markdown-xhtml-header-content
+                    (nl/markdown-preview--reload-script stamp)))
            (out (markdown-standalone markdown-output-buffer-name)))
       (make-directory dir t)
       (with-current-buffer out
         (write-region (point-min) (point-max) html nil 'silent))
-      (browse-url-of-file html)))
+      (write-region
+       (format "window.nlMarkdownStamp && window.nlMarkdownStamp('%s');\n" stamp)
+       nil (expand-file-name "stamp.js" dir) nil 'silent)
+      (when (or reopen (not (gethash html nl/markdown-preview--opened)))
+        (puthash html t nl/markdown-preview--opened)
+        (browse-url-of-file html))))
+
+  (defun nl/markdown-preview-refresh ()
+    "Re-render this buffer's preview, but only once one has been opened.
+On `after-save-hook', so a live preview follows the file without the
+buffer having to ask for it again."
+    (when (gethash (cadr (nl/markdown-preview--paths))
+                   nl/markdown-preview--opened)
+      (nl/markdown-preview)))
 
   (defun nl/markdown-command-menu ()
     "Open the Markdown command hydra."
@@ -120,13 +196,15 @@ instead of littering the temp directory."
         markdown-fontify-code-blocks-natively t
         markdown-hide-markup t)
 
-  ;; One-shot `markdown-preview' (C-c C-c p): render current buffer to a
-  ;; static HTML file and open it once in the browser - no live socket.
+  ;; `nl/markdown-preview' (`jc p'): render the current buffer to a static
+  ;; HTML file and open it in the browser.  The page polls a sibling stamp
+  ;; file and reloads itself when the render changes, so re-previewing or
+  ;; saving updates the tab that is already open - no server, no socket.
   ;; Style it like GitHub's light theme by feeding the same vendored
   ;; `github-markdown-css' into markdown-mode's export variables. The CSS
   ;; targets `.markdown-body', so we wrap the body in that container and add
   ;; GitHub's recommended sizing (which lives in github.com's page shell,
-  ;; not the stylesheet). Re-run the command to refresh the preview.
+  ;; not the stylesheet).
   (setq markdown-css-paths (list (concat "file://" nl/markdown-github-css-file))
         markdown-xhtml-body-preamble "<div class=\"markdown-body\">"
         markdown-xhtml-body-epilogue "</div>"
@@ -142,6 +220,7 @@ instead of littering the temp directory."
     (defhydra hydra-nl-markdown (:color blue :hint nil)
       "Markdown"
       ("p" nl/markdown-preview "Render preview in browser" :column "Preview")
+      ("P" (nl/markdown-preview t) "Reopen preview tab" :column "Preview")
       ("e" markdown-export "Export to .html file" :column "Preview")
       ("m" markdown-toggle-markup-hiding "Toggle markup hiding" :column "View")))
   (custom-set-faces
