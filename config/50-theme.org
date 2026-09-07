@@ -48,11 +48,26 @@ palettes under =~/.config/theme/themes/=.  This block makes Emacs one
 more consumer of that switch.
 
 omarchy.el bundles 22 Modus-derived themes named after the Omarchy
-palettes, and 22 of the 25 =qs-theme= palettes carry those names
-verbatim, so the two sides line up by name with no translation table.
-Only =colorful=, =doomone= and =warm= - the ones authored in
-=home_config= rather than ported - have no counterpart, and fall back to
-the Modus theme above.
+palettes, and 22 of the =qs-theme= palettes carry those names verbatim,
+so those two sides line up by name with no translation table.  Their
+syntax slots are hand-aligned to the doom-themes reading of each
+palette, which is worth keeping, so a name omarchy.el knows is applied
+exactly as the package intends.
+
+The rest have no bundled theme: the locally authored palettes, and every
+package installed from the theme manager's community browser since -
+=event-horizon=, =akane=, =coppernight=.  Those are built here instead,
+out of the palette =qs-theme= resolved, by the same two functions
+omarchy.el builds its own with - =modus-themes-generate-palette= and
+=modus-themes-theme=.  So the picture is: 22 themes an author tuned, and
+a generated one for everything else, both reached through
+=omarchy-apply-theme=.
+
+Which palettes fall on which side is deliberately not written down.  The
+set grows every time a theme is installed from the grid, and a list here
+would be one more thing to keep in step with it - so the question is put
+to =omarchy-theme-map= at switch time, and a name it does not answer for
+is generated.
 
 The package's own =omarchy-init= is deliberately not called: it drives
 the =omarchy-*= CLIs, which do not exist on a host that merely borrows
@@ -70,13 +85,6 @@ instead, the same file every other consumer reads.
   :config
   (require 'omarchy-themes)
 
-  ;; The three locally authored palettes have no bundled theme.  Without an
-  ;; entry here `omarchy-apply-theme' interns the bare name and fails to
-  ;; load it, so name them explicitly rather than letting them error.
-  (dolist (name '("colorful" "doomone" "warm"))
-    (setf (alist-get name omarchy-theme-map nil nil #'equal)
-          omarchy-default-theme))
-
   (defconst nl/qs-theme-state-file
     (expand-file-name "theme/theme.name"
                       (or (getenv "XDG_STATE_HOME")
@@ -91,11 +99,266 @@ instead, the same file every other consumer reads.
         (let ((name (string-trim (buffer-string))))
           (unless (string-empty-p name) name)))))
 
+  ;; ── The generated theme ──────────────────────────────────────────────
+  ;; What `qs-theme set' rendered for the palette now in force: the same
+  ;; resolved colours alacritty, mako and the bar were given, as an alist.
+  ;; Read, never loaded - the file is data, and the mapping onto Modus slots
+  ;; is here rather than in the template because a template cannot branch.
+
+  (defconst nl/qs-palette-file
+    (expand-file-name "theme/emacs-palette.el"
+                      (or (getenv "XDG_STATE_HOME")
+                          (expand-file-name "~/.local/state")))
+    "File `qs-theme set' renders the resolved palette into.")
+
+  (defun nl/qs-palette ()
+    "Return the resolved palette as an alist, or signal if it is unreadable.
+Signalling is the point: `omarchy-apply-theme' catches it and falls back
+to `omarchy-default-theme', so a missing render leaves Emacs themed."
+    (unless (file-readable-p nl/qs-palette-file)
+      (error "No palette at %s - run `qs-theme set'" nl/qs-palette-file))
+    (with-temp-buffer
+      (insert-file-contents nl/qs-palette-file)
+      (car (read-from-string (buffer-string)))))
+
+  (defun nl/qs-color (palette key)
+    "Colour KEY in PALETTE.  Signals when the key is absent."
+    (or (alist-get key palette)
+        (error "Palette has no %s" key)))
+
+  (defun nl/qs-mix (a b p)
+    "Blend hex colours A and B, P of the way from A to B."
+    (apply #'format "#%02x%02x%02x"
+           (seq-mapn (lambda (x y) (round (+ x (* (- y x) p))))
+                      (nl/qs-rgb a) (nl/qs-rgb b))))
+
+  (defun nl/qs-rgb (hex)
+    "The three bytes of HEX, as integers."
+    (mapcar (lambda (i) (string-to-number (substring hex i (+ i 2)) 16))
+            '(1 3 5)))
+
+  (defun nl/qs-base-colours (pal)
+    "Modus base colours built from the qs-theme palette PAL.
+Slots Modus knows are filled from the palette's own roles; the `qs-'
+slots carry roles Modus has no name for, and exist to be referred to by
+the mappings below.  Anything named here is taken as-is, and everything
+else is derived by `modus-themes-generate-palette'."
+    (let ((bg (nl/qs-color pal 'background))
+          (get (lambda (k) (nl/qs-color pal k))))
+      (append
+       `((bg-main     ,bg)
+         (bg-dim      ,(funcall get 'dark-background))
+         (bg-alt      ,(funcall get 'lighter-background))
+         (bg-active   ,(funcall get 'selection))
+         (bg-inactive ,(funcall get 'darker-background))
+         (border      ,(funcall get 'popup-border))
+         (fg-main     ,(funcall get 'foreground))
+         (fg-dim      ,(funcall get 'dim))
+         (fg-alt      ,(funcall get 'bright-foreground))
+         (cursor      ,(funcall get 'cursor))
+
+         ;; Roles with no Modus slot, named for the mappings to reach.
+         (qs-accent         ,(funcall get 'accent))
+         (qs-accent2        ,(funcall get 'accent2))
+         (qs-muted          ,(funcall get 'muted))
+         (qs-dim            ,(funcall get 'dim))
+         (qs-inactive       ,(funcall get 'inactive))
+         (qs-selection      ,(funcall get 'selection))
+         (qs-selection-text ,(funcall get 'selection-text))
+         (qs-critical       ,(funcall get 'critical))
+         (qs-orange         ,(funcall get 'orange))
+         (qs-bright-fg      ,(funcall get 'bright-foreground)))
+
+       ;; The five-way Modus split of each hue, off the palette's two rows.
+       ;; `warmer' leans on the neighbouring hue the way Modus's own do:
+       ;; red toward orange, blue toward the accent, magenta toward accent2.
+       `((red             ,(funcall get 'red))
+         (red-warmer      ,(funcall get 'orange))
+         (red-cooler      ,(funcall get 'red))
+         (red-faint       ,(funcall get 'red))
+         (red-intense     ,(funcall get 'bright-red))
+         (green           ,(funcall get 'green))
+         (green-warmer    ,(funcall get 'green))
+         (green-cooler    ,(funcall get 'bright-green))
+         (green-faint     ,(funcall get 'green))
+         (green-intense   ,(funcall get 'bright-green))
+         (yellow          ,(funcall get 'yellow))
+         (yellow-warmer   ,(funcall get 'orange))
+         (yellow-cooler   ,(funcall get 'yellow))
+         (yellow-faint    ,(funcall get 'yellow))
+         (yellow-intense  ,(funcall get 'bright-yellow))
+         (blue            ,(funcall get 'blue))
+         (blue-warmer     ,(funcall get 'accent))
+         (blue-cooler     ,(funcall get 'bright-blue))
+         (blue-faint      ,(funcall get 'blue))
+         (blue-intense    ,(funcall get 'bright-blue))
+         (magenta         ,(funcall get 'magenta))
+         (magenta-warmer  ,(funcall get 'accent2))
+         (magenta-cooler  ,(funcall get 'magenta))
+         (magenta-faint   ,(funcall get 'magenta))
+         (magenta-intense ,(funcall get 'bright-magenta))
+         (cyan            ,(funcall get 'cyan))
+         (cyan-warmer     ,(funcall get 'cyan))
+         (cyan-cooler     ,(funcall get 'bright-cyan))
+         (cyan-faint      ,(funcall get 'cyan))
+         (cyan-intense    ,(funcall get 'bright-cyan)))
+
+       ;; Diffs, tinted from the palette rather than left to the core one:
+       ;; Modus's own are built for Modus's background and read as a foreign
+       ;; body on a dark blue or a light cream one.
+       (let ((green (funcall get 'green))
+             (red   (funcall get 'red))
+             (blue  (funcall get 'blue)))
+         `((bg-added           ,(nl/qs-mix bg green 0.16))
+           (bg-added-faint     ,(nl/qs-mix bg green 0.09))
+           (bg-added-refine    ,(nl/qs-mix bg green 0.28))
+           (bg-added-intense   ,(nl/qs-mix bg green 0.40))
+           (fg-added           ,green)
+           (fg-added-intense   ,(funcall get 'bright-green))
+           (bg-removed         ,(nl/qs-mix bg red 0.16))
+           (bg-removed-faint   ,(nl/qs-mix bg red 0.09))
+           (bg-removed-refine  ,(nl/qs-mix bg red 0.28))
+           (bg-removed-intense ,(nl/qs-mix bg red 0.40))
+           (fg-removed         ,red)
+           (fg-removed-intense ,(funcall get 'bright-red))
+           (bg-changed         ,(nl/qs-mix bg blue 0.16))
+           (bg-changed-faint   ,(nl/qs-mix bg blue 0.09))
+           (bg-changed-refine  ,(nl/qs-mix bg blue 0.28))
+           (bg-changed-intense ,(nl/qs-mix bg blue 0.40))
+           (fg-changed         ,blue)
+           (fg-changed-intense ,(funcall get 'bright-blue)))))))
+
+  (defconst nl/qs-mappings
+    '(;; Syntax.  The same slot choices the bundled themes make, so a
+      ;; generated theme and a hand-tuned one read alike.
+      (keyword      magenta)
+      (builtin      red)
+      (constant     qs-orange)
+      (fnname       blue)
+      (fnname-call  blue)
+      (name         blue)
+      (type         cyan)
+      (variable     qs-bright-fg)
+      (variable-use qs-bright-fg)
+      (identifier   qs-bright-fg)
+      (property     cyan)
+      (property-use cyan)
+      (string       green)
+      (docstring    qs-muted)
+      (comment      qs-dim)
+      (preprocessor cyan)
+      (operator     cyan)
+      (punctuation  fg-main)
+      (rx-construct magenta)
+      (rx-backslash cyan)
+
+      ;; Diagnostics.  `critical' is what the bar and mako draw their
+      ;; red-bordered cards in, so an error is the same colour everywhere.
+      (err     qs-critical)
+      (warning yellow)
+      (info    qs-accent)
+      (note    cyan)
+      (success green)
+
+      ;; Mode line.  Its own faces name no colours (20-fonts.org) - these
+      ;; are what they inherit.
+      (bg-mode-line-active       bg-alt)
+      (fg-mode-line-active       fg-alt)
+      (border-mode-line-active   qs-accent)
+      (bg-mode-line-inactive     bg-dim)
+      (fg-mode-line-inactive     qs-inactive)
+      (border-mode-line-inactive bg-alt)
+      (modeline-err              qs-critical)
+      (modeline-warning          yellow)
+      (modeline-info             qs-accent)
+
+      (fg-line-number-inactive qs-dim)
+      (fg-line-number-active   qs-accent)
+      (bg-line-number-inactive bg-main)
+      (bg-line-number-active   bg-alt)
+
+      ;; Region.  `selection-text' is measured against the selection by the
+      ;; resolver rather than assumed to be the foreground, which is what
+      ;; keeps a theme whose selection sits up near its text legible.
+      (bg-region         qs-selection)
+      (fg-region         qs-selection-text)
+      (bg-hl-line        bg-alt)
+      (bg-paren-match    bg-active)
+      (fg-paren-match    qs-orange)
+      (bg-search-current qs-accent)
+      (fg-search-current bg-main)
+      (bg-search-lazy    bg-active)
+
+      (bg-completion      bg-alt)
+      (bg-hover           bg-active)
+      (bg-hover-secondary bg-alt)
+
+      (link          qs-accent)
+      (link-symbolic cyan)
+      (prompt        qs-accent)
+
+      (fg-heading-0 qs-accent)
+      (fg-heading-1 qs-accent)
+      (fg-heading-2 blue)
+      (fg-heading-3 magenta)
+      (fg-heading-4 cyan)
+      (fg-heading-5 green)
+      (fg-heading-6 qs-orange)
+      (fg-heading-7 yellow)
+      (fg-heading-8 red))
+    "Which palette slot each Modus semantic role is drawn from.")
+
+  (defvar nl/qs-theme-palette nil
+    "Complete Modus palette generated from the qs-theme palette.")
+
+  (defcustom nl/qs-theme-palette-overrides nil
+    "Palette overrides layered on the generated theme."
+    :type '(repeat (list symbol (choice symbol string))))
+
+  (defun nl/qs-generated-theme ()
+    "Define and enable a theme built from the palette `qs-theme set' rendered.
+The thunk `omarchy-apply-theme' is handed for a palette omarchy.el
+bundles no theme for.
+
+Two theme names, not one, because `modus-themes-theme' declares a theme
+only the first time it sees the name: the background mode and the core
+palette are fixed at that moment, so a single name would carry the first
+palette's mode for the rest of the session and declare a light palette
+dark.  A name per mode is declared once and is right forever.
+
+`enable-theme' rather than `load-theme': the theme is defined here from
+live data, and has no file to be found on `custom-theme-load-path'."
+    (let* ((pal  (nl/qs-palette))
+           (light (equal (alist-get 'mode pal) "light"))
+           (theme (if light 'qs-theme-light 'qs-theme-dark))
+           (core (if light
+                     'modus-themes-operandi-palette
+                   'modus-themes-vivendi-palette)))
+      (setq nl/qs-theme-palette
+            (modus-themes-generate-palette
+             (nl/qs-base-colours pal) nil (symbol-value core) nl/qs-mappings))
+      (modus-themes-theme
+       theme 'nl-qs-themes
+       (format "%s, generated from the qs-theme palette."
+               (alist-get 'name pal))
+       (if light 'light 'dark)
+       core 'nl/qs-theme-palette 'nl/qs-theme-palette-overrides)
+      (mapc #'disable-theme custom-enabled-themes)
+      (enable-theme theme)))
+
   (defun nl/qs-theme-sync ()
     "Load the Emacs theme matching the palette `qs-theme' has in force.
-Run at startup, and again from `qs-theme set' over emacsclient."
+Run at startup, and again from `qs-theme set' over emacsclient.
+
+Both paths go through `omarchy-apply-theme', which brings its error
+handling with it: whichever of the two fails, Emacs lands on
+`omarchy-default-theme' rather than on no theme at all."
     (interactive)
-    (omarchy-apply-theme (or (nl/qs-theme-current) omarchy-default-theme)))
+    (let ((name (nl/qs-theme-current)))
+      (omarchy-apply-theme
+       (cond ((null name) omarchy-default-theme)
+             ((omarchy--lookup-theme name) name)
+             (t #'nl/qs-generated-theme)))))
 
   (defun nl/qs-theme-set (name)
     "Switch the whole desktop, Emacs included, to palette NAME.
