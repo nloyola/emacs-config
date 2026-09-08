@@ -224,18 +224,10 @@ buffer having to ask for it again."
       ("m" markdown-toggle-markup-hiding "Toggle markup hiding" :column "View")))
   (custom-set-faces
    `(markdown-code-face ((t (:family ,nl/gui-fixed-font-name
-                                     :foreground "#91b831"
-                                     :background "#303030"
-                                     :weight normal
-                                     :height 160))))
+                                     :weight normal))))
    `(markdown-pre-face ((t (:family ,nl/gui-fixed-font-name
-                                     :foreground "#91b831"
-                                     :background "#303030"
-                                     :weight normal
-                                     :height 160))))
+                                     :weight normal))))
    `(markdown-inline-code-face ((t (:family ,nl/gui-fixed-font-name
-                                            :foreground "#91b831"
-                                            :background "#303030"
                                             :weight normal))))
    `(markdown-strike-through-face ((t (:strike-through "#ff5555"))))
    `(nl/markdown-struck-inline-code-face ((t (:inherit markdown-inline-code-face
@@ -245,15 +237,8 @@ buffer having to ask for it again."
                                                 :underline "#ff5555"))))
    `(markdown-bold-face ((t (:family ,nl/gui-variable-font-name :weight bold))))
    `(markdown-italic-face ((t (:family ,nl/gui-variable-font-name :slant italic))))
-   `(markdown-list-face ((t (:family ,nl/gui-variable-font-name :height 170))))
-   `(markdown-header-face-1 ((t (:family ,nl/gui-variable-font-name :height 230 :foreground "#91b831"))))
-   `(markdown-header-face-2 ((t (:family ,nl/gui-variable-font-name :height 210 :foreground "#91b831"))))
-   `(markdown-header-face-3 ((t (:family ,nl/gui-variable-font-name :height 190 :foreground "#91b831"))))
-   `(markdown-header-face-4 ((t (:family ,nl/gui-variable-font-name :height 180 :foreground "#91b831"))))
-   `(markdown-header-face-5 ((t (:family ,nl/gui-variable-font-name :height 170 :foreground "#91b831"))))
-   `(markdown-header-face-6 ((t (:family ,nl/gui-variable-font-name :height 160 :foreground "#91b831"))))
-   `(markdown-header-face ((t (:family ,nl/gui-variable-font-name :height 150 :foreground "#91b831"))))
-   `(markdown-header-delimiter-face ((t (:family ,nl/gui-variable-font-name :height 120))))
+   `(markdown-list-face ((t (:family ,nl/gui-variable-font-name))))
+   `(markdown-header-delimiter-face ((t (:family ,nl/gui-variable-font-name))))
    ))
 #+end_src
 
