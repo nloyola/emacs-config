@@ -61,17 +61,12 @@ These faces only ever render in Org buffers, where that remap is always
 in effect, so the compensation is unconditional."
       (let ((block-height (/ nl/org-block-height nl/variable-pitch-height)))
         (set-face-attribute 'org-tag nil
-                            :inherit '(fixed-pitch)
-                            :background "#303030"
-                            :foreground "#ffffff"
-                            :box '(:line-width 2 :color "#505050"))
+                            :inherit '(fixed-pitch))
         (set-face-attribute 'org-table nil
                             :inherit 'fixed-pitch
-                            :foreground "#91b831"
                             :height block-height)
         (set-face-attribute 'org-block nil
                             :inherit 'fixed-pitch
-                            :background "gray18"
                             :height block-height)
         ;; The #+begin_src/#+end_src lines keep their theme colours; only the
         ;; size follows the block they delimit.
@@ -284,8 +279,6 @@ latter is advised to run the email CSS inliner, which is irrelevant here."
   (org-modern-horizontal-rule "────────────────────────────────────────")
   :config
   (set-face-attribute 'org-modern-tag nil
-                      :background "#303030"
-                      :foreground "#ffffff"
                       :inherit '(org-modern-label fixed-pitch))
   (set-face-attribute 'org-modern-label nil
                       :inherit '(fixed-pitch)
