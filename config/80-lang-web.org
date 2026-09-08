@@ -190,7 +190,6 @@ buffer having to ask for it again."
     (hydra-nl-markdown/body))
   :hook
   (markdown-mode . nl/markdown-mode-setup)
-  (gfm-mode . nl/markdown-mode-setup)
   :config
   (setq markdown-command "pandoc"
         markdown-fontify-code-blocks-natively t
