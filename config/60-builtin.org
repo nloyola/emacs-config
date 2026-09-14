@@ -221,6 +221,54 @@ Make =dired= show directories first.
          (dired-mode . hl-line-mode)))
 #+end_src
 
+** =dired= to herdr
+
+Send the file at point, or the marked files, to the agent in herdr's
+focused pane.  =herdr pane send-text= types the paths into that agent's
+prompt without submitting them, so this is the equivalent of dropping a
+file onto the terminal - which cannot work here at all: this is a PGTK
+build, and =x-begin-drag= exists only on X11, macOS and Haiku, so
+=dired-mouse-drag-files= can never fire.
+
+#+begin_src emacs-lisp
+(use-package dired
+  :ensure nil
+  :preface
+  (defun nl/herdr-focused-pane ()
+    "Return the pane id that herdr currently has focused, as a string.
+Signal a `user-error' when herdr is missing, not running, or has no
+focused pane, so the caller always fails loudly rather than silently."
+    (unless (executable-find "herdr")
+      (user-error "herdr is not installed"))
+    (with-temp-buffer
+      (unless (zerop (call-process "herdr" nil t nil "pane" "list"))
+        (user-error "herdr is not running"))
+      (let* ((json (condition-case nil
+                       (json-parse-string (buffer-string) :object-type 'alist)
+                     (error (user-error "Could not parse herdr's response"))))
+             (panes (alist-get 'panes (alist-get 'result json)))
+             (focused (seq-find (lambda (pane)
+                                  (eq (alist-get 'focused pane) t))
+                                panes)))
+        (or (alist-get 'pane_id focused)
+            (user-error "No herdr pane is focused")))))
+
+  (defun nl/dired-send-to-herdr ()
+    "Send the marked files, or the file at point, to herdr's focused pane.
+The paths are shell-quoted and followed by a space, ready for the agent
+to read as arguments."
+    (interactive)
+    (let* ((files (dired-get-marked-files))
+           (pane (nl/herdr-focused-pane))
+           (text (concat (mapconcat #'shell-quote-argument files " ") " ")))
+      (unless (zerop (call-process "herdr" nil nil nil
+                                   "pane" "send-text" pane text))
+        (user-error "herdr refused the text"))
+      (message "Sent %d file%s to herdr pane %s"
+               (length files) (if (cdr files) "s" "") pane)))
+  :bind (:map dired-mode-map ("C-c C-w" . nl/dired-send-to-herdr)))
+#+end_src
+
 ** =emacsclient=
 
 #+begin_src emacs-lisp
