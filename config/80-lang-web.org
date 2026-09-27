@@ -195,6 +195,24 @@ buffer having to ask for it again."
         markdown-fontify-code-blocks-natively t
         markdown-hide-markup t)
 
+  ;; With markup hidden, markdown-mode stretches the padding before each
+  ;; table `|' with `(space :align-to COL)'.  A bare COL counts frame
+  ;; columns, but tables here render in `fixed-pitch' at a larger height
+  ;; (see `nl/variable-pitch-height'), so separators land short and the
+  ;; table turns ragged.  Align in pixels of the table font instead.
+  (define-advice markdown--fontify-table-alignment
+      (:override () nl/pixel-align)
+    "Align table separators in pixels of `markdown-table-face'."
+    (let ((width (window-font-width (get-buffer-window nil t)
+                                    'markdown-table-face)))
+      (beginning-of-line)
+      (while (re-search-forward "[ \t]+|" (line-end-position) t)
+        (let ((separator (1- (match-end 0))))
+          (unless (markdown-inline-code-at-pos-p separator)
+            (put-text-property
+             (match-beginning 0) separator
+             'display `(space :align-to (,(* width (1- (current-column)))))))))))
+
   ;; `nl/markdown-preview' (`jc p'): render the current buffer to a static
   ;; HTML file and open it in the browser.  The page polls a sibling stamp
   ;; file and reloads itself when the render changes, so re-previewing or
