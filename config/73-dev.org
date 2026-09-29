@@ -377,10 +377,6 @@ Run code formatters asynchronously on save without moving point around.
         '("ruff" "format" "--stdin-filename" filepath "-"))
   (setf (alist-get 'rustfmt apheleia-formatters)
         '("rustfmt" "--emit" "stdout"))
-  (setf (alist-get 'prettier-java apheleia-formatters)
-        '(npx "prettier" "--parser" "java"))
-  (setf (alist-get 'prettier-sql apheleia-formatters)
-        '(npx "prettier" "--parser" "sql"))
   (setf (alist-get 'php-cs-fixer apheleia-formatters)
         '("php-cs-fixer"
           "fix"
@@ -389,22 +385,10 @@ Run code formatters asynchronously on save without moving point around.
           "--using-cache=no"
           "--quiet"
           inplace))
-  ;; Projects with an oxfmt config get oxfmt, everything else Prettier. The
-  ;; choice is made when the formatter runs, so it needs no mode hook.
-  (defun nl/apheleia-oxfmt-project-p ()
-    "Return non-nil if the current file is in a project configured for oxfmt."
-    (and buffer-file-name
-         (locate-dominating-file
-          buffer-file-name
-          (lambda (dir)
-            (or (file-exists-p (expand-file-name ".oxfmtrc.json" dir))
-                (file-exists-p (expand-file-name ".oxfmtrc.jsonc" dir)))))))
-  (setf (alist-get 'nl-js apheleia-formatters)
-        '("apheleia-npx"
-          (if (nl/apheleia-oxfmt-project-p) "oxfmt" "prettier")
-          "--stdin-filepath" filepath
-          (unless (nl/apheleia-oxfmt-project-p)
-            (apheleia-formatters-js-indent "--use-tabs" "--tab-width"))))
+  ;; apheleia's built-in oxfmt formats a temp file, which hides the
+  ;; project's .oxfmtrc.json; --stdin-filepath resolves it from the real path.
+  (setf (alist-get 'nl-oxfmt apheleia-formatters)
+        '("apheleia-npx" "oxfmt" "--stdin-filepath" filepath))
 
   (setf (alist-get 'go-mode apheleia-mode-alist) 'nl-gofmt)
   (setf (alist-get 'go-ts-mode apheleia-mode-alist) 'nl-gofmt)
@@ -414,20 +398,22 @@ Run code formatters asynchronously on save without moving point around.
   (setf (alist-get 'php-mode apheleia-mode-alist) 'php-cs-fixer)
   (setf (alist-get 'php-ts-mode apheleia-mode-alist) 'php-cs-fixer)
   (setf (alist-get 'rustic-mode apheleia-mode-alist) 'rustfmt)
-  (setf (alist-get 'js-ts-mode apheleia-mode-alist) 'nl-js)
-  (setf (alist-get 'typescript-ts-mode apheleia-mode-alist) 'nl-js)
-  (setf (alist-get 'tsx-ts-mode apheleia-mode-alist) 'nl-js)
-  (setf (alist-get 'json-mode apheleia-mode-alist) 'nl-js)
-  (setf (alist-get 'vue-mode apheleia-mode-alist) 'nl-js)
-  (setf (alist-get 'css-mode apheleia-mode-alist) 'nl-js)
+  ;; Every mode apheleia would hand to Prettier goes to oxfmt instead.
+  (dolist (mode '(js-mode js3-mode js-ts-mode typescript-mode
+                  typescript-ts-mode tsx-ts-mode json-mode js-json-mode
+                  json-ts-mode vue-mode css-mode css-ts-mode scss-mode
+                  html-mode html-ts-mode web-mode graphql-mode))
+    (setf (alist-get mode apheleia-mode-alist) 'nl-oxfmt))
+  ;; oxfmt has no Java, SQL, Ruby or Svelte support, so these are not
+  ;; formatted on save.
+  (dolist (mode '(java-mode java-ts-mode sql-mode ruby-mode ruby-ts-mode
+                  svelte-mode))
+    (setf (alist-get mode apheleia-mode-alist) nil))
   ;; YAML files often contain embedded HTML block scalars and project-specific
-  ;; formatting, so do not run Prettier on save.
+  ;; formatting, so do not format them on save.
   (setf (alist-get 'yaml-mode apheleia-mode-alist) nil)
   (setf (alist-get 'yaml-ts-mode apheleia-mode-alist) nil)
   (setf (alist-get 'nl/poly-yaml-mode apheleia-mode-alist) nil)
-  ;; Prettier's PHP support corrupts mixed PHP/HTML templates.
-  (add-to-list 'apheleia-mode-alist '("\\.tpl\\.php\\'" . nil))
-  (setf (alist-get 'web-mode apheleia-mode-alist) 'nl-js)
-  (setf (alist-get 'java-ts-mode apheleia-mode-alist) 'prettier-java)
-  (setf (alist-get 'sql-mode apheleia-mode-alist) 'prettier-sql))
+  ;; Formatting corrupts mixed PHP/HTML templates.
+  (add-to-list 'apheleia-mode-alist '("\\.tpl\\.php\\'" . nil)))
 #+end_src
