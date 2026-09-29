@@ -112,6 +112,8 @@ everything else Harper checks stays on there.
     "Set up Harper, dropping rules that misfire on Org markup.
 Runs from `text-mode-hook', which precedes `org-mode-hook', so the
 disable list is in place before the first check."
+    ;; `flymake-harper-disable' is unbound until the package loads.
+    (require 'flymake-harper)
     (when (derived-mode-p 'org-mode)
       (setq-local flymake-harper-disable
                   (append nl/flymake-harper-org-disable flymake-harper-disable)))
