@@ -389,6 +389,22 @@ Run code formatters asynchronously on save without moving point around.
           "--using-cache=no"
           "--quiet"
           inplace))
+  ;; Projects with an oxfmt config get oxfmt, everything else Prettier. The
+  ;; choice is made when the formatter runs, so it needs no mode hook.
+  (defun nl/apheleia-oxfmt-project-p ()
+    "Return non-nil if the current file is in a project configured for oxfmt."
+    (and buffer-file-name
+         (locate-dominating-file
+          buffer-file-name
+          (lambda (dir)
+            (or (file-exists-p (expand-file-name ".oxfmtrc.json" dir))
+                (file-exists-p (expand-file-name ".oxfmtrc.jsonc" dir)))))))
+  (setf (alist-get 'nl-js apheleia-formatters)
+        '("apheleia-npx"
+          (if (nl/apheleia-oxfmt-project-p) "oxfmt" "prettier")
+          "--stdin-filepath" filepath
+          (unless (nl/apheleia-oxfmt-project-p)
+            (apheleia-formatters-js-indent "--use-tabs" "--tab-width"))))
 
   (setf (alist-get 'go-mode apheleia-mode-alist) 'nl-gofmt)
   (setf (alist-get 'go-ts-mode apheleia-mode-alist) 'nl-gofmt)
@@ -398,12 +414,12 @@ Run code formatters asynchronously on save without moving point around.
   (setf (alist-get 'php-mode apheleia-mode-alist) 'php-cs-fixer)
   (setf (alist-get 'php-ts-mode apheleia-mode-alist) 'php-cs-fixer)
   (setf (alist-get 'rustic-mode apheleia-mode-alist) 'rustfmt)
-  (setf (alist-get 'js-ts-mode apheleia-mode-alist) 'prettier)
-  (setf (alist-get 'typescript-ts-mode apheleia-mode-alist) 'prettier)
-  (setf (alist-get 'tsx-ts-mode apheleia-mode-alist) 'prettier)
-  (setf (alist-get 'json-mode apheleia-mode-alist) 'prettier)
-  (setf (alist-get 'vue-mode apheleia-mode-alist) 'prettier)
-  (setf (alist-get 'css-mode apheleia-mode-alist) 'prettier)
+  (setf (alist-get 'js-ts-mode apheleia-mode-alist) 'nl-js)
+  (setf (alist-get 'typescript-ts-mode apheleia-mode-alist) 'nl-js)
+  (setf (alist-get 'tsx-ts-mode apheleia-mode-alist) 'nl-js)
+  (setf (alist-get 'json-mode apheleia-mode-alist) 'nl-js)
+  (setf (alist-get 'vue-mode apheleia-mode-alist) 'nl-js)
+  (setf (alist-get 'css-mode apheleia-mode-alist) 'nl-js)
   ;; YAML files often contain embedded HTML block scalars and project-specific
   ;; formatting, so do not run Prettier on save.
   (setf (alist-get 'yaml-mode apheleia-mode-alist) nil)
@@ -411,7 +427,7 @@ Run code formatters asynchronously on save without moving point around.
   (setf (alist-get 'nl/poly-yaml-mode apheleia-mode-alist) nil)
   ;; Prettier's PHP support corrupts mixed PHP/HTML templates.
   (add-to-list 'apheleia-mode-alist '("\\.tpl\\.php\\'" . nil))
-  (setf (alist-get 'web-mode apheleia-mode-alist) 'prettier)
+  (setf (alist-get 'web-mode apheleia-mode-alist) 'nl-js)
   (setf (alist-get 'java-ts-mode apheleia-mode-alist) 'prettier-java)
   (setf (alist-get 'sql-mode apheleia-mode-alist) 'prettier-sql))
 #+end_src
