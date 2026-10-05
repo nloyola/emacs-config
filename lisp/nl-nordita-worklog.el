@@ -38,8 +38,8 @@
 (defvar nl/nordita-worklog-repo (expand-file-name "~/src/nordita/norweb-2021/")
   "Git repository the monthly work summary is generated from.")
 
-(defvar nl/nordita-worklog-claude (expand-file-name "~/.local/bin/claude")
-  "Path to the claude CLI that generates the summary.")
+(defvar nl/nordita-worklog-claude (executable-find "claude")
+  "Path to the claude CLI that generates the summary, found on `exec-path'.")
 
 (defvar nl/nordita-worklog-recipient "elizabeth.yang@su.se"
   "Primary To: address for the monthly work report.")
@@ -235,8 +235,10 @@ Refuses to run if MONTH already has \"** Week\" sections - delete them first to
 regenerate.  On failure the output is left in *nordita-worklog* and the note is
 not touched."
   (interactive (list (nl/nordita-worklog--read-month)))
-  (unless (file-executable-p nl/nordita-worklog-claude)
-    (user-error "No claude executable at %s" nl/nordita-worklog-claude))
+  (unless (and nl/nordita-worklog-claude
+               (file-executable-p nl/nordita-worklog-claude))
+    (user-error "No claude executable found (nl/nordita-worklog-claude is %s)"
+                nl/nordita-worklog-claude))
   (let* ((marker (nl/nordita-timesheet--marker-for month))
          (pretty (nl/nordita-timesheet--month-name month))
          (buf    (get-buffer-create "*nordita-worklog*")))
