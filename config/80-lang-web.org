@@ -191,7 +191,12 @@ buffer having to ask for it again."
   :hook
   (markdown-mode . nl/markdown-mode-setup)
   :config
-  (setq markdown-command "pandoc"
+  ;; `--columns' is raised so pandoc leaves table column widths to the
+  ;; browser.  Once any row of a pipe table is longer than `--columns'
+  ;; (72 by default), pandoc pins each column to a share of the width taken
+  ;; from the dashes of the `|---|---|' separator - nearly always equal
+  ;; shares, so a short key column got as much room as a long prose one.
+  (setq markdown-command "pandoc --columns=10000"
         markdown-fontify-code-blocks-natively t
         markdown-hide-markup t)
 
@@ -222,6 +227,12 @@ buffer having to ask for it again."
   ;; targets `.markdown-body', so we wrap the body in that container and add
   ;; GitHub's recommended sizing (which lives in github.com's page shell,
   ;; not the stylesheet).
+  ;;
+  ;; Prose keeps that 980px reading column, but a table wider than it breaks
+  ;; out to the window width, centred over the column.  Tables that fit stay
+  ;; put, flush with the text.  That rule depends on the table's own
+  ;; rendered width, which CSS cannot branch on, so a script measures each
+  ;; table on load and resize and shifts only the wide ones.
   (setq markdown-css-paths (list (concat "file://" nl/markdown-github-css-file))
         markdown-xhtml-body-preamble "<div class=\"markdown-body\">"
         markdown-xhtml-body-epilogue "</div>"
@@ -231,7 +242,32 @@ buffer having to ask for it again."
                 ".markdown-body { box-sizing: border-box; min-width: 200px;"
                 " max-width: 980px; margin: 0 auto; padding: 45px; }"
                 "@media (max-width: 767px) { .markdown-body { padding: 15px; } }"
-                "</style>"))
+                "</style>"
+                "<script>"
+                "(function () {"
+                " function fit () {"
+                "  var body = document.querySelector('.markdown-body');"
+                "  if (!body) { return; }"
+                "  var style = getComputedStyle(body);"
+                "  var pad = parseFloat(style.paddingLeft);"
+                "  var box = body.getBoundingClientRect();"
+                "  var left = box.left + pad;"
+                "  var right = box.right - parseFloat(style.paddingRight);"
+                "  var room = document.documentElement.clientWidth - 2 * pad;"
+                "  body.querySelectorAll('table').forEach(function (table) {"
+                "   table.style.marginLeft = '0px';"
+                "   table.style.maxWidth = room + 'px';"
+                "   var r = table.getBoundingClientRect();"
+                "   if (r.right > right + 0.5) {"
+                "    table.style.marginLeft = ((left + right - r.width) / 2 - r.left) + 'px';"
+                "   }"
+                "  });"
+                " }"
+                " addEventListener('DOMContentLoaded', fit);"
+                " addEventListener('load', fit);"
+                " addEventListener('resize', fit);"
+                "}());"
+                "</script>"))
 
   (with-eval-after-load 'hydra
     (defhydra hydra-nl-markdown (:color blue :hint nil)
