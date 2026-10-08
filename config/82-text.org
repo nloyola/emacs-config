@@ -175,26 +175,6 @@ Provides a minor mode that enables code folding and outlining based on indentati
   (outline-indent-ellipsis " ▼ "))
 #+end_src
 
-** [[https://github.com/arnm/ob-mermaid][ob-mermaid]]
-
-#+begin_src emacs-lisp
-(use-package ob-mermaid
-  :ensure t
-  :after org
-  :config
-  ;; Automatically find the path to @mermaid-js/mermaid-cli
-  (let ((mmdc-path (executable-find "mmdc")))
-    (if mmdc-path
-        (setq ob-mermaid-cli-path mmdc-path)
-      (warn "mmdc not found. Install it with: npm install -g @mermaid-js/mermaid-cli")))
-
-  ;; Register mermaid in Org-babel
-  (org-babel-do-load-languages
-   'org-babel-load-languages
-   (append org-babel-load-languages
-           '((mermaid . t)))))
-#+end_src
-
 ** [[https://github.com/akicho8/string-inflection][string-inflection]]
 
 #+begin_src emacs-lisp

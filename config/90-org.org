@@ -113,10 +113,7 @@ in effect, so the compensation is unconditional."
           org-log-into-drawer t
           org-file-apps '(("\\.png\\'" . browse-url) (auto-mode . emacs))
           org-export-use-babel t ; Ensure babel blocks are evaluated on export
-          org-confirm-babel-evaluate nil ; Optional: Stops Emacs from asking 'yes/no' every time)
-          org-babel-default-header-args:mermaid
-          '((:results . "file")
-            (:exports . "results")))
+          org-confirm-babel-evaluate nil) ; Optional: Stops Emacs from asking 'yes/no' every time
           (defun nl/org-run-css-inliner (file)
             "Inline CSS in FILE for email clients when an inliner is available."
             (when (and file (file-exists-p file))
@@ -160,7 +157,6 @@ in effect, so the compensation is unconditional."
        (latex . t)
        (java . t)
        (js . t)
-       (mermaid . t)
        (python . t)
        (ruby . t)
        (shell . t)
