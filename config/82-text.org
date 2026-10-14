@@ -91,6 +91,11 @@ than on prose, collected in =nl/flymake-harper-org-disable=:
   blocks, which is by far the loudest rule on a note tree.
 - =NumericRangeEnDash=: fires on the =-= in tables, dates, and command-line flags.
 
+=yaml-mode= and =yaml-ts-mode= also derive from =text-mode=, but a YAML file
+holds data, not prose: Harper reads a run of keys as one long sentence and flags
+it. Those modes, listed in =nl/flymake-harper-excluded-modes=, skip Harper
+entirely.
+
 Second upstream bug, on top of the =flymake-harper--options= one above:
 =flymake-harper-disable= does not work at all. Harper reports the rule name as a
 JSON string (="LongSentences"=), and =flymake-harper-sentinel-1= filters it with
@@ -108,16 +113,22 @@ everything else Harper checks stays on there.
     '(LongSentences ToDoHyphen Spaces NumericRangeEnDash)
     "Harper rules that fire on Org syntax rather than on prose.")
 
+  (defvar nl/flymake-harper-excluded-modes
+    '(yaml-mode yaml-ts-mode)
+    "Data-format modes that derive from `text-mode' but hold no prose.")
+
   (defun nl/flymake-harper-setup ()
     "Set up Harper, dropping rules that misfire on Org markup.
-Runs from `text-mode-hook', which precedes `org-mode-hook', so the
-disable list is in place before the first check."
-    ;; `flymake-harper-disable' is unbound until the package loads.
-    (require 'flymake-harper)
-    (when (derived-mode-p 'org-mode)
-      (setq-local flymake-harper-disable
-                  (append nl/flymake-harper-org-disable flymake-harper-disable)))
-    (flymake-harper-setup))
+Skips the modes in `nl/flymake-harper-excluded-modes'.  Runs from
+`text-mode-hook', which precedes `org-mode-hook', so the disable list
+is in place before the first check."
+    (unless (apply #'derived-mode-p nl/flymake-harper-excluded-modes)
+      ;; `flymake-harper-disable' is unbound until the package loads.
+      (require 'flymake-harper)
+      (when (derived-mode-p 'org-mode)
+        (setq-local flymake-harper-disable
+                    (append nl/flymake-harper-org-disable flymake-harper-disable)))
+      (flymake-harper-setup)))
   :config
   (defun nl/flymake-harper--apply-disable (args)
     "Drop lints whose rule is in `flymake-harper-disable'.
