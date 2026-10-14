@@ -28,6 +28,14 @@ Using =nerd-icons-dired= instead.
 
 Using =nerd-icons= or =all-the-icons= slows down init time.
 
+=dashboard-setup-startup-hook= hangs the dashboard on =after-init-hook= and
+=emacs-startup-hook=. When Elpaca has a package to build at startup, it runs
+this =:config= only after the build, once both hooks have already fired, and
+it points =initial-buffer-choice= at =*elpaca-log*=, so Emacs comes up on the
+log with no =*dashboard*= buffer at all. The two =elpaca-after-init-hook=
+entries, the recipe from the dashboard README, open the dashboard once
+Elpaca's startup queues finish, whether or not anything was built.
+
 #+begin_src emacs-lisp
 (defun nl/open-dashboard ()
   "Open the dashboard buffer."
@@ -75,6 +83,8 @@ Using =nerd-icons= or =all-the-icons= slows down init time.
                           (projects . 5)
                           (bookmarks . 5)
                           (registers . 5)))
+  (add-hook 'elpaca-after-init-hook #'dashboard-insert-startupify-lists)
+  (add-hook 'elpaca-after-init-hook #'dashboard-initialize)
   (dashboard-setup-startup-hook))
 #+end_src
 
