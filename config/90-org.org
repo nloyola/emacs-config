@@ -305,10 +305,12 @@ latter is advised to run the email CSS inliner, which is irrelevant here."
 *** org-roam
 
 #+begin_src emacs-lisp
-;; :demand t is load-bearing. org-roam resolves `id:' links by advising
-;; org-id-find; deferring it leaves roam ids unresolvable (and autosync off)
-;; until a C-c n binding happens to load it.
+;; :after org + :demand t is load-bearing. org-roam resolves `id:' links by
+;; advising org-id-find; deferring it past Org leaves roam ids unresolvable
+;; (and autosync off) until a C-c n binding happens to load it. Loading it
+;; with Org keeps both working without loading Org at startup.
 (use-package org-roam
+  :after org
   :demand t
   :init
   (setq org-roam-v2-ack t)
