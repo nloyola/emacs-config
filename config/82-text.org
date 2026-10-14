@@ -219,8 +219,7 @@ highlighted. The following keybindings are defined:
 To save all buffers that wgrep has changed, run =M-x wgrep-save-all-buffers=.
 
 #+begin_src emacs-lisp
-(use-package wgrep
-  :demand t)
+(use-package wgrep)
 #+end_src
 
 ** [[https://github.com/capitaomorte/yasnippet][yasnippet]]

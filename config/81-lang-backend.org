@@ -73,8 +73,6 @@ Requires the =clj-kondo= binary on =PATH=.
 
 (use-package go-mode
   :mode "\\.go\\'"
-  :preface
-  (use-package nl-go-project :ensure nil :demand :load-path "~/.emacs.d/lisp")
   :init
   ;; prefer gofumpt; fall back to gofmt
   (setq gofmt-command (if (executable-find "gofumpt") "gofumpt" "gofmt"))
@@ -87,6 +85,12 @@ Requires the =clj-kondo= binary on =PATH=.
     (lsp-register-custom-settings
      '(("gopls.completeUnimported" t t)
        ("gopls.staticcheck" t t)))))
+
+(use-package nl-go-project
+  :ensure nil
+  :load-path "~/.emacs.d/lisp"
+  :after go-ts-mode
+  :demand t)
 #+end_src
 
 *** [[https://github.com/danderson/templ-ts-mode][templ-ts-mode]]

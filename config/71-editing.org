@@ -29,13 +29,14 @@ A quick way to jump around text in buffers.
 
 #+begin_src emacs-lisp
 (use-package casual
-  :demand t
-  :bind
-  (:map dired-mode-map ("C-o" . #'casual-dired-tmenu))
-  ;; (:map calc-mode-map ("C-o" . #'casual-calc-tmenu))
-  ;; (:map bookmark-bmenu-mode-map ("C-o" . #'casual-bookmarks-tmenu))
-  :config
-  (require 'dired))
+  :init
+  (with-eval-after-load 'dired
+    (keymap-set dired-mode-map "C-o" #'casual-dired-tmenu))
+  ;; (with-eval-after-load 'calc
+  ;;   (keymap-set calc-mode-map "C-o" #'casual-calc-tmenu))
+  ;; (with-eval-after-load 'bookmark
+  ;;   (keymap-set bookmark-bmenu-mode-map "C-o" #'casual-bookmarks-tmenu))
+  )
 
 (use-package casual-suite)
 #+end_src
