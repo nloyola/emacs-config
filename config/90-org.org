@@ -317,11 +317,20 @@ latter is advised to run the email CSS inliner, which is irrelevant here."
   :custom
   (org-roam-db-location "~/Sync/RoamNotes/org-roam.db")
   (org-roam-directory "~/Sync/RoamNotes")
-  :bind (("C-c n l" . org-roam-buffer-toggle)
-         ("C-c n f" . org-roam-node-find)
-         ("C-c n i" . org-roam-node-insert))
   :config
   (org-roam-db-autosync-mode 1))
+
+;; The keys live outside the use-package form: with :after org, :bind is
+;; wrapped in the same eval-after-load, so C-c n stayed undefined until some
+;; Org file loaded. The commands autoload from "org", not org-roam: loading
+;; Org runs the block above, which requires org-roam and so defines all three.
+;; Autoloading from org-roam instead would load org-roam.el twice, because its
+;; own (require 'org) fires that block while it is still half-loaded.
+(dolist (cmd '(org-roam-node-find org-roam-node-insert org-roam-buffer-toggle))
+  (autoload cmd "org" nil t))
+(keymap-global-set "C-c n l" #'org-roam-buffer-toggle)
+(keymap-global-set "C-c n f" #'org-roam-node-find)
+(keymap-global-set "C-c n i" #'org-roam-node-insert)
 #+end_src
 
 *** org-roam-ui
