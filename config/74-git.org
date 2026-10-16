@@ -169,22 +169,44 @@ indentation, and each resulting paragraph is refilled."
                       magit-branch-local
                       magit-branch-remote
                       magit-branch-remote-head
-                      magit-head))
+                      magit-head
+                      magit-tag))
         (let ((branch-background (pcase face
                                    ('magit-branch-current "#7c3aed")
                                    ('magit-branch-local "#2563eb")
                                    ('magit-branch-remote "#059669")
                                    ('magit-branch-remote-head "#0891b2")
+                                   ('magit-tag "#daa520")
                                    (_ "#6d28d9"))))
           (set-face-attribute face nil
                               :family branch-font
-                              :foreground "#ffffff"
+                              ;; White text is unreadable on goldenrod.
+                              :foreground (if (eq face 'magit-tag) "#1c1917" "#ffffff")
                               :background branch-background
                               :weight 'bold
                               :height 1.0
                               :box `(:line-width (1 . -1)
                                       :color ,branch-background
                                       :style released-button))))))
+  (defun nl/magit-bullet-tag-labels (labels)
+    "Lead every tag badge in LABELS with a bullet, inside the badge."
+    (when labels
+      (let ((pos 0)
+            (out ""))
+        (while (< pos (length labels))
+          (let* ((end (or (next-single-property-change pos 'face labels)
+                          (length labels)))
+                 (chunk (substring labels pos end))
+                 (face (get-text-property pos 'face labels)))
+            (setq out (concat out
+                              (if (memq 'magit-tag (ensure-list face))
+                                  (concat (apply #'propertize "• "
+                                                 (text-properties-at 0 chunk))
+                                          chunk)
+                                chunk)))
+            (setq pos end)))
+        out)))
+  (advice-add 'magit-format-ref-labels :filter-return #'nl/magit-bullet-tag-labels)
   (with-eval-after-load 'magit-status
     (define-key magit-status-mode-map (kbd "q") #'magit-quit-session)
     (magit-add-section-hook 'magit-status-sections-hook
