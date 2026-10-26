@@ -207,6 +207,21 @@ indentation, and each resulting paragraph is refilled."
             (setq pos end)))
         out)))
   (advice-add 'magit-format-ref-labels :filter-return #'nl/magit-bullet-tag-labels)
+  (defun nl/magit-echo-git-progress (proc string)
+    "Echo the latest progress line of a running fetch, pull or push.
+
+Runs before `magit-process-filter', which drops everything up to the
+last carriage return, so git's progress redraws would be lost after it."
+    (when (seq-some (lambda (arg) (member arg '("fetch" "pull" "push" "remote")))
+                    (process-command proc))
+      ;; Remote-side lines end in an ESC[K clear-line sequence.
+      (when-let ((line (car (last (split-string
+                                   (replace-regexp-in-string
+                                    "\e\\[[0-9;]*[A-Za-z]" "" string)
+                                   "[\r\n]+" t "[ \t]+")))))
+        (let ((message-log-max nil))
+          (message "git: %s" line)))))
+  (advice-add 'magit-process-filter :before #'nl/magit-echo-git-progress)
   (with-eval-after-load 'magit-status
     (define-key magit-status-mode-map (kbd "q") #'magit-quit-session)
     (magit-add-section-hook 'magit-status-sections-hook
