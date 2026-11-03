@@ -10,6 +10,7 @@
 
 (use-package nl-php-project :ensure nil :demand :load-path "~/.emacs.d/lisp")
 (require 'nl-php-project)
+(require 'nl-repo-links)
 
 (projectile-register-project-type 'php-symfony '("composer.json" "src" "test" "vendor")
                                   :project-file "composer.json"
@@ -76,33 +77,6 @@
   (let* ((default-directory (format "%s" (project-root (project-current)))))
     (compile (format "grep -nre \"%s\" {default_pages,src,pw-frontend/src/ts}" (symbol-at-point)))))
 
-(defconst nl/nordita-github-url "https://github.com/nordita-stockholm/norweb-2021"
-  "The Norweb repository on GitHub.")
-
-(defconst nl/nordita-issues-url
-  (concat nl/nordita-github-url "/issues"
-          "?q=is%3Aissue+state%3Aopen+-label%3Acontent+-label%3ASymfony"
-          "+-label%3Adb-refactor+-label%3A%22Build+Tools%22+-label%3AInfrastructure")
-  "Open Norweb issues, minus the labels that are not development work.")
-
-(defconst nl/nordita-dropbox-dir "~/Dropbox/nordita/"
-  "The local Dropbox folder holding Nordita files.")
-
-(defun nl/nordita-open-dropbox ()
-  "Open the Nordita Dropbox folder in Chrome as a local file listing."
-  (interactive)
-  (browse-url-chrome (concat "file://" (expand-file-name nl/nordita-dropbox-dir))))
-
-(defun nl/nordita-open-github ()
-  "Open the Norweb repository page in the browser."
-  (interactive)
-  (browse-url nl/nordita-github-url))
-
-(defun nl/nordita-open-issues ()
-  "Open the filtered Norweb issue list in the browser."
-  (interactive)
-  (browse-url nl/nordita-issues-url))
-
 (with-eval-after-load 'hydra
   (defhydra hydra-nl/php-test (:color blue)
     "Test"
@@ -119,9 +93,9 @@
     ("t" hydra-nl/php-test/body "test" :color blue :column "PHP")
     ("c" nl/php-code-sniffer "Run PHP CodeSniffer" :column "Build")
     ("y" nl/nordita-build-page-from-yaml "Build ProcessWire page from YAML file" :color blue)
-    ("p" nl/nordita-open-github "Open project page" :color blue :column "GitHub")
-    ("i" nl/nordita-open-issues "Open issues" :color blue)
-    ("d" nl/nordita-open-dropbox "Open Dropbox folder" :color blue :column "Dropbox")
+    ("p" nl/repo-open-github "Open project page" :color blue :column "GitHub")
+    ("i" nl/repo-open-issues "Open issues" :color blue)
+    ("d" nl/repo-open-dropbox "Open Dropbox folder" :color blue :column "Dropbox")
     ("g" hydra-nl-common/body "common" :color blue :column "Common")))
 
 (define-key php-ts-mode-map (kbd "C-c , d") 'nl/phpunit-run-this-method-with-debug-logging)

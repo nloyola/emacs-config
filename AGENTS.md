@@ -55,7 +55,7 @@ These directories/files are local state or generated artifacts and should normal
 - When changing anything under `lisp/`, run the test suite from the repository root:
 
   ```sh
-  emacs -Q --batch -L lisp -l test/nl-nordita-tests.el -f ert-run-tests-batch-and-exit
+  emacs -Q --batch -L lisp -l test/nl-nordita-tests.el -l test/nl-repo-links-tests.el -f ert-run-tests-batch-and-exit
   ```
 
 - If further validation is needed, use a non-interactive Emacs startup check such as loading `init.el` in batch mode, provided the task warrants it.

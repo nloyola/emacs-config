@@ -168,10 +168,10 @@ an overview for daily use, not the source of truth for implementation.
 
 - ~C-x g~ :: Open =magit-status=.
 
-- ~jc~ (magit buffers) :: Open the repo's project hydra, or the common hydra
-  when the repo has none. In Norweb, ~jc p~ opens the GitHub project page,
-  ~jc i~ the filtered issue list and ~jc d~ the Nordita Dropbox folder in
-  Chrome.
+- ~jc~ (magit buffers) :: Open the repo's project hydra. In repos listed in
+  =nl/repo-links= (Norweb, openta-private), ~jc p~ opens the GitHub project
+  page, ~jc i~ the issue list and ~jc d~ the repo's Dropbox folder in Chrome.
+  Other repos get the common hydra.
 
 - ~C-c p~ :: Open the Projectile command map.
 

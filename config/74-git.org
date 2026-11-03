@@ -257,24 +257,18 @@ The following code makes magit-status run alone in the frame, and then restores 
 
 **** Project hydra from magit
 
-=jc= in any magit buffer opens the same project hydra the repo's source buffers use, picked by the
-repo's =origin= remote so clones and worktrees under any directory name still match. Repos without
-a project hydra get the common one.
+=jc= in any magit buffer opens the repo's project hydra. Repos are listed in =nl/repo-links=
+(=lisp/nl-repo-links.el=) by their =origin= remote, so clones and worktrees under any directory
+name still match. A listed repo without its own hydra gets the repository hydra (GitHub page,
+issues, Dropbox folder); anything else gets the common one.
 
 #+begin_src emacs-lisp
-(defun nl/magit-project-hydra ()
-  "Open the project hydra for the repository of the current magit buffer."
-  (interactive)
-  (let ((origin (or (magit-get "remote.origin.url") "")))
-    (cond
-     ((string-match-p "nordita-stockholm/norweb-2021" origin)
-      (require 'nl-nordita-php-project)
-      (hydra-nl-nordita-project/body))
-     (t (hydra-nl-common/body)))))
+(use-package nl-repo-links :ensure nil :load-path "~/.emacs.d/lisp"
+  :commands nl/repo-hydra)
 
 (with-eval-after-load 'key-chord
   (with-eval-after-load 'magit-mode
-    (key-chord-define magit-mode-map "jc" #'nl/magit-project-hydra)))
+    (key-chord-define magit-mode-map "jc" #'nl/repo-hydra)))
 #+end_src
 
 *** [[https://github.com/alphapapa/magit-todos][magit-todos]] (disabled)
