@@ -255,6 +255,28 @@ The following code makes magit-status run alone in the frame, and then restores 
   (jump-to-register ?z))
 #+end_src
 
+**** Project hydra from magit
+
+=jc= in any magit buffer opens the same project hydra the repo's source buffers use, picked by the
+repo's =origin= remote so clones and worktrees under any directory name still match. Repos without
+a project hydra get the common one.
+
+#+begin_src emacs-lisp
+(defun nl/magit-project-hydra ()
+  "Open the project hydra for the repository of the current magit buffer."
+  (interactive)
+  (let ((origin (or (magit-get "remote.origin.url") "")))
+    (cond
+     ((string-match-p "nordita-stockholm/norweb-2021" origin)
+      (require 'nl-nordita-php-project)
+      (hydra-nl-nordita-project/body))
+     (t (hydra-nl-common/body)))))
+
+(with-eval-after-load 'key-chord
+  (with-eval-after-load 'magit-mode
+    (key-chord-define magit-mode-map "jc" #'nl/magit-project-hydra)))
+#+end_src
+
 *** [[https://github.com/alphapapa/magit-todos][magit-todos]] (disabled)
 
 #+begin_src emacs-lisp :tangle no
