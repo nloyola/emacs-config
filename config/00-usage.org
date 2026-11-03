@@ -173,6 +173,8 @@ an overview for daily use, not the source of truth for implementation.
   page, ~jc i~ the issue list and ~jc d~ the repo's Dropbox folder in Chrome.
   Other repos get the common hydra.
 
+- ~jc~ (dashboard) :: The same, for the directory Emacs was started in.
+
 - ~C-c p~ :: Open the Projectile command map.
 
 - ~C-c c~ :: Run =org-capture=.

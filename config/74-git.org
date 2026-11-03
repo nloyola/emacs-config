@@ -255,12 +255,15 @@ The following code makes magit-status run alone in the frame, and then restores 
   (jump-to-register ?z))
 #+end_src
 
-**** Project hydra from magit
+**** Project hydra from magit and the dashboard
 
 =jc= in any magit buffer opens the repo's project hydra. Repos are listed in =nl/repo-links=
 (=lisp/nl-repo-links.el=) by their =origin= remote, so clones and worktrees under any directory
 name still match. A listed repo without its own hydra gets the repository hydra (GitHub page,
 issues, Dropbox folder); anything else gets the common one.
+
+The dashboard does the same for its own directory, which is the one Emacs was started in, so an
+Emacs launched from a repo gets that repo's hydra wherever point is.
 
 #+begin_src emacs-lisp
 (use-package nl-repo-links :ensure nil :load-path "~/.emacs.d/lisp"
@@ -268,7 +271,9 @@ issues, Dropbox folder); anything else gets the common one.
 
 (with-eval-after-load 'key-chord
   (with-eval-after-load 'magit-mode
-    (key-chord-define magit-mode-map "jc" #'nl/repo-hydra)))
+    (key-chord-define magit-mode-map "jc" #'nl/repo-hydra))
+  (with-eval-after-load 'dashboard
+    (key-chord-define dashboard-mode-map "jc" #'nl/repo-hydra)))
 #+end_src
 
 *** [[https://github.com/alphapapa/magit-todos][magit-todos]] (disabled)
