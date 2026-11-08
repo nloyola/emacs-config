@@ -252,12 +252,22 @@ Mixed pitch is a minor mode that enables mixing fixed-pitch (also known as fixed
 and variable-pitch (AKA “proportional”) fonts. It tries to be smart about which fonts get which
 face.
 
+Plain =.txt= files stay fixed-pitch: they are usually logs, notes laid out
+with spaces, or ASCII tables, and proportional glyphs wreck their alignment.
+
 #+begin_src emacs-lisp
 (use-package mixed-pitch
+  :preface
+  (defun nl/mixed-pitch-maybe ()
+    "Enable `mixed-pitch-mode' unless the buffer visits a .txt file."
+    (unless (and buffer-file-name
+                 (string-equal-ignore-case
+                  (or (file-name-extension buffer-file-name) "") "txt"))
+      (mixed-pitch-mode 1)))
   :config
   (add-to-list 'mixed-pitch-fixed-pitch-faces 'org-property-value)
   (add-to-list 'mixed-pitch-fixed-pitch-faces 'font-lock-comment-face)
-  :hook (text-mode . mixed-pitch-mode))
+  :hook (text-mode . nl/mixed-pitch-maybe))
 #+end_src
 
 ** Mode Line
