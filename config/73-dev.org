@@ -30,6 +30,19 @@ otherwise fall back to =dockerfile-mode= so highlighting works immediately.
         (dockerfile-mode)))))
 #+end_src
 
+** [[https://just.systems/man/en/][just]]
+
+=just-mode= highlights justfiles; =justl= lists a justfile's recipes and runs them.
+
+#+begin_src emacs-lisp
+(use-package just-mode
+  :mode (("\\(?:\\`\\|/\\)\\.?[Jj]ustfile\\'" . just-mode)
+         ("\\.just\\'" . just-mode)))
+
+(use-package justl
+  :commands (justl justl-exec-recipe-in-dir))
+#+end_src
+
 ** [[https://github.com/emacs-lsp/dap-mode][dap-mode]] (disabled)
 
 #+begin_src emacs-lisp :tangle no
