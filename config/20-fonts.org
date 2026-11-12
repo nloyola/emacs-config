@@ -263,7 +263,14 @@ with spaces, or ASCII tables, and proportional glyphs wreck their alignment.
     (unless (and buffer-file-name
                  (string-equal-ignore-case
                   (or (file-name-extension buffer-file-name) "") "txt"))
-      (mixed-pitch-mode 1)))
+      (mixed-pitch-mode 1)
+      ;; `mixed-pitch-set-height' is nil, so the mode swaps in only the
+      ;; variable-pitch family, at the frame's 17px - where SN Pro reads
+      ;; visibly smaller than the monospace beside it.  Org and Markdown get
+      ;; their prose size from `variable-pitch-mode' (see 90-org.org,
+      ;; 80-lang-web.org); give *scratch* the same.
+      (when (equal (buffer-name) "*scratch*")
+        (variable-pitch-mode 1))))
   :config
   (add-to-list 'mixed-pitch-fixed-pitch-faces 'org-property-value)
   (add-to-list 'mixed-pitch-fixed-pitch-faces 'font-lock-comment-face)
