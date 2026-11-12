@@ -222,6 +222,31 @@ last carriage return, so git's progress redraws would be lost after it."
         (let ((message-log-max nil))
           (message "git: %s" line)))))
   (advice-add 'magit-process-filter :before #'nl/magit-echo-git-progress)
+  (defun nl/magit-fill-long-message-lines (orig &rest args)
+    "Hard-wrap commit message body lines longer than 100 columns.
+
+Short lines are left alone, so bullet lists keep their shape.  The
+summary line is the section heading and is skipped."
+    (let ((beg (point-marker)))
+      (apply orig args)
+      (let ((end (point-marker))
+            (fill-column 100)
+            (inhibit-read-only t))
+        (save-excursion
+          (goto-char beg)
+          (forward-line 1)
+          (while (< (point) end)
+            (let ((bol (line-beginning-position))
+                  (eol (line-end-position)))
+              (if (<= (- eol bol) fill-column)
+                  (forward-line 1)
+                (let ((section (get-text-property bol 'magit-section)))
+                  (fill-region bol eol)
+                  ;; Newlines inserted by the fill carry no section property.
+                  (put-text-property bol (point) 'magit-section section)
+                  (forward-line 1)))))))))
+  (advice-add 'magit-insert-revision-message :around
+              #'nl/magit-fill-long-message-lines)
   (with-eval-after-load 'magit-status
     (define-key magit-status-mode-map (kbd "q") #'magit-quit-session)
     (magit-add-section-hook 'magit-status-sections-hook
