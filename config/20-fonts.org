@@ -83,8 +83,9 @@ prog-mode buffer - and, since `nl/linux-monitor-fontsize' is kept pinned
 to Alacritty's cell, at the size Alacritty renders too.
 
 Read this as a multiple of the frame `default', NOT of the height Emacs
-finally applies.  Org buffers run `mixed-pitch-mode', which remaps
-`default' to `variable-pitch', so every relative height in them is
+finally applies.  Org buffers run `variable-pitch-mode' (hooked on
+`org-modern-mode' in 90-org.org), which remaps `default' to
+`variable-pitch', so every relative height in them is
 multiplied by `nl/variable-pitch-height' before it lands.
 `nl/apply-org-faces' divides that factor back out so the number here
 means what it says.  That compensation is why this is 1.0 and not the

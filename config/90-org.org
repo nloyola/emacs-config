@@ -47,15 +47,17 @@ relative value multiplies the inherited `fixed-pitch', so it follows the
 session's point size, while an absolute one would replace that height
 outright and render at a fixed size regardless of the base font.
 
-The one wrinkle is that Org buffers run `mixed-pitch-mode' (hooked on
-text-mode in 20-fonts.org), which remaps `default' to `variable-pitch'.
-Every relative height inside them therefore compounds by
-`nl/variable-pitch-height' before it lands, so `fixed-pitch' - nominally
-1.0 - really renders 1.28x the frame default.  Dividing that factor back
-out here is what lets `nl/org-block-height' mean a plain multiple of the
-frame `default', as its docstring claims.  Without it the old 0.85 was
-really 0.85 * 1.28 = 1.09, and source blocks came out *larger* than the
-default face instead of smaller.
+The one wrinkle is that Org buffers run `variable-pitch-mode' (hooked on
+`org-modern-mode' below), which remaps `default' to `variable-pitch'.
+`mixed-pitch-mode' runs too, but it swaps in only the family, not the
+height (`mixed-pitch-set-height' is nil).  Every relative height inside
+them therefore compounds by `nl/variable-pitch-height' before it lands,
+so `fixed-pitch' - nominally 1.0 - really renders 1.28x the frame
+default.  Dividing that factor back out here is what lets
+`nl/org-block-height' mean a plain multiple of the frame `default', as
+its docstring claims.  Without it the old 0.85 was really 0.85 * 1.28 =
+1.09, and source blocks came out *larger* than the default face instead
+of smaller.
 
 These faces only ever render in Org buffers, where that remap is always
 in effect, so the compensation is unconditional."
