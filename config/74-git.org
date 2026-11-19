@@ -261,6 +261,28 @@ summary line is the section heading and is skipped."
         magit-ediff-dwim-show-on-hunks t))
 #+end_src
 
+**** Push to every remote with =git pushall=
+
+=P a= in the push menu runs the repo's =git pushall= alias, which pushes to each remote in turn
+(Norweb: =origin=, then the =nloyola= mirror). The push menu's switches, such as =-f=
+(=--force-with-lease=) and =-h= (=--no-verify=), are passed through. The entry shows only in repos
+that define the alias.
+
+#+begin_src emacs-lisp
+(defun nl/magit-pushall-p ()
+  "Non-nil when the current repo defines a `pushall' git alias."
+  (magit-get "alias.pushall"))
+
+(defun nl/magit-pushall (args)
+  "Push with the repo's `git pushall' alias, passing the push menu's ARGS."
+  (interactive (list (magit-push-arguments)))
+  (magit-run-git-async "pushall" args))
+
+(with-eval-after-load 'magit-push
+  (transient-append-suffix 'magit-push "e"
+    '("a" "all remotes (pushall)" nl/magit-pushall :if nl/magit-pushall-p)))
+#+end_src
+
 **** Full-screen magit
 
 The following code makes magit-status run alone in the frame, and then restores the old window configuration when you quit out of magit.
