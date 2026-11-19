@@ -34,6 +34,13 @@
   (should (equal (nl/repo-issues-url (assoc "openta-development/openta-private" nl/repo-links))
                  "https://github.com/openta-development/openta-private/issues?q=is%3Aissue%20state%3Aopen")))
 
+(ert-deftest nl-repo-stock-analyzer-is-listed ()
+  (let ((entry (assoc "nloyola/stock_analyzer" nl/repo-links)))
+    (should entry)
+    (should (equal (plist-get (cdr entry) :dropbox) "~/Dropbox/investing/"))
+    (should (equal (nl/repo-issues-url entry)
+                   "https://github.com/nloyola/stock_analyzer/issues?q=is%3Aissue%20state%3Aopen"))))
+
 (ert-deftest nl-repo-current-reads-the-origin-remote ()
   (let* ((dir (make-temp-file "nl-repo-links" t))
          (default-directory (file-name-as-directory dir)))

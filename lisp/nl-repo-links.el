@@ -20,7 +20,9 @@
      :hydra hydra-nl-nordita-project/body
      :feature nl-nordita-php-project)
     ("openta-development/openta-private"
-     :dropbox "~/Dropbox/openTA/"))
+     :dropbox "~/Dropbox/openTA/")
+    ("nloyola/stock_analyzer"
+     :dropbox "~/Dropbox/investing/"))
   "Repositories with links, as (SLUG . PLIST).
 SLUG is the GitHub owner/name of the `origin' remote.  PLIST keys:
 `:issues-query' filters the issue list (default: open issues),
