@@ -175,7 +175,7 @@ is how to get the preview back after closing its tab."
        nil (expand-file-name "stamp.js" dir) nil 'silent)
       (when (or reopen (not (gethash html nl/markdown-preview--opened)))
         (puthash html t nl/markdown-preview--opened)
-        (browse-url-of-file html))))
+        (nl/browse-url-in-recent-chrome (browse-url-file-url html)))))
 
   (defun nl/markdown-preview-refresh ()
     "Re-render this buffer's preview, but only once one has been opened.

@@ -56,6 +56,54 @@ When called interactively, copy it to the kill ring instead of printing it."
       secret)))
 #+end_src
 
+** =browse-url=
+
+Open previews in the Chrome window I used last.  Chrome puts a URL from
+the command line in the window it last saw activated, which under
+Wayland is often not the right one, so focus that window through
+Hyprland first.
+
+#+begin_src emacs-lisp
+(use-package browse-url
+  :ensure nil
+  :defer t
+  :preface
+  (defun nl/hyprland-recent-chrome-window ()
+    "Return the address of the Chrome window focused most recently, or nil.
+Asks Hyprland, whose focus history covers every window on the desktop.
+Returns nil outside Hyprland, or when no Chrome window is open."
+    (when (and (getenv "HYPRLAND_INSTANCE_SIGNATURE")
+               (executable-find "hyprctl"))
+      (with-temp-buffer
+        (when (zerop (call-process "hyprctl" nil t nil "clients" "-j"))
+          (let* ((clients (append (ignore-errors
+                                    (json-parse-string (buffer-string)
+                                                       :object-type 'alist))
+                                  nil))
+                 (chrome (seq-filter
+                          (lambda (client)
+                            (and (equal (alist-get 'class client) "google-chrome")
+                                 (>= (alist-get 'focusHistoryID client -1) 0)))
+                          clients)))
+            (alist-get 'address
+                       (car (seq-sort-by (lambda (client)
+                                           (alist-get 'focusHistoryID client))
+                                         #'< chrome))))))))
+
+  (defun nl/browse-url-in-recent-chrome (url)
+    "Open URL in a new tab of the Chrome window used most recently.
+Chrome puts a URL from the command line in the window it last saw
+activated, and under Wayland that is often not the one used last.
+Focusing that window through Hyprland first makes Chrome pick it, and
+brings the new tab into view.  Elsewhere, fall back to `browse-url'."
+    (let ((window (nl/hyprland-recent-chrome-window)))
+      (if (not window)
+          (browse-url url)
+        (call-process "hyprctl" nil nil nil
+                      "dispatch" "focuswindow" (concat "address:" window))
+        (browse-url-chrome url)))))
+#+end_src
+
 ** =compile=
 
 Do not ask me to save files before compiling, or kill a previous compilation. Also scroll to the end of the compilation buffer when it is opened.
