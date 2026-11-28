@@ -217,7 +217,7 @@ latter is advised to run the email CSS inliner, which is irrelevant here."
       (make-directory dir t)
       (with-temp-file html
         (insert output))
-      (browse-url-of-file html)))
+      (nl/browse-url-in-recent-chrome (browse-url-file-url html))))
 
   (defun nl/org-command-menu ()
     "Open the Org command hydra."
