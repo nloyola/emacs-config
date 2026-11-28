@@ -165,7 +165,8 @@ is how to get the preview back after closing its tab."
            (markdown-xhtml-header-content
             (concat markdown-xhtml-header-content
                     (nl/markdown-preview--reload-script stamp)))
-           (out (markdown-standalone markdown-output-buffer-name)))
+           (out (markdown-standalone markdown-output-buffer-name
+                                     (buffer-name))))
       (make-directory dir t)
       (with-current-buffer out
         (write-region (point-min) (point-max) html nil 'silent))
